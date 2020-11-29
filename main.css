@@ -1,0 +1,17 @@
+#blockly {            /* Zona de bloques (Blockly) */
+  border:1px solid;     /* Borde negro fino */
+  margin-top:0px;       /* Contra el borde superior */
+  margin-left:-3px;     /* Dejo un poco de espacio respecto al canvas */
+  margin-bottom:-10px;  /* Contra el borde inferior */
+}
+
+#t01 td {
+  border: 1px solid #CCC;
+  text-align:center;
+  padding-right:20px;
+  padding-left:20px;
+}
+
+#t01 th {
+  border: 1px solid black;
+}
