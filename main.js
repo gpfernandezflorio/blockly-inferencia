@@ -1,4 +1,4 @@
-const Main = {};
+const Main = {modo_variables : "LOCALES"};
 
 // Posibles valores para los argumentos que vienen en la URL
   // El primero es el valor por defecto
@@ -94,6 +94,18 @@ Main.argumentoURL = function(key) {
 Main.agregarScriptFuente = function(ruta) {
   document.write(`<script src="${ruta}"></script>\n`);
 };
+
+Main.opcion_variables = function() {
+  let opt = document.getElementById("opcion_variables").value;
+  if (opt == "Sólo locales") {
+    Main.modo_variables = "LOCALES";
+  } else if (opt == "Sólo globales") {
+    Main.modo_variables = "GLOBALES";
+  } else {
+    Main.modo_variables = "AMBAS";
+  }
+  Main.ejecutar();
+}
 
 // Antes de terminar de cargar la página, llamo a esta función
 Main.preCarga();

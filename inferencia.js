@@ -22,18 +22,19 @@ TIPOS.distintos = function(t1, t2) {
     return t1.v != t2.v;
   }
   return false;
-}
+};
+
 // Retorna el índice de la próxima variable fresca
 TIPOS.fresca = function() {
   TIPOS.i++;
   return TIPOS.i;
-}
+};
 
-
-TIPOS.UNDEF = {
+TIPOS.UNDEF = { // Todavía no está definido
   id: "UNDEF",
   str: "indefinido"
-}; // Todavía no está definido
+};
+
 TIPOS.VAR = function(v_id) { // Variable fresca
   if (v_id in Inferencia.mapa_de_variables) { return Inferencia.mapa_de_variables[v_id].tipo; }
   return {
@@ -41,8 +42,9 @@ TIPOS.VAR = function(v_id) { // Variable fresca
     v:v_id,
     unificar: function(otro) { return otro; }
   };
-}
-TIPOS.LISTA = function(alfa) {
+};
+
+TIPOS.LISTA = function(alfa) { // Lista
   return {id:"LISTA", str: "lista de " + alfa.str, alfa:alfa,
     unificar:function(otro) {
       if (otro.id == "LISTA") {
@@ -55,39 +57,42 @@ TIPOS.LISTA = function(alfa) {
       return null;
     }
   }
-}; // Lista
-TIPOS.ENTERO = {id:"ENTERO", str: "entero",
+};
+
+TIPOS.ENTERO = {id:"ENTERO", str: "entero", // Entero
   unificar:function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return otro;
     }
     return null;
   }
-}; // Entero
-TIPOS.FRACCION = {id:"FRACCION", str: "flotante",
+};
+TIPOS.FRACCION = {id:"FRACCION", str: "flotante", // Fracción
   unificar:function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return this;
     }
     return null;
   }
-}; // Fracción
-TIPOS.BINARIO = {id:"BINARIO", str: "booleano",
+};
+
+TIPOS.BINARIO = {id:"BINARIO", str: "booleano", // Binario
   unificar:function(otro) {
     if (otro.id == "BINARIO") {
       return this;
     }
     return null;
   }
-}; // Binario
-TIPOS.TEXTO = {id:"TEXTO", str: "string",
+};
+
+TIPOS.TEXTO = {id:"TEXTO", str: "string", // Texto
   unificar:function(otro) {
     if (otro.id == "TEXTO") {
       return this;
     }
     return null;
   }
-}; // Texto
+};
 
 Blockly.Blocks['math_number'].getBlockType = function() {
   if (String(this.getFieldValue('NUM')).includes(".")) {return TIPOS.FRACCION;}
@@ -95,13 +100,13 @@ Blockly.Blocks['math_number'].getBlockType = function() {
 };
 Blockly.Blocks['logic_boolean'].getBlockType = function() {
   return TIPOS.BINARIO;
-}
+};
 Blockly.Blocks['text'].getBlockType = function() {
   return TIPOS.TEXTO;
-}
+};
 Blockly.Blocks['variables_get'].getBlockType = function() {
   return TIPOS.VAR(Inferencia.obtenerIdVariableBloque(this));
-}
+};
 Blockly.Blocks['lists_create_with'].getBlockType = function() {
   if (this.itemCount_ > 0) {
     let tipo = undefined;
@@ -121,7 +126,7 @@ Blockly.Blocks['lists_create_with'].getBlockType = function() {
     if (tipo) return TIPOS.LISTA(tipo);
   }
   return TIPOS.LISTA(TIPOS.VAR(this.id));
-}
+};
 
 function obtener_bloques_ancestros(bloque) {
   var lista = [];
@@ -131,7 +136,7 @@ function obtener_bloques_ancestros(bloque) {
     block = block.getSurroundParent();
   } while (block);
   return lista;
-}
+};
 
 const bloques_superiores = [
   "main", "procedures_defreturn", "procedures_defnoreturn",
@@ -142,7 +147,7 @@ const bloques_superiores = [
   "event_ultrasonic", "event_ldr_analog", "event_ldr", "event_pir",
   "event_joystick_axis_change", "event_joystick_axis_limit", "event_keypad",
   "event_remote","define_def"
-]
+];
 
 function obtener_bloque_superior(bloque) {
   var ancestros = obtener_bloques_ancestros(bloque);
@@ -153,13 +158,13 @@ function obtener_bloque_superior(bloque) {
     }
   }
   return null;
-}
+};
 
 const Inferencia = {};
 Main.generador = Blockly.JavaScript;
 
 function mostrarMapa() {
-  let res = "<h3>Resultado</h3><table id='t01'><tr><th>scope</th><th>variable</th><th>tipo inferido</th></tr>"
+  let res = "<h4>Resultado</h4><table id='t01'><tr><th>scope</th><th>variable</th><th>tipo inferido</th></tr>"
   for (v_id in Inferencia.mapa_de_variables) {
     let scope = Inferencia.mapa_de_variables[v_id].scope;
     if (scope) {
@@ -272,8 +277,14 @@ Inferencia.detectarTipoBloque = function(bloque){
   }
 };
 
-function es_local() {
-  return true;
+function es_local(nombre) {
+  if (Main.modo_variables = "LOCALES") {
+    return true;
+  } else if (Main.modo_variables = "GLOBALES") {
+    return false;
+  }
+  // Ambas
+  return false;
 };
 
 function obtenerScope(bloque) {

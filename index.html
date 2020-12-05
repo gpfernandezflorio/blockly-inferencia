@@ -23,6 +23,16 @@
   <table><tr><td>
     <div id="blockly"></div>
   </td><td valign="top">
+    <div>
+      <h4>Opciones</h4>
+      <table>
+        <tr><td>Variables</td><td><select id="opcion_variables" onchange="Main.opcion_variables();">
+          <option>Sólo locales</option>
+          <option>Sólo globales</option>
+          <option>Ambas</option>
+        </select></td></tr>
+      </table>
+    </div>
     <div id="resultado"></div>
   </td></tr></table>
 
