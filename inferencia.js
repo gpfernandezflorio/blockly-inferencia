@@ -214,8 +214,7 @@ Inferencia.crearMapaDeVariables = function(ws) {
   let bloques_top = ws.getTopBlocks(true);
   Inferencia.buscarGlobales(bloques_top);
   for (bloque of bloques_top) {
-    let scope = obtenerScope(bloque);
-    if (scope) Inferencia.definirVariablesDelMapa(bloque, scope);
+    Inferencia.definirVariablesDelMapa(bloque);
   }
   Inferencia.unificarTipos();
 };
@@ -224,37 +223,36 @@ Inferencia.crearMapaDeVariables = function(ws) {
 Inferencia.buscarGlobales = function(bloques) {
   for (bloque of bloques) {
     if (bloque.type == 'variables_set'/*'variables_global_def'*/ && Main.modo_variables != "LOCALES") {
-      Inferencia.agregarVariableAlMapa(bloque, Inferencia.scopeGlobal());
+      Inferencia.agregarVariableAlMapa(bloque);
     }
   }
 };
 
 // Recorro un scope y agrego sus variables al mapa
-Inferencia.definirVariablesDelMapa = function(top, scope) {
+Inferencia.definirVariablesDelMapa = function(top) {
   for (bloque of todos_los_hijos(top)) {
-    if (bloque.type == 'variables_set'/* || bloque.type == 'variables_get'*/) {
-      if (es_local(bloque)) {
-        Inferencia.agregarVariableAlMapa(bloque, scope);
-      } else {
-        Inferencia.agregarVariableAlMapa(bloque, Inferencia.scopeGlobal());
-      }
+    if (bloque.type == 'variables_set') {
+      Inferencia.agregarVariableAlMapa(bloque);
     }
   }
 };
 
-Inferencia.agregarVariableAlMapa = function(bloque, scope) {
+Inferencia.agregarVariableAlMapa = function(bloque) {
   let nombre_variable = bloque.getField('VAR').getText();
-  let id_variable = Inferencia.obtenerIdVariable(nombre_variable, scope);
-  if (id_variable in Inferencia.mapa_de_variables) {
-    Inferencia.mapa_de_variables[id_variable].asignaciones.push({bloque:bloque.id});
-  } else {
-    Inferencia.mapa_de_variables[id_variable] = {
-      scope: scope,
-      nombre_original: nombre_variable,
-      asignaciones: [{bloque:bloque.id}],
-      tipos_a_unificar: [],
-      tipo: TIPOS.VAR(id_variable)
-    };
+  let scope = obtenerScope(bloque, nombre_variable);
+  if (scope) {
+    let id_variable = Inferencia.obtenerIdVariable(nombre_variable, scope);
+    if (id_variable in Inferencia.mapa_de_variables) {
+      Inferencia.mapa_de_variables[id_variable].asignaciones.push({bloque:bloque.id});
+    } else {
+      Inferencia.mapa_de_variables[id_variable] = {
+        scope: scope,
+        nombre_original: nombre_variable,
+        asignaciones: [{bloque:bloque.id}],
+        tipos_a_unificar: [],
+        tipo: TIPOS.VAR(id_variable)
+      };
+    }
   }
 }
 
@@ -269,18 +267,19 @@ Inferencia.unificarTipos = function() {
   while (algo_cambio) {
     algo_cambio = false;
     for (v_id in Inferencia.mapa_de_variables) {
-      for (asignacion of Inferencia.mapa_de_variables[v_id].asignaciones) {
+      let mapa = Inferencia.mapa_de_variables[v_id];
+      for (asignacion of mapa.asignaciones) {
         let bloque = Main.workspace.getBlockById(asignacion.bloque).getInputTargetBlock("VALUE");
         if (bloque && bloque.getBlockType) {
           let tipo = bloque.getBlockType();
-          if (!Inferencia.mapa_de_variables[v_id].tipos_a_unificar.includes(tipo)) {
-            Inferencia.mapa_de_variables[v_id].tipos_a_unificar.push(tipo);
+          if (!mapa.tipos_a_unificar.includes(tipo)) {
+            mapa.tipos_a_unificar.push(tipo);
           }
         }
       }
-      let tipo0 = Inferencia.mapa_de_variables[v_id].tipo;
-      Inferencia.mgu(Inferencia.mapa_de_variables[v_id]);
-      if (TIPOS.distintos(tipo0, Inferencia.mapa_de_variables[v_id].tipo)) {algo_cambio = true;}
+      let tipo0 = mapa.tipo;
+      Inferencia.mgu(mapa);
+      if (TIPOS.distintos(tipo0, mapa.tipo)) {algo_cambio = true;}
     }
     for (v_id in Inferencia.mapa_de_variables) {
       let tipo0 = Inferencia.mapa_de_variables[v_id].tipo;
@@ -317,7 +316,14 @@ function es_local(bloque) {
   return !Inferencia.existeVariableGlobal(nombre_variable);
 };
 
-function obtenerScope(bloque) {
+function obtenerScope(bloque, nombre) {
+  if (Main.modo_variables == "GLOBALES") {
+    return Inferencia.scopeGlobal();
+  } else if (Main.modo_variables == "AMBAS") {
+    if (Inferencia.existeVariableGlobal(nombre)) {
+      return Inferencia.scopeGlobal();
+    }
+  }
   let top = obtener_bloque_superior(bloque);
   if (top) {
     if (top.type == 'procedures_defnoreturn' || top.type == 'procedures_defreturn') {
@@ -332,9 +338,9 @@ function obtenerScope(bloque) {
         nombre_original: "procedimiento principal"
       };
     }
-  } else if (Main.modo_variables != "LOCALES") {
-    return Inferencia.scopeGlobal();
-  } else {return null;}
+  }
+  if (Main.modo_variables != "LOCALES") { return Inferencia.scopeGlobal(); }
+  return null;
 }
 
 Inferencia.scopeGlobal = function() {
@@ -354,7 +360,7 @@ function todos_los_hijos(bloque) {
 
 Inferencia.obtenerIdVariableBloque = function(bloque) { // el bloque debe ser variables_get o variables_set
   let nombre_original = bloque.getField("VAR").getText();
-  let scope = obtenerScope(bloque);
+  let scope = obtenerScope(bloque, nombre_original);
   if (scope) return Inferencia.obtenerIdVariable(nombre_original, scope);
   return null;
 }
