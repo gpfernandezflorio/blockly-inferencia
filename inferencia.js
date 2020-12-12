@@ -229,10 +229,10 @@ Inferencia.buscarGlobales = function(bloques) {
   for (bloque of bloques) {
     if (bloque.type == 'variables_set'/*'variables_global_def'*/ && Main.modo_variables != "LOCALES") {
       let nombre = bloque.getField('VAR').getText();
-      Inferencia.agregarVariableAlMapa(nombre, bloque, true);
+      Inferencia.agregarVariableAlMapa(nombre, bloque, "VAR", true);
     } else if (bloque.type == 'procedures_defreturn') {
       let nombre = bloque.getFieldValue('NAME');
-      Inferencia.agregarVariableAlMapa(nombre, bloque, true);
+      Inferencia.agregarVariableAlMapa(nombre, bloque, "PROC", true);
     }
   }
 };
@@ -242,12 +242,12 @@ Inferencia.definirVariablesDelMapa = function(top) {
   for (bloque of todos_los_hijos(top)) {
     if (bloque.type == 'variables_set') {
       let nombre = bloque.getField('VAR').getText();
-      Inferencia.agregarVariableAlMapa(nombre, bloque);
+      Inferencia.agregarVariableAlMapa(nombre, bloque, "VAR", false);
     }
   }
 };
 
-Inferencia.agregarVariableAlMapa = function(nombre, bloque, global=false) {
+Inferencia.agregarVariableAlMapa = function(nombre, bloque, clase, global) {
   let scope;
   if (global) {
     scope = Inferencia.scopeGlobal();
@@ -255,7 +255,7 @@ Inferencia.agregarVariableAlMapa = function(nombre, bloque, global=false) {
     scope = obtenerScope(bloque, nombre);
   }
   if (scope) {
-    let id_variable = Inferencia.obtenerIdVariable(nombre, scope);
+    let id_variable = Inferencia.obtenerIdVariable(nombre, scope, clase);
     if (id_variable in Inferencia.mapa_de_variables) {
       Inferencia.mapa_de_variables[id_variable].asignaciones.push({bloque:bloque.id});
     } else {
@@ -271,7 +271,7 @@ Inferencia.agregarVariableAlMapa = function(nombre, bloque, global=false) {
 }
 
 Inferencia.existeVariableGlobal = function(nombre) {
-  let id_variable = Inferencia.obtenerIdVariable(nombre, Inferencia.scopeGlobal());
+  let id_variable = Inferencia.obtenerIdVariable(nombre, Inferencia.scopeGlobal(), "VAR");
   return id_variable in Inferencia.mapa_de_variables;
 }
 
@@ -379,15 +379,15 @@ function todos_los_hijos(bloque) {
 
 Inferencia.obtenerIdFuncionBloque = function(bloque) { // el bloque debe ser procedures_callreturn
   let nombre_original = bloque.getFieldValue('NAME');
-  return Inferencia.obtenerIdVariable(nombre_original, Inferencia.scopeGlobal());
+  return Inferencia.obtenerIdVariable(nombre_original, Inferencia.scopeGlobal(), "PROC");
 }
 Inferencia.obtenerIdVariableBloque = function(bloque) { // el bloque debe ser variables_get o variables_set
   let nombre_original = bloque.getField("VAR").getText();
   let scope = obtenerScope(bloque, nombre_original);
-  if (scope) return Inferencia.obtenerIdVariable(nombre_original, scope);
+  if (scope) return Inferencia.obtenerIdVariable(nombre_original, scope, "VAR");
   return null;
 }
-Inferencia.obtenerIdVariable = function(nombre_original, scope, prefijo="VAR") {
+Inferencia.obtenerIdVariable = function(nombre_original, scope, prefijo) {
   if (scope) {
     scope = "_" + scope.id_s + "_"
   } else {
