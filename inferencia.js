@@ -11,7 +11,7 @@ TIPOS.unificar = function(uno, otro) {
     }
     return uno;
   }
-  return uno.unificar(otro);
+  return uno.unificar(otro); // El "otro" NO es una variable
 }
 
 TIPOS.distintos = function(t1, t2) {
@@ -106,6 +106,11 @@ Blockly.Blocks['text'].getBlockType = function() {
 };
 Blockly.Blocks['variables_get'].getBlockType = function() {
   let id = Inferencia.obtenerIdVariableBloque(this);
+  if (id) return TIPOS.VAR(id);
+  return TIPOS.UNDEF;
+};
+Blockly.Blocks['procedures_callreturn'].getBlockType = function() {
+  let id = Inferencia.obtenerIdFuncionBloque(this);
   if (id) return TIPOS.VAR(id);
   return TIPOS.UNDEF;
 };
@@ -223,7 +228,11 @@ Inferencia.crearMapaDeVariables = function(ws) {
 Inferencia.buscarGlobales = function(bloques) {
   for (bloque of bloques) {
     if (bloque.type == 'variables_set'/*'variables_global_def'*/ && Main.modo_variables != "LOCALES") {
-      Inferencia.agregarVariableAlMapa(bloque);
+      let nombre = bloque.getField('VAR').getText();
+      Inferencia.agregarVariableAlMapa(nombre, bloque, true);
+    } else if (bloque.type == 'procedures_defreturn') {
+      let nombre = bloque.getFieldValue('NAME');
+      Inferencia.agregarVariableAlMapa(nombre, bloque, true);
     }
   }
 };
@@ -232,22 +241,27 @@ Inferencia.buscarGlobales = function(bloques) {
 Inferencia.definirVariablesDelMapa = function(top) {
   for (bloque of todos_los_hijos(top)) {
     if (bloque.type == 'variables_set') {
-      Inferencia.agregarVariableAlMapa(bloque);
+      let nombre = bloque.getField('VAR').getText();
+      Inferencia.agregarVariableAlMapa(nombre, bloque);
     }
   }
 };
 
-Inferencia.agregarVariableAlMapa = function(bloque) {
-  let nombre_variable = bloque.getField('VAR').getText();
-  let scope = obtenerScope(bloque, nombre_variable);
+Inferencia.agregarVariableAlMapa = function(nombre, bloque, global=false) {
+  let scope;
+  if (global) {
+    scope = Inferencia.scopeGlobal();
+  } else {
+    scope = obtenerScope(bloque, nombre);
+  }
   if (scope) {
-    let id_variable = Inferencia.obtenerIdVariable(nombre_variable, scope);
+    let id_variable = Inferencia.obtenerIdVariable(nombre, scope);
     if (id_variable in Inferencia.mapa_de_variables) {
       Inferencia.mapa_de_variables[id_variable].asignaciones.push({bloque:bloque.id});
     } else {
       Inferencia.mapa_de_variables[id_variable] = {
         scope: scope,
-        nombre_original: nombre_variable,
+        nombre_original: nombre,
         asignaciones: [{bloque:bloque.id}],
         tipos_a_unificar: [],
         tipo: TIPOS.VAR(id_variable)
@@ -269,7 +283,12 @@ Inferencia.unificarTipos = function() {
     for (v_id in Inferencia.mapa_de_variables) {
       let mapa = Inferencia.mapa_de_variables[v_id];
       for (asignacion of mapa.asignaciones) {
-        let bloque = Main.workspace.getBlockById(asignacion.bloque).getInputTargetBlock("VALUE");
+        let bloque = Main.workspace.getBlockById(asignacion.bloque);
+        if (bloque && bloque.type == 'variables_set') {
+          bloque = bloque.getInputTargetBlock("VALUE");
+        } else if (bloque && bloque.type == 'procedures_defreturn') {
+          bloque = bloque.getInputTargetBlock("RETURN");
+        }
         if (bloque && bloque.getBlockType) {
           let tipo = bloque.getBlockType();
           if (!mapa.tipos_a_unificar.includes(tipo)) {
@@ -358,6 +377,10 @@ function todos_los_hijos(bloque) {
   return res;
 };
 
+Inferencia.obtenerIdFuncionBloque = function(bloque) { // el bloque debe ser procedures_callreturn
+  let nombre_original = bloque.getFieldValue('NAME');
+  return Inferencia.obtenerIdVariable(nombre_original, Inferencia.scopeGlobal());
+}
 Inferencia.obtenerIdVariableBloque = function(bloque) { // el bloque debe ser variables_get o variables_set
   let nombre_original = bloque.getField("VAR").getText();
   let scope = obtenerScope(bloque, nombre_original);
