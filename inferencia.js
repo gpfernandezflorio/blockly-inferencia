@@ -78,7 +78,7 @@ function mostrarMapa() {
       } else {
         scope = " ";
       }
-      res += "<tr><td>" + scope + "</td><td>" + mapa.nombre_original + "</td><td>" + mapa.tipo.str + "</td></tr>";
+      res += "<tr><td>" + scope + "</td><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
     }
     res += "</table>";
   }
@@ -86,7 +86,7 @@ function mostrarMapa() {
     res += "<h5>Variables globales</h5>"
     res += "<table id='t01'><tr><th>variable</th><th>tipo inferido</th></tr>";
     for (mapa of variables_globales) {
-      res += "<tr><td>" + mapa.nombre_original + "</td><td>" + mapa.tipo.str + "</td></tr>";
+      res += "<tr><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
     }
     res += "</table>";
   }
@@ -94,7 +94,7 @@ function mostrarMapa() {
     res += "<h5>Funciones</h5>"
     res += "<table id='t01'><tr><th>función</th><th>tipo inferido</th></tr>";
     for (mapa of funciones) {
-      res += "<tr><td>" + mapa.nombre_original + "</td><td>" + mapa.tipo.str + "</td></tr>";
+      res += "<tr><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
     }
     res += "</table>";
   }
@@ -103,6 +103,7 @@ function mostrarMapa() {
 
 // Inicia la ejecución
 Main.ejecutar = function(){
+  Main.quitarErrores();
   Inferencia.crearMapaDeVariables(Main.workspace);
   mostrarMapa();
   //const codigo = Main.generador.workspaceToCode(Main.workspace);
@@ -199,6 +200,9 @@ Inferencia.unificarTipos = function() {
         }
       }
       let tipo0 = mapa.tipo;
+      if (tipo0.alfa && tipo0.alfa.alfa) {
+        const x = 0;
+      }
       Inferencia.mgu(mapa);
       if (TIPOS.distintos(tipo0, mapa.tipo)) {algo_cambio = true;}
     }
@@ -213,9 +217,7 @@ Inferencia.unificarTipos = function() {
 Inferencia.mgu = function(mapa) {
   for (tipo of mapa.tipos_a_unificar) {
     let unificacion = TIPOS.unificar(mapa.tipo, tipo);
-    if (unificacion) {
-      mapa.tipo = unificacion;
-    }
+    mapa.tipo = unificacion;
   }
   mapa.tipos_a_unificar = [];
 };

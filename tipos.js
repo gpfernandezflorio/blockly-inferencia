@@ -20,7 +20,7 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
 };
 
 TIPOS.unificar = function(uno, otro) {
-  if (TIPOS.distintos(uno, otro) && TIPOS.colision(uno, otro)) {return uno;}
+  if (TIPOS.distintos(uno, otro) && TIPOS.colisionan(uno, otro)) { return TIPOS.COLISION(uno, otro); }
   let resultado = uno;
   if (otro.id == "VAR") {
     let tipo_a_unificar = TIPOS.obtenerTipoVariable(otro);
@@ -45,6 +45,7 @@ TIPOS.unificar = function(uno, otro) {
 }
 
 TIPOS.distintos = function(t1, t2) {
+  if (t1.id == "ERROR" || t2.id == "ERROR") { return false; }
   if (t1.id != t2.id) {
     return true;
   }
@@ -57,7 +58,7 @@ TIPOS.distintos = function(t1, t2) {
   return false;
 };
 
-TIPOS.colision = function(uno, otro) {
+TIPOS.colisionan = function(uno, otro) {
   const variables_uno = TIPOS.variablesEn(uno);
   for (v of TIPOS.variablesEn(otro)) {
     if (variables_uno.includes(v)) {
@@ -74,8 +75,37 @@ TIPOS.variablesEn = function(tipo) {
   if (tipo.id=="LISTA") {
     return TIPOS.variablesEn(tipo.alfa);
   }
+  if (tipo.id=="ERROR") {
+    return [0]; // Para detectar errores rápido
+  }
   return [];
-}
+};
+
+TIPOS.fallo = function(tipo) {
+  return TIPOS.variablesEn(tipo).includes(0);
+};
+
+TIPOS.COLISION = function(t1, t2) {
+  let strError;
+  if (TIPOS.fallo(t1) || TIPOS.fallo(t2)) { strError = "error diferido"; }
+  else {strError = "colisión entre " + t1.str + " y " + t2.str;}
+  return {
+    id:"ERROR", str:"error", strError:strError,
+    t1:t1, t2:t2,
+    unificar: function(otro) { return this; }
+  };
+};
+
+TIPOS.INCOMPATIBLES = function(t1, t2) {
+  let strError;
+  if (TIPOS.fallo(t1) || TIPOS.fallo(t2)) { strError = "error diferido"; }
+  else {strError = "tipos " + t1.str + " y " + t2.str + " incompatibles";}
+  return {
+    id:"ERROR", str:"error", strError:strError,
+    t1:t1, t2:t2,
+    unificar: function(otro) { return this; }
+  };
+};
 
 // Retorna el índice de la próxima variable fresca
 TIPOS.fresca = function() {
@@ -112,12 +142,13 @@ TIPOS.LISTA = function(alfa) { // Lista
     unificar:function(otro) {
       if (otro.id == "LISTA") {
         let tipo_unificado = TIPOS.unificar(this.alfa, otro.alfa);
-        if (tipo_unificado) {
-          this.alfa = tipo_unificado;
-        } else { return null; }
+        if (TIPOS.fallo(tipo_unificado)) {
+          return TIPOS.INCOMPATIBLES(this, otro);
+        }
+        this.alfa = tipo_unificado;
         return otro;
       }
-      return null;
+      return TIPOS.INCOMPATIBLES(this, otro);
     }
   }
 };
@@ -127,7 +158,7 @@ TIPOS.ENTERO = {id:"ENTERO", str: "entero", // Entero
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return otro;
     }
-    return null;
+    return TIPOS.INCOMPATIBLES(this, otro);
   }
 };
 
@@ -136,7 +167,7 @@ TIPOS.FRACCION = {id:"FRACCION", str: "flotante", // Fracción
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return this;
     }
-    return null;
+    return TIPOS.INCOMPATIBLES(this, otro);
   }
 };
 
@@ -145,7 +176,7 @@ TIPOS.BINARIO = {id:"BINARIO", str: "booleano", // Binario
     if (otro.id == "BINARIO") {
       return this;
     }
-    return null;
+    return TIPOS.INCOMPATIBLES(this, otro);
   }
 };
 
@@ -154,18 +185,25 @@ TIPOS.TEXTO = {id:"TEXTO", str: "string", // Texto
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return this;
     }
-    return null;
+    return TIPOS.INCOMPATIBLES(this, otro);
   }
-}
+};
 
 TIPOS.CARACTER = {id:"CARACTER", str: "letra", // Texto
   unificar:function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return otro;
     }
-    return null;
+    return TIPOS.INCOMPATIBLES(this, otro);
   }
-};;
+};
+
+TIPOS.str = function(tipo) {
+  if ('strError' in tipo) {
+    return "<b style='color:red'>"+tipo.strError+"</b>";
+  }
+  return tipo.str;
+}
 
 const fEntero = function() { return TIPOS.ENTERO; };
 for (i of ['math_round','math_modulo','math_random_int','text_length',
@@ -286,9 +324,10 @@ Blockly.Blocks['math_on_list'].tipo = function() {
   }
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
-    if (tipo_unificado) {
-      tipoLista = tipo_unificado;
+    if (TIPOS.fallo(tipo_unificado)) {
+      return tipo_unificado;
     }
+    tipoLista = tipo_unificado;
   }
   return tipoLista.alfa;
 };
@@ -306,9 +345,10 @@ Blockly.Blocks['lists_getIndex'].tipo = function() {
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
-    if (tipo_unificado) {
-      tipoLista = tipo_unificado;
+    if (TIPOS.fallo(tipo_unificado)) {
+      return tipo_unificado;
     }
+    tipoLista = tipo_unificado;
   }
   return tipoLista.alfa;
 };
@@ -318,9 +358,10 @@ Blockly.Blocks['lists_getSublist'].tipo = function() {
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
-    if (tipo_unificado) {
-      tipoLista = tipo_unificado;
+    if (TIPOS.fallo(tipo_unificado)) {
+      return tipo_unificado;
     }
+    tipoLista = tipo_unificado;
   }
   return tipoLista;
 };
@@ -338,9 +379,10 @@ Blockly.Blocks['lists_sort'].tipo = function() {
   }
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
-    if (tipo_unificado) {
-      tipoLista = tipo_unificado;
+    if (TIPOS.fallo(tipo_unificado)) {
+      return tipo_unificado;
     }
+    tipoLista = tipo_unificado;
   }
   return tipoLista;
 };
@@ -352,9 +394,10 @@ function unificadorSerial(iterador) {
     if (bloque && bloque.tipo) {
       if (tipo) {
         let tipo_unificado = TIPOS.unificar(tipo, bloque.tipo());
-        if (tipo_unificado) {
-          tipo = tipo_unificado;
+        if (TIPOS.fallo(tipo_unificado)) {
+          return tipo_unificado;
         }
+        tipo = tipo_unificado;
       } else {
         tipo = bloque.tipo();
       }
