@@ -1,140 +1,3 @@
-TIPOS = {i:0};
-
-TIPOS.unificar = function(uno, otro) {
-  if (otro.id == "VAR") {
-    if (otro.v in Inferencia.mapa_de_variables) {
-      let tipo_unificado = Inferencia.mapa_de_variables[otro.v].tipo;
-      if (TIPOS.distintos(tipo_unificado, otro)) {
-        return TIPOS.unificar(uno, tipo_unificado);
-      }
-      if (uno.id == "VAR") { return otro; }
-    }
-    return uno;
-  }
-  return uno.unificar(otro); // El "otro" NO es una variable
-}
-
-TIPOS.distintos = function(t1, t2) {
-  if (t1.id != t2.id) {
-    return true;
-  }
-  if (t1.id=="VAR") {
-    return t1.v != t2.v;
-  }
-  return false;
-};
-
-// Retorna el índice de la próxima variable fresca
-TIPOS.fresca = function() {
-  TIPOS.i++;
-  return TIPOS.i;
-};
-
-TIPOS.UNDEF = { // Todavía no está definido
-  id: "UNDEF",
-  str: "indefinido"
-};
-
-TIPOS.VAR = function(v_id) { // Variable fresca
-  if (v_id in Inferencia.mapa_de_variables) { return Inferencia.mapa_de_variables[v_id].tipo; }
-  return {
-    id:"VAR", str: "variable fresca " + TIPOS.fresca(),
-    v:v_id,
-    unificar: function(otro) { return otro; }
-  };
-};
-
-TIPOS.LISTA = function(alfa) { // Lista
-  return {id:"LISTA", str: "lista de " + alfa.str, alfa:alfa,
-    unificar:function(otro) {
-      if (otro.id == "LISTA") {
-        let tipo_unificado = TIPOS.unificar(this.alfa, otro.alfa);
-        if (tipo_unificado) {
-          this.alfa = tipo_unificado;
-        } else { return null; }
-        return otro;
-      }
-      return null;
-    }
-  }
-};
-
-TIPOS.ENTERO = {id:"ENTERO", str: "entero", // Entero
-  unificar:function(otro) {
-    if (otro.id == "FRACCION" || otro.id == "ENTERO") {
-      return otro;
-    }
-    return null;
-  }
-};
-TIPOS.FRACCION = {id:"FRACCION", str: "flotante", // Fracción
-  unificar:function(otro) {
-    if (otro.id == "FRACCION" || otro.id == "ENTERO") {
-      return this;
-    }
-    return null;
-  }
-};
-
-TIPOS.BINARIO = {id:"BINARIO", str: "booleano", // Binario
-  unificar:function(otro) {
-    if (otro.id == "BINARIO") {
-      return this;
-    }
-    return null;
-  }
-};
-
-TIPOS.TEXTO = {id:"TEXTO", str: "string", // Texto
-  unificar:function(otro) {
-    if (otro.id == "TEXTO") {
-      return this;
-    }
-    return null;
-  }
-};
-
-Blockly.Blocks['math_number'].getBlockType = function() {
-  if (String(this.getFieldValue('NUM')).includes(".")) {return TIPOS.FRACCION;}
-  return TIPOS.ENTERO;
-};
-Blockly.Blocks['logic_boolean'].getBlockType = function() {
-  return TIPOS.BINARIO;
-};
-Blockly.Blocks['text'].getBlockType = function() {
-  return TIPOS.TEXTO;
-};
-Blockly.Blocks['variables_get'].getBlockType = function() {
-  let id = Inferencia.obtenerIdVariableBloque(this);
-  if (id) return TIPOS.VAR(id);
-  return TIPOS.UNDEF;
-};
-Blockly.Blocks['procedures_callreturn'].getBlockType = function() {
-  let id = Inferencia.obtenerIdFuncionBloque(this);
-  if (id) return TIPOS.VAR(id);
-  return TIPOS.UNDEF;
-};
-Blockly.Blocks['lists_create_with'].getBlockType = function() {
-  if (this.itemCount_ > 0) {
-    let tipo = undefined;
-    for (var i=0; i<this.itemCount_; i++) {
-      let bloque = this.getInputTargetBlock("ADD"+i);
-      if (bloque && bloque.getBlockType) {
-        if (tipo) {
-          let tipo_unificado = TIPOS.unificar(tipo, bloque.getBlockType());
-          if (tipo_unificado) {
-            tipo = tipo_unificado;
-          }
-        } else {
-          tipo = bloque.getBlockType();
-        }
-      }
-    }
-    if (tipo) return TIPOS.LISTA(tipo);
-  }
-  return TIPOS.LISTA(TIPOS.VAR(this.id));
-};
-
 function obtener_bloques_ancestros(bloque) {
   var lista = [];
   var block = bloque;
@@ -176,6 +39,7 @@ Blockly.defineBlocksWithJsonArray([  // BEGIN JSON EXTRACT
     "message0": "MAIN",
     "args0": [],
     "message1": "%1",
+    "style": "procedure_blocks",
     "args1": [{"type":"input_statement","name":"LOOP"}],
     "inputsInline": false
   }
@@ -187,17 +51,53 @@ Main.generador['main'] = function(block) {
 };
 
 function mostrarMapa() {
-  let res = "<h4>Resultado</h4><table id='t01'><tr><th>scope</th><th>variable</th><th>tipo inferido</th></tr>"
+  let res = "<h4>Resultado</h4>";
+  const variables_main = [];
+  const variables_locales = [];
+  const variables_globales = [];
+  const funciones = [];
   for (v_id in Inferencia.mapa_de_variables) {
-    let scope = Inferencia.mapa_de_variables[v_id].scope;
-    if (scope) {
-      scope =  scope.nombre_original + " ";
+    let mapa = Inferencia.mapa_de_variables[v_id];
+    let scope = mapa.scope;
+    if (scope.id_s=="GLOBAL") {
+      if (v_id.startsWith("VAR")) {variables_globales.push(mapa);}
+      else {funciones.push(mapa);}
+    } else if (scope.id_s=="MAIN") {
+      variables_main.push(mapa);
     } else {
-      scope = " ";
+      variables_locales.push(mapa);
     }
-    res += "<tr><td>" + scope + "</td><td>" + Inferencia.mapa_de_variables[v_id].nombre_original + "</td><td>" + Inferencia.mapa_de_variables[v_id].tipo.str + "</td></tr>";
   }
-  res += "</table>";
+  if (variables_main.length || variables_locales.length) {
+    res += "<h5>Variables locales</h5>"
+    res += "<table id='t01'><tr><th>scope</th><th>variable</th><th>tipo inferido</th></tr>";
+    for (mapa of variables_main.concat(variables_locales)) {
+      let scope = mapa.scope;
+      if (scope) {
+        scope =  scope.nombre_original + " ";
+      } else {
+        scope = " ";
+      }
+      res += "<tr><td>" + scope + "</td><td>" + mapa.nombre_original + "</td><td>" + mapa.tipo.str + "</td></tr>";
+    }
+    res += "</table>";
+  }
+  if (variables_globales.length) {
+    res += "<h5>Variables globales</h5>"
+    res += "<table id='t01'><tr><th>variable</th><th>tipo inferido</th></tr>";
+    for (mapa of variables_globales) {
+      res += "<tr><td>" + mapa.nombre_original + "</td><td>" + mapa.tipo.str + "</td></tr>";
+    }
+    res += "</table>";
+  }
+  if (funciones.length) {
+    res += "<h5>Funciones</h5>"
+    res += "<table id='t01'><tr><th>función</th><th>tipo inferido</th></tr>";
+    for (mapa of funciones) {
+      res += "<tr><td>" + mapa.nombre_original + "</td><td>" + mapa.tipo.str + "</td></tr>";
+    }
+    res += "</table>";
+  }
   document.getElementById("resultado").innerHTML = res;
 }
 
@@ -215,6 +115,8 @@ Inferencia.crearMapaDeVariables = function(ws) {
   // Mapa: por cada scope, todas las variables definidas.
   // Por cada una de ellas, una lista de los bloques que la usan y el tipo que le asignan
   Inferencia.mapa_de_variables = {};
+  // Mapa secundario para bloques sin tipo definido
+  Inferencia.variables_auxiliares = {};
   TIPOS.i=0;
   let bloques_top = ws.getTopBlocks(true);
   Inferencia.buscarGlobales(bloques_top);
@@ -289,8 +191,8 @@ Inferencia.unificarTipos = function() {
         } else if (bloque && bloque.type == 'procedures_defreturn') {
           bloque = bloque.getInputTargetBlock("RETURN");
         }
-        if (bloque && bloque.getBlockType) {
-          let tipo = bloque.getBlockType();
+        if (bloque && bloque.tipo) {
+          let tipo = bloque.tipo();
           if (!mapa.tipos_a_unificar.includes(tipo)) {
             mapa.tipos_a_unificar.push(tipo);
           }
