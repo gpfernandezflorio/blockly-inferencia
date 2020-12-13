@@ -267,17 +267,22 @@ Blockly.Blocks['procedures_callreturn'].tipo = function() {
 
 Blockly.Blocks['lists_create_with'].tipo = function() {
   let bloque = this;
-  return TIPOS.LISTA(unificadorSerial({id:bloque.id, j:-1,
+  let alfa = unificadorSerial({id:bloque.id, j:-1,
     dame:function() {
       this.j++; if (this.j==bloque.itemCount_){ return undefined; }
       return bloque.getInputTargetBlock("ADD"+this.j);
     }
-  }));
+  });
+  if (TIPOS.fallo(alfa)) {
+    Main.error(this, "TIPOS", alfa.strError);
+    return alfa;
+  };
+  return TIPOS.LISTA(alfa);
 };
 
 Blockly.Blocks['logic_ternary'].tipo = function() {
   let bloque = this;
-  return unificadorSerial({id:bloque.id,
+  let ret = unificadorSerial({id:bloque.id,
     dame:function(){
       this.dame = function(){
         this.dame = function() { return undefined; }
@@ -286,11 +291,13 @@ Blockly.Blocks['logic_ternary'].tipo = function() {
       return bloque.getInputTargetBlock("THEN");
     }
   });
+  if (TIPOS.fallo(ret)) { Main.error(this, "TIPOS", ret.strError); }
+  return ret;
 };
 
 Blockly.Blocks['math_arithmetic'].tipo = function() {
   let bloque = this;
-  return unificadorSerial({id:bloque.id,
+  let arg = unificadorSerial({id:bloque.id,
     dame:function(){
       this.dame = function(){
         this.dame = function() { return undefined; }
@@ -299,6 +306,12 @@ Blockly.Blocks['math_arithmetic'].tipo = function() {
       return bloque.getInputTargetBlock("A");
     }
   });
+  if (TIPOS.fallo(arg)) { Main.error(this, "TIPOS", arg.strError); }
+  else {
+    arg = TIPOS.unificar(arg, TIPOS.ENTERO);
+    if (TIPOS.fallo(arg)) { Main.error(this, "TIPOS", "Deben ser números"); }
+  }
+  return arg;
 };
 
 Blockly.Blocks['math_single'].tipo = function() {
@@ -306,7 +319,9 @@ Blockly.Blocks['math_single'].tipo = function() {
   if (op=="ABS" || op=="NEG") {
     let bloque = this.getInputTargetBlock("NUM");
     if (bloque && bloque.tipo) {
-      return TIPOS.unificar(TIPOS.ENTERO, bloque.tipo());
+      let arg = TIPOS.unificar(TIPOS.ENTERO, bloque.tipo());
+      if (TIPOS.fallo(arg)) { Main.error(this, "TIPOS", arg.strError); }
+      return arg;
     }
     return TIPOS.ENTERO;
   }
@@ -325,6 +340,7 @@ Blockly.Blocks['math_on_list'].tipo = function() {
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
     if (TIPOS.fallo(tipo_unificado)) {
+      Main.error(this, "TIPOS", tipo_unificado.strError);
       return tipo_unificado;
     }
     tipoLista = tipo_unificado;
@@ -335,7 +351,12 @@ Blockly.Blocks['math_on_list'].tipo = function() {
 Blockly.Blocks['lists_repeat'].tipo = function() {
   let bloque = this.getInputTargetBlock("ITEM");
   if (bloque && bloque.tipo) {
-    return TIPOS.LISTA(bloque.tipo());
+    let rec = bloque.tipo();
+    if (TIPOS.fallo(rec)) {
+      Main.error(this, "TIPOS", rec.strError);
+      return rec;
+    }
+    return TIPOS.LISTA(rec);
   }
   return TIPOS.LISTA(TIPOS.AUXVAR(this.id));
 };
@@ -346,6 +367,7 @@ Blockly.Blocks['lists_getIndex'].tipo = function() {
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
     if (TIPOS.fallo(tipo_unificado)) {
+      Main.error(this, "TIPOS", tipo_unificado.strError);
       return tipo_unificado;
     }
     tipoLista = tipo_unificado;
@@ -359,6 +381,7 @@ Blockly.Blocks['lists_getSublist'].tipo = function() {
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
     if (TIPOS.fallo(tipo_unificado)) {
+      Main.error(this, "TIPOS", tipo_unificado.strError);
       return tipo_unificado;
     }
     tipoLista = tipo_unificado;
@@ -380,6 +403,7 @@ Blockly.Blocks['lists_sort'].tipo = function() {
   if (bloque && bloque.tipo) {
     let tipo_unificado = TIPOS.unificar(tipoLista, bloque.tipo());
     if (TIPOS.fallo(tipo_unificado)) {
+      Main.error(this, "TIPOS", tipo_unificado.strError);
       return tipo_unificado;
     }
     tipoLista = tipo_unificado;

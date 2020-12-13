@@ -102,12 +102,13 @@ function mostrarMapa() {
 }
 
 // Inicia la ejecución
-Main.ejecutar = function(){
-  Main.quitarErrores();
+Main.ejecutar = function() {
+  Main.recolectarErrores();
   Inferencia.crearMapaDeVariables(Main.workspace);
   mostrarMapa();
   //const codigo = Main.generador.workspaceToCode(Main.workspace);
   //console.log(codigo);
+  Main.quitarErroresObsoletos();
 }
 
 // Reviso todos los bloques para recolectar variables en sus respectivos scopes

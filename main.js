@@ -66,6 +66,18 @@ Main.inyectarBlockly = function() {
 Main.registrarEventos = function () {
   Main.workspace.addChangeListener(function(event) {
     if (event.type != Blockly.Events.UI) {
+      // Elimino los chequeos de tipo
+      if (event.type == Blockly.Events.BLOCK_CREATE) {
+        for (b_id of event.ids) {
+          let bloque = Main.workspace.getBlockById(b_id);
+          if (bloque.outputConnection) { bloque.outputConnection.setCheck(null); }
+          for (input of bloque.inputList) {
+            if (input.connection) {
+              input.setCheck(null);
+            }
+          }
+        }
+      }
       Main.ejecutar();
     }
   });
@@ -114,13 +126,46 @@ Main.opcion_variables = function() {
   Main.ejecutar();
 }
 
-Main.quitarErrores = function() {
+// Me guardo los errores actuales para no borrarlos
+Main.recolectarErrores = function() {
+  Main.baseDeErrores = {};
   for (bloque of Main.workspace.getAllBlocks()) {
-    bloque.setWarningText(null);
+    if (bloque.warning) {
+      let b_id = bloque.id;
+      for (tag in bloque.warning.text_) {
+        if (b_id in Main.baseDeErrores) {
+          Main.baseDeErrores[b_id][tag] = {'texto':bloque.warning.text_[tag],'d':true};
+        } else {
+          Main.baseDeErrores[b_id] = {[tag]: {'texto':bloque.warning.text_[tag],'d':true}}
+        }
+      }
+    }
   }
 };
 
+// Borro los errores que no hayan sido marcados
+Main.quitarErroresObsoletos = function() {
+  for (b_id in Main.baseDeErrores) {
+    for (tag in Main.baseDeErrores[b_id]) {
+      if (Main.baseDeErrores[b_id][tag].d) {
+        let bloque = Main.workspace.getBlockById(b_id);
+        bloque.setWarningText(null, tag);
+      }
+    }
+  }
+};
+
+// Si el error ya existe, lo marco. Si no, lo agrego
 Main.error = function(bloque, tag, mensaje) {
+  if (bloque.id in Main.baseDeErrores) {
+    if (tag in Main.baseDeErrores[bloque.id]) {
+      Main.baseDeErrores[bloque.id][tag].d = false;
+      if (Main.baseDeErrores[bloque.id][tag].texto != mensaje) {
+        bloque.setWarningText(mensaje, tag);
+      }
+      return;
+    }
+  }
   bloque.setWarningText(mensaje, tag);
 };
 
