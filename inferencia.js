@@ -186,39 +186,58 @@ Inferencia.unificarTipos = function() {
     algo_cambio = false;
     for (v_id in Inferencia.mapa_de_variables) {
       let mapa = Inferencia.mapa_de_variables[v_id];
-      for (asignacion of mapa.asignaciones) {
-        let bloque = Main.workspace.getBlockById(asignacion.bloque);
-        if (bloque && bloque.type == 'variables_set') {
-          bloque = bloque.getInputTargetBlock("VALUE");
-        } else if (bloque && bloque.type == 'procedures_defreturn') {
-          bloque = bloque.getInputTargetBlock("RETURN");
-        }
-        if (bloque && bloque.tipo) {
-          let tipo = bloque.tipo();
-          if (!mapa.tipos_a_unificar.includes(tipo)) {
-            mapa.tipos_a_unificar.push(tipo);
-          }
-        }
+      if (!TIPOS.fallo(mapa.tipo)) {
+        let tipo = mapa.tipo;
+        Inferencia.unificarTiposVariable(mapa);
+        if (TIPOS.distintos(tipo, mapa.tipo)) { algo_cambio = true; }
       }
-      let tipo0 = mapa.tipo;
-      if (tipo0.alfa && tipo0.alfa.alfa) {
-        const x = 0;
-      }
-      Inferencia.mgu(mapa);
-      if (TIPOS.distintos(tipo0, mapa.tipo)) {algo_cambio = true;}
     }
     for (v_id in Inferencia.mapa_de_variables) {
       let tipo0 = Inferencia.mapa_de_variables[v_id].tipo;
-      Inferencia.mgu(Inferencia.mapa_de_variables[v_id]);
-      if (TIPOS.distintos(tipo0, Inferencia.mapa_de_variables[v_id].tipo)) {algo_cambio = true;}
+      if (!TIPOS.fallo(tipo0)) {
+        Inferencia.mgu(Inferencia.mapa_de_variables[v_id]);
+        if (TIPOS.distintos(tipo0, Inferencia.mapa_de_variables[v_id].tipo)) { algo_cambio = true; }
+      }
     }
   }
+};
+
+Inferencia.unificarTiposVariable = function(mapa) {
+  for (asignacion of mapa.asignaciones) {
+    let bloque = Main.workspace.getBlockById(asignacion.bloque);
+    if (bloque && bloque.type == 'variables_set') {
+      bloque = bloque.getInputTargetBlock("VALUE");
+    } else if (bloque && bloque.type == 'procedures_defreturn') {
+      bloque = bloque.getInputTargetBlock("RETURN");
+    }
+    if (bloque && bloque.tipo) {
+      let tipo = bloque.tipo();
+      /* OPCIÓN 1: en cuanto hay un error, paro */
+      if (TIPOS.fallo(tipo)) {
+        mapa.tipo = TIPOS.DIFERIDO(tipo);
+        return;
+      } else if (!mapa.tipos_a_unificar.includes(tipo)) {
+        mapa.tipos_a_unificar.push(tipo);
+      }
+      /**/
+      /* OPCIÓN 2: ignoro los errores
+      if (!TIPOS.fallo(tipo) && !mapa.tipos_a_unificar.includes(tipo)) {
+        mapa.tipos_a_unificar.push(tipo);
+      }
+      */
+    }
+  }
+  Inferencia.mgu(mapa);
 };
 
 Inferencia.mgu = function(mapa) {
   for (tipo of mapa.tipos_a_unificar) {
     let unificacion = TIPOS.unificar(mapa.tipo, tipo);
     mapa.tipo = unificacion;
+    if (TIPOS.fallo(unificacion)) {
+      mapa.tipos_a_unificar = [];
+      return;
+    }
   }
   mapa.tipos_a_unificar = [];
 };

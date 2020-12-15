@@ -19,7 +19,13 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
   }
 };
 
+// FUNCIONES BÁSICAS DE TIPOS:
+// unificar, distintos, colisionan, variablesEn, fallo
+
 TIPOS.unificar = function(uno, otro) {
+  if (TIPOS.fallo(uno) || TIPOS.fallo(otro)) {
+    console.error("NO PUEDO UNIFICAR ERRORES");
+  }
   if (TIPOS.distintos(uno, otro) && TIPOS.colisionan(uno, otro)) { return TIPOS.COLISION(uno, otro); }
   let resultado = uno;
   if (otro.id == "VAR") {
@@ -85,27 +91,7 @@ TIPOS.fallo = function(tipo) {
   return TIPOS.variablesEn(tipo).includes(0);
 };
 
-TIPOS.COLISION = function(t1, t2) {
-  let strError;
-  if (TIPOS.fallo(t1) || TIPOS.fallo(t2)) { strError = "error diferido"; }
-  else {strError = "colisión entre " + t1.str + " y " + t2.str;}
-  return {
-    id:"ERROR", str:"error", strError:strError,
-    t1:t1, t2:t2,
-    unificar: function(otro) { return this; }
-  };
-};
-
-TIPOS.INCOMPATIBLES = function(t1, t2) {
-  let strError;
-  if (TIPOS.fallo(t1) || TIPOS.fallo(t2)) { strError = "error diferido"; }
-  else {strError = "tipos " + t1.str + " y " + t2.str + " incompatibles";}
-  return {
-    id:"ERROR", str:"error", strError:strError,
-    t1:t1, t2:t2,
-    unificar: function(otro) { return this; }
-  };
-};
+// DEFINICIONES DE TIPOS
 
 // Retorna el índice de la próxima variable fresca
 TIPOS.fresca = function() {
@@ -113,7 +99,19 @@ TIPOS.fresca = function() {
   return TIPOS.i;
 };
 
-TIPOS.AUXVAR = function(b_id) { // Variable fresca auxiliar (no se corresponde a una variable)
+// Variable fresca (se corresponde a una variable de usuario)
+TIPOS.VAR = function(v_id) {
+  if (v_id in Inferencia.mapa_de_variables) { return Inferencia.mapa_de_variables[v_id].tipo; }
+  let i = TIPOS.fresca();
+  return {
+    id:"VAR", str: "variable fresca " + i,
+    v:v_id, i:i, src:"V", // Variable
+    unificar: function(otro) { return otro; }
+  };
+};
+
+// Variable fresca auxiliar (no se corresponde a una variable sino a un bloque sin variable asociada)
+TIPOS.AUXVAR = function(b_id) {
   if (b_id in Inferencia.variables_auxiliares) { return Inferencia.variables_auxiliares[b_id].tipo; }
   let i = TIPOS.fresca();
   let tipo = {
@@ -127,17 +125,8 @@ TIPOS.AUXVAR = function(b_id) { // Variable fresca auxiliar (no se corresponde a
   return tipo;
 }
 
-TIPOS.VAR = function(v_id) { // Variable fresca (se corresponde a una variable)
-  if (v_id in Inferencia.mapa_de_variables) { return Inferencia.mapa_de_variables[v_id].tipo; }
-  let i = TIPOS.fresca();
-  return {
-    id:"VAR", str: "variable fresca " + i,
-    v:v_id, i:i, src:"V", // Variable
-    unificar: function(otro) { return otro; }
-  };
-};
-
-TIPOS.LISTA = function(alfa) { // Lista
+// Lista (alfa)
+TIPOS.LISTA = function(alfa) {
   return {id:"LISTA", str: "lista de " + alfa.str, alfa:alfa,
     unificar:function(otro) {
       if (otro.id == "LISTA") {
@@ -153,7 +142,8 @@ TIPOS.LISTA = function(alfa) { // Lista
   }
 };
 
-TIPOS.ENTERO = {id:"ENTERO", str: "entero", // Entero
+// Entero
+TIPOS.ENTERO = {id:"ENTERO", str: "entero",
   unificar:function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return otro;
@@ -162,7 +152,8 @@ TIPOS.ENTERO = {id:"ENTERO", str: "entero", // Entero
   }
 };
 
-TIPOS.FRACCION = {id:"FRACCION", str: "flotante", // Fracción
+// Fracción
+TIPOS.FRACCION = {id:"FRACCION", str: "flotante",
   unificar:function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return this;
@@ -171,7 +162,8 @@ TIPOS.FRACCION = {id:"FRACCION", str: "flotante", // Fracción
   }
 };
 
-TIPOS.BINARIO = {id:"BINARIO", str: "booleano", // Binario
+// Binario
+TIPOS.BINARIO = {id:"BINARIO", str: "booleano",
   unificar:function(otro) {
     if (otro.id == "BINARIO") {
       return this;
@@ -180,7 +172,8 @@ TIPOS.BINARIO = {id:"BINARIO", str: "booleano", // Binario
   }
 };
 
-TIPOS.TEXTO = {id:"TEXTO", str: "string", // Texto
+// Texto
+TIPOS.TEXTO = {id:"TEXTO", str: "string",
   unificar:function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return this;
@@ -189,13 +182,46 @@ TIPOS.TEXTO = {id:"TEXTO", str: "string", // Texto
   }
 };
 
-TIPOS.CARACTER = {id:"CARACTER", str: "letra", // Texto
+// Caracter
+TIPOS.CARACTER = {id:"CARACTER", str: "letra",
   unificar:function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return otro;
     }
     return TIPOS.INCOMPATIBLES(this, otro);
   }
+};
+
+// DEFINICIONES DE ERRORES
+
+// Cuando no puedo inferir debido a otro error
+TIPOS.DIFERIDO = function(otro) {
+  return {
+    id:"ERROR", str:"error", strError:"error diferido",
+    otro:otro,
+  }
+}
+
+// Cuando dos tipos colisionan
+TIPOS.COLISION = function(t1, t2) {
+  if (TIPOS.fallo(t1) || TIPOS.fallo(t2)) {
+    console.error("ESTE DEBERÍA SER UN DIFERIDO");
+  }
+  return {
+    id:"ERROR", str:"error", strError:"colisión entre " + t1.str + " y " + t2.str,
+    t1:t1, t2:t2
+  };
+};
+
+// Cuando dos tipos son incompatibles
+TIPOS.INCOMPATIBLES = function(t1, t2) {
+  if (TIPOS.fallo(t1) || TIPOS.fallo(t2)) {
+    console.error("ESTE DEBERÍA SER UN DIFERIDO");
+  }
+  return {
+    id:"ERROR", str:"error", strError:"tipos " + t1.str + " y " + t2.str + " incompatibles",
+    t1:t1, t2:t2
+  };
 };
 
 TIPOS.str = function(tipo) {
@@ -205,39 +231,50 @@ TIPOS.str = function(tipo) {
   return tipo.str;
 }
 
+// FUNCIONES DE TIPO PARA CADA BLOQUE DE EXPRESIÓN
+
+// tipo entero
 const fEntero = function() { return TIPOS.ENTERO; };
 for (i of ['math_round','math_modulo','math_random_int','text_length',
   'text_indexOf','lists_length','lists_indexOf']) {
   Blockly.Blocks[i].tipo = fEntero;
 }
 
+// tipo fracción
 const fFraccion = function() { return TIPOS.FRACCION; };
 for (i of ['math_trig','math_constant','math_random_float','math_atan2']) {
   Blockly.Blocks[i].tipo = fFraccion;
 }
 
+// tipo binario
 const fBinario = function() { return TIPOS.BINARIO; };
 for (i of ['logic_boolean','logic_compare','logic_operation','logic_negate',
   'math_number_property','text_isEmpty','lists_isEmpty']) {
   Blockly.Blocks[i].tipo = fBinario;
 }
 
+// tipo texto
 const fTexto = function() { return TIPOS.TEXTO; };
 for (i of ['text','text_join','text_getSubstring','text_changeCase','text_trim',
   'text_prompt_ext']) {
   Blockly.Blocks[i].tipo = fTexto;
 }
 
+// tipo caracter
 const fCaracter = function() { return TIPOS.CARACTER; };
 for (i of ['text_charAt']) {
   Blockly.Blocks[i].tipo = fCaracter;
 }
 
+// bloque numérico (puede ser entero o fracción)
 Blockly.Blocks['math_number'].tipo = function() {
   if (String(this.getFieldValue('NUM')).includes(".")) {return TIPOS.FRACCION;}
   return TIPOS.ENTERO;
 };
 
+// bloque de variable
+// si ya está en el mapa, retorno lo que está en el mapa
+// si no, creo una nueva variable fresca y la agrego al mapa
 Blockly.Blocks['variables_get'].tipo = function() {
   let v_id = Inferencia.obtenerIdVariableBloque(this);
   if (v_id in Inferencia.mapa_de_variables) {
@@ -256,6 +293,8 @@ Blockly.Blocks['variables_get'].tipo = function() {
   return tipo;
 };
 
+// bloque de función
+// retorno una variable fresca
 Blockly.Blocks['procedures_callreturn'].tipo = function() {
   let id = Inferencia.obtenerIdFuncionBloque(this);
   if (id) return TIPOS.VAR(id);
@@ -265,69 +304,116 @@ Blockly.Blocks['procedures_callreturn'].tipo = function() {
   return TIPOS.AUXVAR(this.id);
 };
 
+// bloque de lista
+// si todos los elementos son de tipos unificables, retorno lista de tal tipo
 Blockly.Blocks['lists_create_with'].tipo = function() {
-  let bloque = this;
-  let alfa = unificadorSerial({id:bloque.id, j:-1,
-    dame:function() {
-      this.j++; if (this.j==bloque.itemCount_){ return undefined; }
-      return bloque.getInputTargetBlock("ADD"+this.j);
-    }
-  });
-  if (TIPOS.fallo(alfa)) {
-    Main.error(this, "TIPOS", alfa.strError);
-    return alfa;
-  };
-  return TIPOS.LISTA(alfa);
-};
-
-Blockly.Blocks['logic_ternary'].tipo = function() {
-  let bloque = this;
-  let ret = unificadorSerial({id:bloque.id,
-    dame:function(){
-      this.dame = function(){
-        this.dame = function() { return undefined; }
-        return bloque.getInputTargetBlock("ELSE");
+  let tipo = undefined;
+  for (var i=0; i<this.itemCount_; i++) {
+    let bloque = this.getInputTargetBlock("ADD"+i);
+    if (bloque && bloque.tipo) {
+      let otro = bloque.tipo();
+      if (TIPOS.fallo(otro)) {
+        return TIPOS.DIFERIDO(otro);
       }
-      return bloque.getInputTargetBlock("THEN");
-    }
-  });
-  if (TIPOS.fallo(ret)) { Main.error(this, "TIPOS", ret.strError); }
-  return ret;
-};
-
-Blockly.Blocks['math_arithmetic'].tipo = function() {
-  let bloque = this;
-  let arg = unificadorSerial({id:bloque.id,
-    dame:function(){
-      this.dame = function(){
-        this.dame = function() { return undefined; }
-        return bloque.getInputTargetBlock("B");
+      if (tipo) {
+        let tipo_unificado = TIPOS.unificar(tipo, otro);
+        if (TIPOS.fallo(tipo_unificado)) {
+          Main.error(this, "TIPOS", "Todos los elementos en la lista deben ser del mismo tipo");
+          return tipo_unificado;
+        }
+        tipo = tipo_unificado;
+      } else {
+        tipo = otro;
       }
-      return bloque.getInputTargetBlock("A");
     }
-  });
-  if (TIPOS.fallo(arg)) { Main.error(this, "TIPOS", arg.strError); }
-  else {
-    arg = TIPOS.unificar(arg, TIPOS.ENTERO);
-    if (TIPOS.fallo(arg)) { Main.error(this, "TIPOS", "Deben ser números"); }
   }
-  return arg;
+  if (tipo===undefined) tipo = TIPOS.AUXVAR(this.id);
+  return TIPOS.LISTA(tipo);
 };
 
+// operador ternario
+Blockly.Blocks['logic_ternary'].tipo = function() {
+  let tipo = undefined;
+  let A = this.getInputTargetBlock("THEN");
+  if (A && A.tipo) {
+    let tipoA = A.tipo();
+    if (TIPOS.fallo(tipoA)) {
+      return TIPOS.DIFERIDO(tipoA);
+    }
+    tipo = tipoA;
+  }
+  let B = this.getInputTargetBlock("ELSE");
+  if (B && B.tipo) {
+    let tipoB = B.tipo();
+    if (TIPOS.fallo(tipoB)) {
+      return TIPOS.DIFERIDO(tipoB);
+    }
+    if (tipo) {
+      tipo = TIPOS.unificar(tipo, tipoB);
+      if (TIPOS.fallo(tipo)) {
+        Main.error(this, "TIPOS", "El tercer argumento debe ser del mismo tipo que el segundo");
+        return tipo;
+      }
+    } else {
+      tipo = tipoB;
+    }
+  }
+  if (tipo===undefined) tipo = TIPOS.AUXVAR(this.id);
+  return tipo;
+};
+
+// operación aritmética binaria
+Blockly.Blocks['math_arithmetic'].tipo = function() {
+  let tipo = TIPOS.ENTERO;
+  let A = this.getInputTargetBlock("A");
+  if (A && A.tipo) {
+    let tipoA = A.tipo();
+    if (TIPOS.fallo(tipoA)) {
+      return TIPOS.DIFERIDO(tipoA);
+    }
+    tipo = TIPOS.unificar(tipo, tipoA);
+    if (TIPOS.fallo(tipo)) {
+      Main.error(this, "TIPOS", "El primer argumento debe ser un número");
+      return tipo;
+    }
+  }
+  let B = this.getInputTargetBlock("B");
+  if (B && B.tipo) {
+    let tipoB = B.tipo();
+    if (TIPOS.fallo(tipoB)) {
+      return TIPOS.DIFERIDO(tipoB);
+    }
+    tipo = TIPOS.unificar(tipo, tipoB);
+    if (TIPOS.fallo(tipo)) {
+      Main.error(this, "TIPOS", "El segundo argumento debe ser un número");
+      return tipo;
+    }
+  }
+  return tipo;
+};
+
+// operación aritmética unaria
 Blockly.Blocks['math_single'].tipo = function() {
   let op = this.getFieldValue('OP');
   if (op=="ABS" || op=="NEG") {
     let bloque = this.getInputTargetBlock("NUM");
     if (bloque && bloque.tipo) {
-      let arg = TIPOS.unificar(TIPOS.ENTERO, bloque.tipo());
-      if (TIPOS.fallo(arg)) { Main.error(this, "TIPOS", arg.strError); }
-      return arg;
+      let tipo = bloque.tipo();
+      if (TIPOS.fallo(tipo)) {
+        return TIPOS.DIFERIDO(tipo);
+      }
+      tipo = TIPOS.unificar(TIPOS.ENTERO, tipo);
+      if (TIPOS.fallo(tipo)) {
+        Main.error(this, "TIPOS", "Debe ser un número");
+      }
+      return tipo;
     }
     return TIPOS.ENTERO;
   }
   return TIPOS.FRACCION;
 };
 
+/*
 Blockly.Blocks['math_on_list'].tipo = function() {
   let op = this.getFieldValue('OP');
   let bloque = this.getInputTargetBlock("LIST");
@@ -410,23 +496,4 @@ Blockly.Blocks['lists_sort'].tipo = function() {
   }
   return tipoLista;
 };
-
-function unificadorSerial(iterador) {
-  let tipo = undefined;
-  let bloque = undefined;
-  while ((bloque = iterador.dame()) !==undefined) {
-    if (bloque && bloque.tipo) {
-      if (tipo) {
-        let tipo_unificado = TIPOS.unificar(tipo, bloque.tipo());
-        if (TIPOS.fallo(tipo_unificado)) {
-          return tipo_unificado;
-        }
-        tipo = tipo_unificado;
-      } else {
-        tipo = bloque.tipo();
-      }
-    }
-  }
-  if (tipo) return tipo;
-  return TIPOS.AUXVAR(iterador.id);
-}
+*/
