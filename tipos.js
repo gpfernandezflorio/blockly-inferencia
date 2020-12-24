@@ -227,7 +227,7 @@ TIPOS.INCOMPATIBLES = function(t1, t2) {
   }
   return {
     id:"ERROR", str:"error", strError:"tipos " + t1.str + " y " + t2.str + " incompatibles",
-    t1:t1, t2:t2, idError:"INCOMPATIBLES"
+    t1:t1, t2:t2, idError:"INCOMPATIBLES", sugerido:t1
   };
 };
 
@@ -294,12 +294,15 @@ function tiparArgumentosLlamado(bloque) {
     if (fallaAnterior) {
       if (tipoArg.idError == "INCOMPATIBLES") {
         fallaAnterior = false;
-        tipoArg = tipoArg.t1;
+        tipoArg = tipoArg.sugerido;
       }
     }
     if (!fallaAnterior) {
       let tipoUnificado = TIPOS.verificarTipoOperando(bloque, 'ARG' + n, tipoArg, "El argumento " + nombreArg + " tiene que ser de tipo " + tipoArg.str, "TIPOS"+n);
-      if (tipoUnificado && !TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
+      if (tipoUnificado) {
+        if (TIPOS.fallo(tipoUnificado) && tipoUnificado.idError == "INCOMPATIBLES") { tipoUnificado.sugerido = tipoUnificado.t2; }
+        if (!TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
+      }
     }
     n++;
   }
@@ -592,7 +595,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
     let fallaAnterior = TIPOS.fallo(tipoAnterior);
     if (fallaAnterior) {
       if (tipoAnterior.idError == "INCOMPATIBLES") {
-        tipoAnterior = tipoAnterior.t1;
+        tipoAnterior = tipoAnterior.sugerido;
       } else { return; }
     }
     let bloqueArgumento = bloque.getInputTargetBlock(argumento);
@@ -604,7 +607,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
         let unificacion = TIPOS.unificar(tipoAnterior, tipo);
         if (TIPOS.fallo(unificacion)) {
           Main.error(bloque, "TIPOS1",
-          "A la " + obj + " " + mapa.nombre_original + " ya se le había asignado el tipo " + tipoAnterior.str
+          obj + " " + mapa.nombre_original + " ya se le había asignado el tipo " + tipoAnterior.str
           );
           Main.error(bloque, "TIPOS2",
           " y ahora se le está asignando el tipo " + tipo.str
@@ -618,14 +621,16 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
 
 // asignar variable
 Blockly.Blocks['variables_set'].tipado = function() {
+  let obj = "A la variable";
+  if (Inferencia.esUnArgumento(this.getField("VAR").getText(), this)) { obj = "Al argumento"; }
   let v_id = Inferencia.obtenerIdVariableBloque(this);
-  TIPOS.tipadoVariable(this, v_id, "VALUE", "variable");
+  TIPOS.tipadoVariable(this, v_id, "VALUE", obj);
 };
 
 // definición de función
 Blockly.Blocks['procedures_defreturn'].tipado = function() {
   let v_id = Inferencia.obtenerIdFuncionBloque(this);
-  TIPOS.tipadoVariable(this, v_id, "RETURN", "función");
+  TIPOS.tipadoVariable(this, v_id, "RETURN", "A la función");
 };
 
 // llamado a un procedimiento

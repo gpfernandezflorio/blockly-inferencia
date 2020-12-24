@@ -111,11 +111,9 @@ Inferencia.crearMapaDeVariables = function(ws) {
   // Mapa secundario para bloques sin tipo definido
   Inferencia.variables_auxiliares = {};
   TIPOS.i=0;
-  let bloques_top = ws.getTopBlocks(true).filter(function(x) {return bloques_superiores.includes(x.type)});
-  Inferencia.buscarGlobales(bloques_top);
-  for (bloque of bloques_top) {
-    Inferencia.definirVariablesDelMapa(bloque);
-  }
+  let bloques_tope = ws.getTopBlocks(true).filter(function(x) {return bloques_superiores.includes(x.type)});
+  Inferencia.buscarGlobales(bloques_tope);
+  Inferencia.definirVariablesDelMapa(bloques_tope);
   Inferencia.ejecutar();
 };
 
@@ -129,10 +127,16 @@ Inferencia.buscarGlobales = function(bloques) {
 };
 
 // Recorro un scope y agrego sus variables al mapa
-Inferencia.definirVariablesDelMapa = function(top) {
-  for (bloque of todos_los_hijos(top)) {
-    if (bloque.variableLibre) {
-      bloque.variableLibre(false);
+Inferencia.definirVariablesDelMapa = function(bloques_tope) {
+  let todosLosBloques = [
+    [], // primero los que modifican argumentos
+    []
+  ]
+  for (tope of bloques_tope) {
+    for (bloque of todos_los_hijos(tope)) {
+      if (bloque.variableLibre) {
+        bloque.variableLibre(false);
+      }
     }
   }
 };
@@ -164,9 +168,9 @@ Inferencia.existeVariableGlobal = function(nombre) {
 };
 
 Inferencia.esUnArgumento = function(nombre, bloque) {
-  let top = obtener_bloque_superior(bloque, nombre);
-  if (top && (top.type == 'procedures_defnoreturn' || top.type == 'procedures_defreturn') && top.arguments_.includes(nombre)) {
-    return top;
+  let tope = obtener_bloque_superior(bloque, nombre);
+  if (tope && (tope.type == 'procedures_defnoreturn' || tope.type == 'procedures_defreturn') && tope.arguments_.includes(nombre)) {
+    return tope;
   }
   return undefined;
 };
@@ -192,9 +196,9 @@ function numeroDeCiclo(bloque) {
 }
 
 function obtenerScope(bloque, nombre) {
-  let top = Inferencia.esUnArgumento(nombre, bloque);
-  if (top) {
-    let nombre_procedimiento = top.getField('NAME').getText();
+  let tope = Inferencia.esUnArgumento(nombre, bloque);
+  if (tope) {
+    let nombre_procedimiento = tope.getField('NAME').getText();
     return {
       id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
       nombre_original: nombre_procedimiento
@@ -207,26 +211,26 @@ function obtenerScope(bloque, nombre) {
       return Inferencia.scopeGlobal();
     }
   }
-  top = obtener_bloque_superior(bloque, nombre);
-  if (top) {
-    if (top.type == 'procedures_defnoreturn' || top.type == 'procedures_defreturn') {
-      let nombre_procedimiento = top.getField('NAME').getText();
+  tope = obtener_bloque_superior(bloque, nombre);
+  if (tope) {
+    if (tope.type == 'procedures_defnoreturn' || tope.type == 'procedures_defreturn') {
+      let nombre_procedimiento = tope.getField('NAME').getText();
       return {
         id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
         nombre_original: nombre_procedimiento
       };
-    } else if (top.type == "main") {
+    } else if (tope.type == "main") {
       return {
         id_s: "MAIN",
         nombre_original: "procedimiento principal"
       };
-    } else if (['controls_for','controls_forEach'].includes(top.type)) {
+    } else if (['controls_for','controls_forEach'].includes(tope.type)) {
       // scope especial: dentro de un ciclo
-      let scope2 = obtenerScope(top.getSurroundParent(), nombre);
+      let scope2 = obtenerScope(tope.getSurroundParent(), nombre);
       if (scope2 && scope2.id_s != "GLOBAL") {
         return {
-          id_s: scope2.id_s + " - " + top.id,
-          nombre_original: scope2.nombre_original + " - ciclo " + numeroDeCiclo(top)
+          id_s: scope2.id_s + " - " + tope.id,
+          nombre_original: scope2.nombre_original + " - ciclo " + numeroDeCiclo(tope)
         }
       }
     }
