@@ -240,11 +240,24 @@ TIPOS.str = function(tipo) {
 
 // BLOQUES CON VARIABLES LIBRES
 
+function obtenerArgumentosDefinicion(bloque) {
+  for (argumento of bloque.arguments_) {
+    Inferencia.agregarVariableAlMapa(argumento, bloque, "VAR", false);
+  }
+}
+
 TIPOS.inicializar = function() {
   Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {
     if (global) {
+      obtenerArgumentosDefinicion(this);
       let nombre = this.getFieldValue('NAME');
       Inferencia.agregarVariableAlMapa(nombre, this, "PROC", true);
+    }
+  };
+
+  Blockly.Blocks['procedures_defnoreturn'].variableLibre = function(global) {
+    if (global) {
+      obtenerArgumentosDefinicion(this);
     }
   };
 
@@ -264,6 +277,33 @@ TIPOS.inicializar = function() {
 }
 
 // FUNCIONES DE TIPADO PARA CADA BLOQUE
+
+function tiparArgumentosLlamado(bloque) {
+  let nombre_procedimiento = bloque.getField('NAME').getText();
+  let scope = {
+    id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
+    nombre_original: nombre_procedimiento
+  };
+  let n = 0;
+  while(bloque.getInput('ARG' + n)) {
+    let nombreArg = bloque.arguments_[n];
+    let idArg = Inferencia.obtenerIdVariable(nombreArg, scope, "VAR");
+    let tipoMapa = Inferencia.mapa_de_variables[idArg].tipo;
+    let tipoArg = tipoMapa;
+    let fallaAnterior = TIPOS.fallo(tipoArg);
+    if (fallaAnterior) {
+      if (tipoArg.idError == "INCOMPATIBLES") {
+        fallaAnterior = false;
+        tipoArg = tipoArg.t1;
+      }
+    }
+    if (!fallaAnterior) {
+      let tipoUnificado = TIPOS.verificarTipoOperando(bloque, 'ARG' + n, tipoArg, "El argumento " + nombreArg + " tiene que ser de tipo " + tipoArg.str, "TIPOS"+n);
+      if (tipoUnificado && !TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
+    }
+    n++;
+  }
+}
 
 TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
   let tipoResultado = undefined;
@@ -588,9 +628,15 @@ Blockly.Blocks['procedures_defreturn'].tipado = function() {
   TIPOS.tipadoVariable(this, v_id, "RETURN", "función");
 };
 
+// llamado a un procedimiento
+Blockly.Blocks['procedures_callnoreturn'].tipado = function() {
+  tiparArgumentosLlamado(this);
+}
+
 // llamado a función
 // retorno una variable fresca
 Blockly.Blocks['procedures_callreturn'].tipado = function() {
+  tiparArgumentosLlamado(this);
   let id = Inferencia.obtenerIdFuncionBloque(this);
   if (id) return TIPOS.VAR(id);
   // Si llego acá hay un bloque procedures_call sin su procedures_def

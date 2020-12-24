@@ -163,6 +163,14 @@ Inferencia.existeVariableGlobal = function(nombre) {
   return id_variable in Inferencia.mapa_de_variables;
 };
 
+Inferencia.esUnArgumento = function(nombre, bloque) {
+  let top = obtener_bloque_superior(bloque, nombre);
+  if (top && (top.type == 'procedures_defnoreturn' || top.type == 'procedures_defreturn') && top.arguments_.includes(nombre)) {
+    return top;
+  }
+  return undefined;
+};
+
 // Algoritmo de inferencia
 Inferencia.ejecutar = function() {
   for (bloque of Main.workspace.getAllBlocks()) {
@@ -170,16 +178,6 @@ Inferencia.ejecutar = function() {
       bloque.tipado();
     }
   }
-};
-
-function es_local(bloque) {
-  if (Main.modo_variables == "LOCALES") {
-    return true;
-  } else if (Main.modo_variables == "GLOBALES") {
-    return false;
-  }
-  let nombre_variable = bloque.getField('VAR').getText();
-  return !Inferencia.existeVariableGlobal(nombre_variable);
 };
 
 function numeroDeCiclo(bloque) {
@@ -194,6 +192,14 @@ function numeroDeCiclo(bloque) {
 }
 
 function obtenerScope(bloque, nombre) {
+  let top = Inferencia.esUnArgumento(nombre, bloque);
+  if (top) {
+    let nombre_procedimiento = top.getField('NAME').getText();
+    return {
+      id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
+      nombre_original: nombre_procedimiento
+    };
+  }
   if (Main.modo_variables == "GLOBALES") {
     return Inferencia.scopeGlobal();
   } else if (Main.modo_variables == "AMBAS") {
@@ -201,7 +207,7 @@ function obtenerScope(bloque, nombre) {
       return Inferencia.scopeGlobal();
     }
   }
-  let top = obtener_bloque_superior(bloque, nombre);
+  top = obtener_bloque_superior(bloque, nombre);
   if (top) {
     if (top.type == 'procedures_defnoreturn' || top.type == 'procedures_defreturn') {
       let nombre_procedimiento = top.getField('NAME').getText();
