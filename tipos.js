@@ -416,10 +416,10 @@ Blockly.Blocks['controls_whileUntil'].tipado = function() {
 
 // repetición con iterador
 Blockly.Blocks['controls_for'].tipado = function() {
+  let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
   let tipoInicial = TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, "El primer operando tiene que ser un número", "TIPOS1");
   TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, "El segundo operando tiene que ser un número", "TIPOS2");
   let tipoPaso = TIPOS.verificarTipoOperando(this, 'BY', TIPOS.ENTERO, "El tercer operando tiene que ser un número", "TIPOS3");
-  let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
   if (tipoVariable === undefined) { return; }
   tipoVariable = tipoVariable.tipo;
   if (TIPOS.fallo(tipoVariable)) { return; }
@@ -435,9 +435,9 @@ Blockly.Blocks['controls_for'].tipado = function() {
 
 // repetición en lista
 Blockly.Blocks['controls_forEach'].tipado = function() {
+  let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
   let tipoOperando = TIPOS.verificarTipoOperando(this, 'LIST', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), "El operando tiene que ser una lista", "TIPOS1");
   if (tipoOperando && TIPOS.fallo(tipoOperando)) { return; }
-  let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
   if (tipoVariable === undefined) { return; }
   tipoVariable = tipoVariable.tipo;
   if (TIPOS.fallo(tipoVariable)) { return; }
