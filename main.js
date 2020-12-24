@@ -237,6 +237,16 @@ Main.error = function(bloque, tag, mensaje) {
   bloque.warning.setVisible(true);
 };
 
+Main.guardar = function() {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(Main.workspace))));
+  element.setAttribute('download', "ws.xml");
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
 // Antes de terminar de cargar la página, llamo a esta función
 Main.preCarga();
 
