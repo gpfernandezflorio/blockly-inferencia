@@ -143,6 +143,7 @@ Main.registrarEventos = function () {
         }
       }
     }
+    if (Blockly.Events.BLOCK_MOVE && Main.workspace.isDragging()) { return; }
     if (!Main.procesando && event.type != Blockly.Events.UI) {
       Main.ejecutar();
     }
@@ -233,8 +234,7 @@ Main.error = function(bloque, tag, mensaje) {
     }
   }
   bloque.setWarningText(mensaje, tag);
-  // TODO: Averiguar la forma correcta de hacer esto:
-  //bloque.warning.createBubble();
+  bloque.warning.setVisible(true);
 };
 
 // Antes de terminar de cargar la página, llamo a esta función
