@@ -111,11 +111,23 @@ Inferencia.crearMapaDeVariables = function(ws) {
   // Mapa secundario para bloques sin tipo definido
   Inferencia.variables_auxiliares = {};
   TIPOS.i=0;
-  let bloques_tope = ws.getTopBlocks(true).filter(function(x) {return bloques_superiores.includes(x.type)});
+  let bloques_tope = Inferencia.obtenerBloquesSuperiores(ws);
   Inferencia.buscarGlobales(bloques_tope);
   Inferencia.definirVariablesDelMapa(bloques_tope);
   Inferencia.ejecutar();
 };
+
+Inferencia.obtenerBloquesSuperiores = function(ws) {
+  let bloquesValidos = []
+  for (bloque of ws.getTopBlocks(true)) {
+    if (bloques_superiores.includes(bloque.type)) {
+      bloquesValidos.push(bloque);
+    } else {
+      Main.error(bloque, "PARENT", "Este bloque tiene que estar dentro de otro");
+    }
+  }
+  return bloquesValidos;
+}
 
 // Reviso los bloques que definen variables globales y las agrego al scope GLOBAL
 Inferencia.buscarGlobales = function(bloques) {
@@ -204,6 +216,7 @@ Inferencia.ejecutar = function() {
     Inferencia.tipado(todosLosBloques);
   }
 };
+
 Inferencia.tipado = function(todosLosBloques) {
   for (bloques of todosLosBloques) {
     for (bloque of bloques) {
