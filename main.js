@@ -225,7 +225,24 @@ Main.quitarErroresObsoletos = function() {
 };
 
 // Si el error ya existe, lo marco. Si no, lo agrego
+// tag es string pero mensaje puede ser string o lista de strings
 Main.error = function(bloque, tag, mensaje) {
+  if (typeof(mensaje)=="string") { Main.error(bloque, tag, mensaje.split("\n")); }
+  else if (Array.isArray(mensaje)) {
+    if (mensaje.length == 1) {
+      Main.errorBloque(bloque, tag, mensaje[0]);
+    } else {
+      let i = 0;
+      for (msg of mensaje) {
+        i++;
+        Main.errorBloque(bloque, tag + " - "+i, msg);
+      }
+    }
+  }
+};
+
+// tag y mensaje son strings
+Main.errorBloque = function(bloque, tag, mensaje) {
   if (bloque.id in Main.baseDeErrores) {
     if (tag in Main.baseDeErrores[bloque.id]) {
       Main.baseDeErrores[bloque.id][tag].d = false;

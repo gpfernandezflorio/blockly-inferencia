@@ -116,7 +116,7 @@ TIPOS.VAR = function(v_id) {
   if (v_id in Inferencia.mapa_de_variables) { return Inferencia.mapa_de_variables[v_id].tipo; }
   let i = TIPOS.fresca();
   return {
-    id:"VAR", str: "variable fresca " + i,
+    id:"VAR", str: function() { return "variable fresca " + this.i; },
     v:v_id, i:i, src:"V", // Variable
     unificar: function(otro) { return otro; }
   };
@@ -127,7 +127,7 @@ TIPOS.AUXVAR = function(b_id) {
   if (b_id in Inferencia.variables_auxiliares) { return Inferencia.variables_auxiliares[b_id].tipo; }
   let i = TIPOS.fresca();
   let tipo = {
-    id:"VAR", str: "variable fresca " + i,
+    id:"VAR", str: function() { return "variable fresca " + this.i; },
     v:b_id, i:i, src:"B", // Bloque
     unificar: function(otro) { return otro; }
   };
@@ -140,7 +140,7 @@ TIPOS.AUXVAR = function(b_id) {
 
 // Lista (alfa)
 TIPOS.LISTA = function(alfa) {
-  return {id:"LISTA", str: "lista de " + alfa.str, alfa:alfa,
+  return {id:"LISTA", str: function() { return "lista de " + this.alfa.str(); }, alfa:alfa,
     unificar:function(otro) {
       if (otro.id == "LISTA") {
         let tipo_unificado = TIPOS.unificar(this.alfa, otro.alfa);
@@ -149,11 +149,9 @@ TIPOS.LISTA = function(alfa) {
         }
         if (TIPOS.distintos(this.alfa, tipo_unificado)) {
           this.alfa = tipo_unificado;
-          this.str = "lista de " + this.alfa.str;
         }
         if (TIPOS.distintos(otro.alfa, tipo_unificado)) {
           otro.alfa = tipo_unificado;
-          otro.str = "lista de " + otro.alfa.str;
         }
         return otro;
       }
@@ -163,7 +161,7 @@ TIPOS.LISTA = function(alfa) {
 };
 
 // Entero
-TIPOS.ENTERO = {id:"ENTERO", str: "entero",
+TIPOS.ENTERO = {id:"ENTERO", str: function() { return "entero"; },
   unificar:function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return otro;
@@ -173,7 +171,7 @@ TIPOS.ENTERO = {id:"ENTERO", str: "entero",
 };
 
 // Fracción
-TIPOS.FRACCION = {id:"FRACCION", str: "flotante",
+TIPOS.FRACCION = {id:"FRACCION", str: function() { return "flotante"; },
   unificar:function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return this;
@@ -183,7 +181,7 @@ TIPOS.FRACCION = {id:"FRACCION", str: "flotante",
 };
 
 // Binario
-TIPOS.BINARIO = {id:"BINARIO", str: "booleano",
+TIPOS.BINARIO = {id:"BINARIO", str: function() { return "booleano"; },
   unificar:function(otro) {
     if (otro.id == "BINARIO") {
       return this;
@@ -193,7 +191,7 @@ TIPOS.BINARIO = {id:"BINARIO", str: "booleano",
 };
 
 // Texto
-TIPOS.TEXTO = {id:"TEXTO", str: "string",
+TIPOS.TEXTO = {id:"TEXTO", str: function() { return "string"; },
   unificar:function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return this;
@@ -203,7 +201,7 @@ TIPOS.TEXTO = {id:"TEXTO", str: "string",
 };
 
 // Caracter
-TIPOS.CARACTER = {id:"CARACTER", str: "letra",
+TIPOS.CARACTER = {id:"CARACTER", str: function() { return "letra"; },
   unificar:function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return otro;
@@ -217,7 +215,7 @@ TIPOS.CARACTER = {id:"CARACTER", str: "letra",
 // Cuando no puedo inferir debido a otro error
 TIPOS.DIFERIDO = function(otro) {
   return {
-    id:"ERROR", str:"error", strError:"error diferido",
+    id:"ERROR", str: function() { return "error"; }, strError: function() { return "error diferido"; },
     otro:otro, idError:"DIFERIDO"
   }
 }
@@ -228,7 +226,7 @@ TIPOS.COLISION = function(t1, t2) {
     console.error("ESTE DEBERÍA SER UN DIFERIDO");
   }
   return {
-    id:"ERROR", str:"error", strError:"colisión entre " + t1.str + " y " + t2.str,
+    id:"ERROR", str: function() { return "error"; }, strError: function() { return "colisión entre " + this.t1.str() + " y " + this.t2.str(); },
     t1:t1, t2:t2, idError:"COLISION"
   };
 };
@@ -239,16 +237,16 @@ TIPOS.INCOMPATIBLES = function(t1, t2) {
     console.error("ESTE DEBERÍA SER UN DIFERIDO");
   }
   return {
-    id:"ERROR", str:"error", strError:"tipos " + t1.str + " y " + t2.str + " incompatibles",
+    id:"ERROR", str: function() { return "error"; }, strError: function() { return "tipos " + t1.str() + " y " + t2.str() + " incompatibles"; },
     t1:t1, t2:t2, idError:"INCOMPATIBLES", sugerido:t1
   };
 };
 
 TIPOS.str = function(tipo) {
   if ('strError' in tipo) {
-    return "<b style='color:red'>"+tipo.strError+"</b>";
+    return "<b style='color:red'>"+tipo.strError()+"</b>";
   }
-  return tipo.str;
+  return tipo.str();
 }
 
 // BLOQUES CON VARIABLES LIBRES
@@ -311,7 +309,7 @@ function tiparArgumentosLlamado(bloque) {
       }
     }
     if (!fallaAnterior) {
-      let tipoUnificado = TIPOS.verificarTipoOperando(bloque, 'ARG' + n, tipoArg, "El argumento " + nombreArg + " tiene que ser de tipo " + tipoArg.str, "TIPOS"+n);
+      let tipoUnificado = TIPOS.verificarTipoOperando(bloque, 'ARG' + n, tipoArg, "El argumento " + nombreArg + " tiene que ser de tipo " + tipoArg.str(), "TIPOS"+n);
       if (tipoUnificado) {
         if (TIPOS.fallo(tipoUnificado) && tipoUnificado.idError == "INCOMPATIBLES") { tipoUnificado.sugerido = tipoUnificado.t2; }
         if (!TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
@@ -331,7 +329,8 @@ TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
     } else {
       let tipoUnificado = TIPOS.unificar(tipoOperando, tipo);
       if (TIPOS.fallo(tipoUnificado)) {
-        Main.error(bloque, tag, error);
+        if ((typeof(error)=="string") || Array.isArray(error)) { Main.error(bloque, tag, error); }
+        else if (typeof(error)=="function") { Main.error(bloque, tag, error(tipoOperando)); }
         return tipoUnificado;
       } else {
         tipoResultado = tipoUnificado;
@@ -341,17 +340,23 @@ TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
   return tipoResultado;
 };
 
-TIPOS.verificarTipoOperandoEntero = function(bloque, input, error, tag) {
+TIPOS.verificarTipoOperandoEntero = function(bloque, input, error, tag, errorEntero=null) {
+  if (!errorEntero) {
+    errorEntero = error;
+  }
   let tipo = TIPOS.verificarTipoOperando(bloque, input, TIPOS.ENTERO, error, tag);
   if (tipo && TIPOS.distintos(tipo, TIPOS.ENTERO)) {
-    Main.error(bloque, tag, error);
+    if ((typeof(errorEntero)=="string") || Array.isArray(errorEntero)) { Main.error(bloque, tag, errorEntero); }
+    else if (typeof(errorEntero)=="function") { Main.error(bloque, tag, errorEntero(tipo)); }
   }
   return tipo;
 }
 
 TIPOS.operandosDelMismoTipo = function(bloque, inputs, error, tag) {
   let tipoResultado = undefined;
-  for (input of inputs) {
+  let primeroTipado = undefined;
+  for (let i=0; i<inputs.length; i++) {
+    let input = inputs[i]
     let operando = bloque.getInputTargetBlock(input);
     if (operando && operando.tipado) {
       let tipoOperando = operando.tipado();
@@ -361,19 +366,51 @@ TIPOS.operandosDelMismoTipo = function(bloque, inputs, error, tag) {
         if (tipoResultado) {
           let tipoUnificado = TIPOS.unificar(tipoOperando, tipoResultado);
           if (TIPOS.fallo(tipoUnificado)) {
-            Main.error(bloque, tag, error);
+            if ((typeof(error)=="string") || Array.isArray(error)) { Main.error(bloque, tag, error); }
+            else if (typeof(error)=="function") { Main.error(bloque, tag, error(primeroTipado, tipoResultado, i, tipoOperando)); }
             return tipoUnificado;
           } else {
             tipoResultado = tipoUnificado;
           }
         } else {
           tipoResultado = tipoOperando;
+          primeroTipado = i;
         }
       }
     }
   }
   return tipoResultado;
 };
+
+const iesimo = function(i) {
+  return ["primero","segundo","tercero","cuarto","quinto","sexto","séptimo","ocatavo","noveno"][i];
+}
+
+const error2Op = function(i1,t1,i2,t2) {return ["Los operandos tienen que ser del mismo tipo", ` pero el primero es de tipo ${t1.str()} y el segundo de tipo ${t2.str()}`]; }
+const errorOps4List = function(i1,t1,i2,t2) {
+  let comparacion = ((i2 < 10) ?
+    ` pero el ${iesimo(i1)} es de tipo ${t1.str()} y el ${iesimo(i2)} de tipo ${t2.str()}` :
+    ` pero uno es de tipo ${t1.str()} y hay otro de tipo ${t2.str()}` );
+  return ["Todos los elementos en la lista deben ser del mismo tipo", comparacion]; }
+const errorNumOp = function(t) {return ["El operando tiene que ser un número", ` pero es de tipo ${t.str()}`]}
+const errorNumOp1 = function(t) {return ["El primer operando tiene que ser un número", ` pero es de tipo ${t.str()}`]}
+const errorNumOp2 = function(t) {return ["El segundo operando tiene que ser un número", ` pero es de tipo ${t.str()}`]}
+const errorNumOp3 = function(t) {return ["El tercer operando tiene que ser un número", ` pero es de tipo ${t.str()}`]}
+const errorIntOp = function(t) {return ["El operando tiene que ser un número entero", ` pero es de tipo ${t.str()}`]}
+const errorIntOp1 = function(t) {return ["El primer operando tiene que ser un número entero", ` pero es de tipo ${t.str()}`]}
+const errorIntOp2 = function(t) {return ["El segundo operando tiene que ser un número entero", ` pero es de tipo ${t.str()}`]}
+const errorIntOp3 = function(t) {return ["El segundo operando tiene que ser un número entero", ` pero es de tipo ${t.str()}`]}
+const errorBoolCond = function(t) { return `La condición tiene que ser binaria\n pero el operando es de tipo ${t.str()}`; };
+const errorBoolOp = function(t) {return ["El operando tiene que ser un binario", ` pero es de tipo ${t.str()}`]}
+const errorBoolOp1 = function(t) {return ["El primer operando tiene que ser un binario", ` pero es de tipo ${t.str()}`]}
+const errorBoolOp2 = function(t) {return ["El segundo operando tiene que ser un binario", ` pero es de tipo ${t.str()}`]}
+const errorListOp = function(t) {return ["El operando tiene que ser una lista", ` pero es de tipo ${t.str()}`]}
+const errorListOp1 = function(t) {return ["El primer operando tiene que ser una lista", ` pero es de tipo ${t.str()}`]}
+const errorListNumOp = function(t) {return ["El operando tiene que ser una lista de números", ` pero es de tipo ${t.str()}`]}
+const errorListTextOp = function(t) {return ["El operando tiene que ser una lista de textos", ` pero es de tipo ${t.str()}`]}
+const errorTextOp = function(t) {return ["El operando tiene que ser un texto", ` pero es de tipo ${t.str()}`]}
+const errorTextOp1 = function(t) {return ["El primer operando tiene que ser un texto", ` pero es de tipo ${t.str()}`]}
+const errorTextOp2 = function(t) {return ["El segundo operando tiene que ser un texto", ` pero es de tipo ${t.str()}`]}
 
 // booleano
 Blockly.Blocks['logic_boolean'].tipado = function() { return TIPOS.BINARIO; };
@@ -382,7 +419,7 @@ Blockly.Blocks['logic_boolean'].tipado = function() { return TIPOS.BINARIO; };
 Blockly.Blocks['controls_if'].tipado = function() {
   let n = 0;
   while(this.getInput('IF' + n)) {
-    TIPOS.verificarTipoOperando(this, 'IF' + n, TIPOS.BINARIO, "La condición tiene que ser binaria", "TIPOS"+n);
+    TIPOS.verificarTipoOperando(this, 'IF' + n, TIPOS.BINARIO, errorBoolCond, "TIPOS"+n);
     n++;
   }
 };
@@ -390,28 +427,28 @@ Blockly.Blocks['controls_if'].tipado = function() {
 Blockly.Blocks['logic_compare'].tipado = function() {
   let op = this.getFieldValue("OP");
   if (["EQ","NEQ"].includes(op)) {
-    TIPOS.operandosDelMismoTipo(this, ["A","B"], "Los operandos tienen que ser del mismo tipo", "TIPOS");
+    TIPOS.operandosDelMismoTipo(this, ["A","B"], error2Op, "TIPOS");
   } else {
-    TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, "El primer operando tiene que ser un número", "TIPOS1");
-    TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, "El segundo operando tiene que ser un número", "TIPOS2");
+    TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, errorNumOp1, "TIPOS1");
+    TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, errorNumOp2, "TIPOS2");
   }
   return TIPOS.BINARIO;
 };
 
 Blockly.Blocks['logic_operation'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'A', TIPOS.BINARIO, "El primer operando tiene que ser un binario", "TIPOS1");
-  TIPOS.verificarTipoOperando(this, 'B', TIPOS.BINARIO, "El primer operando tiene que ser un binario", "TIPOS2");
+  TIPOS.verificarTipoOperando(this, 'A', TIPOS.BINARIO, errorBoolOp1, "TIPOS1");
+  TIPOS.verificarTipoOperando(this, 'B', TIPOS.BINARIO, errorBoolOp2, "TIPOS2");
   return TIPOS.BINARIO;
 };
 
 Blockly.Blocks['logic_negate'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, "El operando tiene que ser un binario", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, errorBoolOp, "TIPOS");
   return TIPOS.BINARIO;
 };
 
 // operador ternario
 Blockly.Blocks['logic_ternary'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'IF', TIPOS.BINARIO, "El primer operando tiene que ser un binario", "TIPOS1");
+  TIPOS.verificarTipoOperando(this, 'IF', TIPOS.BINARIO, errorBoolOp1, "TIPOS1");
   let tipo = TIPOS.operandosDelMismoTipo(this, ["THEN","ELSE"], "El tercer operando debe ser del mismo tipo que el segundo", "TIPOS2");
   if (tipo===undefined) tipo = TIPOS.AUXVAR(this.id);
   return tipo;
@@ -419,20 +456,20 @@ Blockly.Blocks['logic_ternary'].tipado = function() {
 
 // repetición simple
 Blockly.Blocks['controls_repeat_ext'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'TIMES', "El operando tiene que ser un número entero", "TIPOS");
+  TIPOS.verificarTipoOperandoEntero(this, 'TIMES', errorIntOp, "TIPOS");
 };
 
 // repetición condicional
 Blockly.Blocks['controls_whileUntil'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, "El operando tiene que ser un binario", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, errorBoolOp, "TIPOS");
 };
 
 // repetición con iterador
 Blockly.Blocks['controls_for'].tipado = function() {
   let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
-  let tipoInicial = TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, "El primer operando tiene que ser un número", "TIPOS1");
-  TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, "El segundo operando tiene que ser un número", "TIPOS2");
-  let tipoPaso = TIPOS.verificarTipoOperando(this, 'BY', TIPOS.ENTERO, "El tercer operando tiene que ser un número", "TIPOS3");
+  let tipoInicial = TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, errorNumOp1, "TIPOS1");
+  TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, errorNumOp2, "TIPOS2");
+  let tipoPaso = TIPOS.verificarTipoOperando(this, 'BY', TIPOS.ENTERO, errorNumOp3, "TIPOS3");
   if (tipoVariable === undefined) { return; }
   tipoVariable = tipoVariable.tipo;
   if (TIPOS.fallo(tipoVariable)) { return; }
@@ -449,7 +486,7 @@ Blockly.Blocks['controls_for'].tipado = function() {
 // repetición en lista
 Blockly.Blocks['controls_forEach'].tipado = function() {
   let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
-  let tipoOperando = TIPOS.verificarTipoOperando(this, 'LIST', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), "El operando tiene que ser una lista", "TIPOS1");
+  let tipoOperando = TIPOS.verificarTipoOperando(this, 'LIST', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), errorListOp, "TIPOS1");
   if (tipoOperando && TIPOS.fallo(tipoOperando)) { return; }
   if (tipoVariable === undefined) { return; }
   tipoVariable = tipoVariable.tipo;
@@ -457,7 +494,7 @@ Blockly.Blocks['controls_forEach'].tipado = function() {
   if (tipoOperando) {
     let alfa = tipoOperando.alfa;
     tipoOperando = TIPOS.unificar(tipoOperando, TIPOS.LISTA(tipoVariable));
-    if (TIPOS.fallo(tipoOperando)) { Main.error(this, "TIPOS2", "El iterador tiene que ser "+alfa.str); }
+    if (TIPOS.fallo(tipoOperando)) { Main.error(this, "TIPOS2", "El iterador tiene que ser "+alfa.str()); }
   }
 };
 
@@ -469,8 +506,8 @@ Blockly.Blocks['math_number'].tipado = function() {
 
 // operación aritmética binaria
 Blockly.Blocks['math_arithmetic'].tipado = function() {
-  let tipoA = TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, "El primer operando tiene que ser un número", "TIPOS1");
-  let tipoB = TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, "El segundo operando tiene que ser un número", "TIPOS2");
+  let tipoA = TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, errorNumOp1, "TIPOS1");
+  let tipoB = TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, errorNumOp2, "TIPOS2");
   if (tipoA) {
     if (TIPOS.fallo(tipoA)) { return tipoA; }
     if (tipoB) {
@@ -487,7 +524,7 @@ Blockly.Blocks['math_arithmetic'].tipado = function() {
 // operación aritmética unaria
 Blockly.Blocks['math_single'].tipado = function() {
   let op = this.getFieldValue('OP');
-  let tipo = TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, "El operando tiene que ser un número", "TIPOS");
+  let tipo = TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, errorNumOp, "TIPOS");
   if (op=="ABS" || op=="NEG") {
     if (tipo) { return tipo; }
     return TIPOS.ENTERO;
@@ -497,7 +534,7 @@ Blockly.Blocks['math_single'].tipado = function() {
 
 // operación trigonométrica
 Blockly.Blocks['math_trig'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, "El operando tiene que ser un número", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, errorNumOp, "TIPOS");
   return TIPOS.FRACCION;
 };
 
@@ -506,13 +543,13 @@ Blockly.Blocks['math_constant'].tipado = function() { return TIPOS.FRACCION; };
 
 // propiedad matemática
 Blockly.Blocks['math_number_property'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'NUMBER_TO_CHECK', TIPOS.ENTERO, "El operando tiene que ser un número", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'NUMBER_TO_CHECK', TIPOS.ENTERO, errorNumOp, "TIPOS");
   return TIPOS.BINARIO;
 };
 
 // redondear
 Blockly.Blocks['math_round'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, "El operando tiene que ser un número", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, errorNumOp, "TIPOS");
   return TIPOS.ENTERO;
 };
 
@@ -525,8 +562,8 @@ Blockly.Blocks['math_modulo'].tipado = function() {
 
 // entero aleatorio
 Blockly.Blocks['math_random_int'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, "El primer operando tiene que ser un número", "TIPOS1");
-  TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, "El segundo operando tiene que ser un número", "TIPOS2");
+  TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, errorNumOp1, "TIPOS1");
+  TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, errorNumOp2, "TIPOS2");
   return TIPOS.ENTERO;
 };
 
@@ -535,8 +572,8 @@ Blockly.Blocks['math_random_float'].tipado = function() { return TIPOS.FRACCION;
 
 // arcotangente
 Blockly.Blocks['math_atan2'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'X', TIPOS.ENTERO, "El primer operando tiene que ser un número", "TIPOS1");
-  TIPOS.verificarTipoOperando(this, 'Y', TIPOS.ENTERO, "El segundo operando tiene que ser un número", "TIPOS2");
+  TIPOS.verificarTipoOperando(this, 'X', TIPOS.ENTERO, errorNumOp1, "TIPOS1");
+  TIPOS.verificarTipoOperando(this, 'Y', TIPOS.ENTERO, errorNumOp2, "TIPOS2");
   return TIPOS.FRACCION;
 };
 
@@ -548,47 +585,47 @@ for (i of ['text','text_join','text_prompt_ext']) {
 
 // longitud de texto
 Blockly.Blocks['text_length'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, "El operando tiene que ser un texto", "TIPOS");
+  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, errorTextOp, "TIPOS");
   return TIPOS.ENTERO;
 };
 
 // texto vacío
 Blockly.Blocks['text_isEmpty'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, "El operando tiene que ser un texto", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, errorTextOp, "TIPOS");
   return TIPOS.BINARIO;
 };
 
 // encontrar texto
 Blockly.Blocks['text_indexOf'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, "El primer operando tiene que ser un texto", "TIPOS1");
-  TIPOS.verificarTipoOperando(this, 'FIND', TIPOS.TEXTO, "El segundo operando tiene que ser un texto", "TIPOS2");
+  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, errorTextOp1, "TIPOS1");
+  TIPOS.verificarTipoOperando(this, 'FIND', TIPOS.TEXTO, errorTextOp2, "TIPOS2");
   return TIPOS.ENTERO;
 };
 
 // indexar texto
 Blockly.Blocks['text_charAt'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, "El primer operando tiene que ser un texto", "TIPOS1");
-  TIPOS.verificarTipoOperandoEntero(this, 'AT', "El segundo operando tiene que ser un número entero", "TIPOS2");
+  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, errorTextOp1, "TIPOS1");
+  TIPOS.verificarTipoOperandoEntero(this, 'AT', errorIntOp2, "TIPOS2");
   return TIPOS.CARACTER;
 };
 
 // indexar texto
 Blockly.Blocks['text_getSubstring'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'STRING', TIPOS.TEXTO, "El primer operando tiene que ser un texto", "TIPOS1");
-  TIPOS.verificarTipoOperandoEntero(this, 'AT1', "El segundo operando tiene que ser un número entero", "TIPOS2");
-  TIPOS.verificarTipoOperandoEntero(this, 'AT2', "El tercer operando tiene que ser un número entero", "TIPOS3");
+  //TIPOS.verificarTipoOperando(this, 'STRING', TIPOS.TEXTO, errorTextOp1, "TIPOS1");
+  TIPOS.verificarTipoOperandoEntero(this, 'AT1', errorIntOp2, "TIPOS2");
+  TIPOS.verificarTipoOperandoEntero(this, 'AT2', errorIntOp3, "TIPOS3");
   return TIPOS.TEXTO;
 };
 
 // case
 Blockly.Blocks['text_changeCase'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, "El operando tiene que ser un texto", "TIPOS");
+  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, errorTextOp, "TIPOS");
   return TIPOS.TEXTO;
 };
 
 // espacios
 Blockly.Blocks['text_trim'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, "El operando tiene que ser un texto", "TIPOS");
+  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, errorTextOp, "TIPOS");
   return TIPOS.TEXTO;
 };
 
@@ -620,10 +657,10 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
         let unificacion = TIPOS.unificar(tipoAnterior, tipo);
         if (TIPOS.fallo(unificacion)) {
           Main.error(bloque, "TIPOS1",
-          obj + " " + mapa.nombre_original + " ya se había usado como " + tipoAnterior.str
+          obj + " " + mapa.nombre_original + " ya se había usado como " + tipoAnterior.str()
           );
           Main.error(bloque, "TIPOS2",
-          " y ahora se está usando " + tipo.str
+          " y ahora se está usando como " + tipo.str()
           );
         }
         if (!fallaAnterior) { mapa.tipo = unificacion; }
@@ -670,7 +707,7 @@ Blockly.Blocks['lists_create_with'].tipado = function() {
   for (var i=0; i<this.itemCount_; i++) {
     inputs.push("ADD"+i);
   }
-  let tipo = TIPOS.operandosDelMismoTipo(this, inputs, "Todos los elementos en la lista deben ser del mismo tipo", "TIPOS");
+  let tipo = TIPOS.operandosDelMismoTipo(this, inputs, errorOps4List, "TIPOS");
   if (tipo===undefined) tipo = TIPOS.AUXVAR(this.id);
   if (TIPOS.fallo(tipo)) { return TIPOS.DIFERIDO(tipo); }
   return TIPOS.LISTA(tipo);
@@ -682,10 +719,10 @@ Blockly.Blocks['math_on_list'].tipado = function() {
   let error;
   if (op=="RANDOM") {
     tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-    error = "El operando debe ser una lista";
+    error = errorListOp;
   } else {
     tipoLista = TIPOS.LISTA(TIPOS.ENTERO);
-    error = "El operando debe ser una lista de números";
+    error = errorListNumOp;
   }
   let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, error, "TIPOS");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
@@ -694,7 +731,7 @@ Blockly.Blocks['math_on_list'].tipado = function() {
 };
 
 Blockly.Blocks['lists_repeat'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'NUM', "El segundo operando tiene que ser un número entero", "TIPOS");
+  TIPOS.verificarTipoOperandoEntero(this, 'NUM', errorIntOp2, "TIPOS");
   let bloque = this.getInputTargetBlock("ITEM");
   if (bloque && bloque.tipado) {
     let tipoElem = bloque.tipado();
@@ -709,50 +746,50 @@ Blockly.Blocks['lists_repeat'].tipado = function() {
 
 // longitud de lista
 Blockly.Blocks['lists_length'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), "El operando tiene que ser una lista", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), errorListOp, "TIPOS");
   return TIPOS.ENTERO;
 };
 
 // lista vacía
 Blockly.Blocks['lists_isEmpty'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), "El operando tiene que ser una lista", "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), errorListOp, "TIPOS");
   return TIPOS.BINARIO;
 };
 
 Blockly.Blocks['lists_indexOf'].tipado = function() {
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, "El primer operando debe ser una lista", "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, errorListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, "El segundo operando tiene que ser de tipo " + tipoListaUnificado.alfa.str, "TIPOS2");
+  TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, "El segundo operando tiene que ser de tipo " + tipoListaUnificado.alfa.str(), "TIPOS2");
   return TIPOS.ENTERO;
 };
 
 Blockly.Blocks['lists_getIndex'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'AT', "El segundo operando tiene que ser un número entero", "TIPOS2");
+  TIPOS.verificarTipoOperandoEntero(this, 'AT', errorIntOp2, "TIPOS2");
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, "El primer operando debe ser una lista", "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, errorListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   return tipoListaUnificado.alfa;
 };
 
 Blockly.Blocks['lists_setIndex'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'AT', "El segundo operando tiene que ser un número entero", "TIPOS2");
+  TIPOS.verificarTipoOperandoEntero(this, 'AT', errorIntOp2, "TIPOS2");
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, "El primer operando debe ser una lista", "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, errorListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   var modo = this.getFieldValue('MODE');
-  let error = "El elemento a " + (modo=="SET" ? "establecer" : "insertar") + " tiene que ser de tipo " + tipoListaUnificado.alfa.str;
+  let error = "El elemento a " + (modo=="SET" ? "establecer" : "insertar") + " tiene que ser de tipo " + tipoListaUnificado.alfa.str();
   TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, error, "TIPOS3");
 };
 
 Blockly.Blocks['lists_getSublist'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'AT1', "El segundo operando tiene que ser un número entero", "TIPOS2");
-  TIPOS.verificarTipoOperandoEntero(this, 'AT2', "El tercer operando tiene que ser un número entero", "TIPOS3");
+  TIPOS.verificarTipoOperandoEntero(this, 'AT1', errorIntOp2, "TIPOS2");
+  TIPOS.verificarTipoOperandoEntero(this, 'AT2', errorIntOp3, "TIPOS3");
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, "El primer operando debe ser una lista", "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, errorListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   return tipoListaUnificado;
@@ -760,13 +797,13 @@ Blockly.Blocks['lists_getSublist'].tipado = function() {
 
 // conversión texto <-> lista
 Blockly.Blocks['lists_split'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'DELIM', TIPOS.TEXTO, "El segundo operando tiene que ser un texto", "TIPOS1");
+  TIPOS.verificarTipoOperando(this, 'DELIM', TIPOS.TEXTO, errorTextOp2, "TIPOS2");
   let modo = this.getFieldValue('MODE');
   if (modo == 'SPLIT') {
-    TIPOS.verificarTipoOperando(this, 'INPUT', TIPOS.TEXTO, "El primer operando tiene que ser un texto", "TIPOS2");
+    TIPOS.verificarTipoOperando(this, 'INPUT', TIPOS.TEXTO, errorTextOp1, "TIPOS1");
     return TIPOS.LISTA(TIPOS.TEXTO);
   }
-  TIPOS.verificarTipoOperando(this, 'INPUT', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), "El primer operando tiene que ser una lista", "TIPOS2");
+  TIPOS.verificarTipoOperando(this, 'INPUT', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), errorListOp1, "TIPOS2");
   return TIPOS.TEXTO;
 };
 
@@ -776,10 +813,10 @@ Blockly.Blocks['lists_sort'].tipado = function() {
   let error;
   if (op=="NUMERIC") {
     tipoLista = TIPOS.LISTA(TIPOS.ENTERO);
-    error = "El operando debe ser una lista de números";
+    error = errorListNumOp;
   } else {
     tipoLista = TIPOS.LISTA(TIPOS.TEXTO);
-    error = "El operando debe ser una lista de textos";
+    error = errorListTextOp;
   }
   let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, error, "TIPOS");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
