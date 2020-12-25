@@ -579,7 +579,7 @@ Blockly.Blocks['math_atan2'].tipado = function() {
 
 // bloques de texto
 const fTexto = function() { return TIPOS.TEXTO; };
-for (i of ['text','text_join','text_prompt_ext']) {
+for (i of ['text','text_join']) {
   Blockly.Blocks[i].tipado = fTexto;
 }
 
@@ -627,6 +627,12 @@ Blockly.Blocks['text_changeCase'].tipado = function() {
 Blockly.Blocks['text_trim'].tipado = function() {
   //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, errorTextOp, "TIPOS");
   return TIPOS.TEXTO;
+};
+
+// longitud de texto
+Blockly.Blocks['text_prompt_ext'].tipado = function() {
+  if (this.getFieldValue('TYPE')=="TEXT") { return TIPOS.TEXTO; }
+  return TIPOS.ENTERO;
 };
 
 // obtener variable
@@ -699,6 +705,19 @@ Blockly.Blocks['procedures_callreturn'].tipado = function() {
   // la próxima iteración este bloque va a desaparecer
   return TIPOS.AUXVAR(this.id);
 };
+
+Blockly.Blocks['procedures_ifreturn'].tipado = function() {
+  TIPOS.verificarTipoOperando(this, 'CONDITION', TIPOS.BINARIO, errorBoolCond, "TIPOS");
+  let tope = obtener_bloque_superior(bloque);
+  if (tope && (/*tope.type == 'procedures_defnoreturn' || */tope.type == 'procedures_defreturn')) {
+    let v_id = Inferencia.obtenerIdFuncionBloque(tope);
+    TIPOS.tipadoVariable(this, v_id, "VALUE", "La función");
+  } else {
+    Main.error(this, "PARENT", "Este bloque tiene que estar dentro de la definición de una función");
+  }
+};
+
+delete Blockly.Blocks['procedures_ifreturn'].onchange;
 
 // bloque de lista
 // si todos los elementos son de tipos unificables, retorno lista de tal tipo

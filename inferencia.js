@@ -26,7 +26,7 @@ function obtener_bloque_superior(bloque, nombre) {
       return ancestro;
     }
     // También si llego al ciclo en el que declaré la variable en cuestión
-    if (['controls_for','controls_forEach'].includes(ancestro.type) && ancestro.getField("VAR").getText()==nombre) {
+    if (nombre && ['controls_for','controls_forEach'].includes(ancestro.type) && ancestro.getField("VAR").getText()==nombre) {
       return ancestro;
     }
   }
@@ -98,7 +98,7 @@ Main.ejecutar = function() {
       //const codigo = Main.generador.workspaceToCode(Main.workspace);
       //console.log(codigo);
       Main.quitarErroresObsoletos();
-    }, 200);
+    }, 200); // La interfaz tarda un poco en actualizarse
   }
 }
 

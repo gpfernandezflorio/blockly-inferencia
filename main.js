@@ -45,7 +45,7 @@ Main.inicializar = function() {
   Main.redimensionar();     // Llamo a esta función para que ajuste el tamaño al iniciar
   if (false) {
     Blockly.Xml.domToWorkspace(
-    Blockly.Xml.textToDom('<xml xmlns="https://developers.google.com/blockly/xml"><variables><variable id="or(Q;=|s{/2^#++KP]d8">x</variable><variable id="%j!Ik%!rO,[@}Xg;{Y/~">y</variable><variable id="Yufn+c.;4~x^mPcbenNa">z</variable></variables><block type="main" id="MAIN" x="76" y="266"><statement name="LOOP"><block type="procedures_callnoreturn" id="qRa{|[gI#Bs3,*u.~yEy"><mutation name="hola"><arg name="x"></arg><arg name="y"></arg><arg name="z"></arg></mutation><value name="ARG0"><block type="logic_boolean" id="jh1y|}lQ/pg%v_B,35gX"><field name="BOOL">TRUE</field></block></value></block></statement></block><block type="variables_set" id="nR,+Az;RsneJYFmX6_yx" x="418" y="250"><field name="VAR" id="or(Q;=|s{/2^#++KP]d8">x</field><value name="VALUE"><block type="logic_boolean" id="kAR1GJtL?yA*2_2uP-P:"><field name="BOOL">TRUE</field></block></value></block><block type="procedures_defnoreturn" id="Xt7V{lS|vOwh*H^{Qv!v" x="168" y="441"><mutation><arg name="x" varid="or(Q;=|s{/2^#++KP]d8"></arg><arg name="y" varid="%j!Ik%!rO,[@}Xg;{Y/~"></arg><arg name="z" varid="Yufn+c.;4~x^mPcbenNa"></arg></mutation><field name="NAME">hola</field><comment pinned="false" h="80" w="160">Describe esta función...</comment><statement name="STACK"><block type="variables_set" id="kNucmGCZ85R}6t+s+OJ:"><field name="VAR" id="Yufn+c.;4~x^mPcbenNa">z</field><value name="VALUE"><block type="lists_create_with" id="8}XMJBI-igD0f)ZKYVMj"><mutation items="3"></mutation><value name="ADD1"><block type="variables_get" id="$Ej0R!se3NJlOTbuee8_"><field name="VAR" id="%j!Ik%!rO,[@}Xg;{Y/~">y</field></block></value></block></value><next><block type="variables_set" id="X*H1W(/LXai4:*BH65B]"><field name="VAR" id="%j!Ik%!rO,[@}Xg;{Y/~">y</field><value name="VALUE"><block type="lists_create_with" id="w|@F;UDD^M5h8:v*55FS"><mutation items="3"></mutation><value name="ADD1"><block type="variables_get" id="fCZ}c[L8}}LLlnJv)Q9H"><field name="VAR" id="or(Q;=|s{/2^#++KP]d8">x</field></block></value></block></value></block></next></block></statement></block></xml>'),
+    Blockly.Xml.textToDom('<xml xmlns="https://developers.google.com/blockly/xml"><block type="main" id="MAIN" x="50" y="50"></block><block type="procedures_defreturn" id="MivDG)KuXLruH#.]30Ak" x="122" y="249"><field name="NAME">hacer algo</field><comment pinned="false" h="80" w="160">Describe esta función...</comment><statement name="STACK"><block type="procedures_ifreturn" id="/rp5L:Ad?%[*{oaZJf3j"><mutation value="1"></mutation><value name="VALUE"><block type="math_number" id="wkMA:A6TrsPCN4K6plns"><field name="NUM">123</field></block></value><next><block type="procedures_ifreturn" id="I2dU1@XAtx.nHeU)DqWg"><mutation value="1"></mutation><value name="VALUE"><block type="text" id="W*ql){}VLHJMw^]ywgg3"><field name="TEXT"></field></block></value></block></next></block></statement><value name="RETURN"><block type="logic_boolean" id="La{=-NgNp^vsZ0)76)Ke"><field name="BOOL">TRUE</field></block></value></block></xml>'),
     Main.workspace);
   } else {
     var childBlock = Main.workspace.newBlock("main", "MAIN");
@@ -141,8 +141,9 @@ Main.registrarEventos = function () {
               Main.ejecutar();
             }
           }
-          setTimeout(f, 500);
+          f();
         }
+        return;
       }
     }
     if (Blockly.Events.BLOCK_MOVE && Main.workspace.isDragging()) { return; }
