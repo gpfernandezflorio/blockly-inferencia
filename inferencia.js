@@ -128,10 +128,6 @@ Inferencia.buscarGlobales = function(bloques) {
 
 // Recorro un scope y agrego sus variables al mapa
 Inferencia.definirVariablesDelMapa = function(bloques_tope) {
-  let todosLosBloques = [
-    [], // primero los que modifican argumentos
-    []
-  ]
   for (tope of bloques_tope) {
     for (bloque of todos_los_hijos(tope)) {
       if (bloque.variableLibre) {
@@ -154,12 +150,26 @@ Inferencia.agregarVariableAlMapa = function(nombre, bloque, clase, global) {
       Inferencia.mapa_de_variables[id_variable] = {
         scope: scope,
         nombre_original: nombre,
-        tipo: TIPOS.VAR(id_variable)
+        tipo: TIPOS.VAR(id_variable),
+        otras_variables_que_unifican: []
       };
     }
     return Inferencia.mapa_de_variables[id_variable];
   }
   return undefined;
+};
+
+Inferencia.asociarParDeVariables = function(v1, v2) {
+  Inferencia.unificarVariableConVariable(v1, v2);
+  Inferencia.unificarVariableConVariable(v2, v1);
+};
+
+Inferencia.unificarVariableConVariable = function(v, v2) {
+  if (v.src == "V" && v.v in Inferencia.mapa_de_variables) {
+    Inferencia.mapa_de_variables[v.v].otras_variables_que_unifican.push(v2);
+  } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
+    Inferencia.variables_auxiliares[v.v].otras_variables_que_unifican.push(v2);
+  }
 };
 
 Inferencia.existeVariableGlobal = function(nombre) {
@@ -177,9 +187,29 @@ Inferencia.esUnArgumento = function(nombre, bloque) {
 
 // Algoritmo de inferencia
 Inferencia.ejecutar = function() {
-  for (bloque of Main.workspace.getAllBlocks()) {
-    if (bloque.tipado) {
-      bloque.tipado();
+  let todosLosBloques = [
+    [], // primero los que no son llamadas
+    []  // y por último las llamadas
+  ];
+  for (bloque of Main.workspace.getAllBlocks(true)) {
+    if (bloque.type == 'procedures_callnoreturn' || bloque.type == 'procedures_callreturn') {
+      todosLosBloques[1].push(bloque);
+    } else {
+      todosLosBloques[0].push(bloque);
+    }
+  }
+  Inferencia.hayCambios = true;
+  while(Inferencia.hayCambios) {
+    Inferencia.hayCambios = false;
+    Inferencia.tipado(todosLosBloques);
+  }
+};
+Inferencia.tipado = function(todosLosBloques) {
+  for (bloques of todosLosBloques) {
+    for (bloque of bloques) {
+      if (bloque.tipado) {
+        bloque.tipado();
+      }
     }
   }
 };

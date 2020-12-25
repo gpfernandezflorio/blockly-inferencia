@@ -3,19 +3,28 @@ TIPOS = {i:0};
 TIPOS.obtenerTipoVariable = function(v) {
   if (v.src == "V" && v.v in Inferencia.mapa_de_variables) {
     return Inferencia.mapa_de_variables[v.v].tipo;
-  }
-  if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
+  } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
     return Inferencia.variables_auxiliares[v.v].tipo;
   }
   return null;
 };
 
 TIPOS.redefinirTipoVariable = function(v, tipo) {
+  Inferencia.hayCambios = true;
   if (v.src == "V" && v.v in Inferencia.mapa_de_variables) {
-    Inferencia.mapa_de_variables[v.v].tipo = tipo;
-  }
-  if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
-    Inferencia.variables_auxiliares[v.v].tipo = tipo;
+    if (TIPOS.distintos(Inferencia.mapa_de_variables[v.v].tipo, tipo)) {
+      Inferencia.mapa_de_variables[v.v].tipo = tipo;
+      for (v2 of Inferencia.mapa_de_variables[v.v].otras_variables_que_unifican) {
+        TIPOS.redefinirTipoVariable(v2, tipo);
+      }
+    }
+  } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
+    if (TIPOS.distintos(Inferencia.variables_auxiliares[v.v].tipo, tipo)) {
+      Inferencia.variables_auxiliares[v.v].tipo = tipo;
+      for (v2 of Inferencia.variables_auxiliares[v.v].otras_variables_que_unifican) {
+        TIPOS.redefinirTipoVariable(v2, tipo);
+      }
+    }
   }
 };
 
@@ -25,6 +34,9 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
 TIPOS.unificar = function(uno, otro) {
   if (TIPOS.fallo(uno) || TIPOS.fallo(otro)) {
     console.error("NO PUEDO UNIFICAR ERRORES");
+  }
+  if (uno.id == "VAR" && otro.id == "VAR") {
+    Inferencia.asociarParDeVariables(uno, otro);
   }
   if (TIPOS.distintos(uno, otro) && TIPOS.colisionan(uno, otro)) { return TIPOS.COLISION(uno, otro); }
   let resultado = uno;
@@ -120,7 +132,8 @@ TIPOS.AUXVAR = function(b_id) {
     unificar: function(otro) { return otro; }
   };
   Inferencia.variables_auxiliares[b_id] = {
-    tipo: tipo
+    tipo: tipo,
+    otras_variables_que_unifican: []
   };
   return tipo;
 }
@@ -369,7 +382,7 @@ Blockly.Blocks['logic_boolean'].tipado = function() { return TIPOS.BINARIO; };
 Blockly.Blocks['controls_if'].tipado = function() {
   let n = 0;
   while(this.getInput('IF' + n)) {
-    TIPOS.verificarTipoOperando(this, 'IF' + n, TIPOS.BINARIO, "La condición debe ser binaria", "TIPOS"+n);
+    TIPOS.verificarTipoOperando(this, 'IF' + n, TIPOS.BINARIO, "La condición tiene que ser binaria", "TIPOS"+n);
     n++;
   }
 };
@@ -377,7 +390,7 @@ Blockly.Blocks['controls_if'].tipado = function() {
 Blockly.Blocks['logic_compare'].tipado = function() {
   let op = this.getFieldValue("OP");
   if (["EQ","NEQ"].includes(op)) {
-    TIPOS.operandosDelMismoTipo(this, ["A","B"], "Los operandos deben ser del mismo tipo", "TIPOS");
+    TIPOS.operandosDelMismoTipo(this, ["A","B"], "Los operandos tienen que ser del mismo tipo", "TIPOS");
   } else {
     TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, "El primer operando tiene que ser un número", "TIPOS1");
     TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, "El segundo operando tiene que ser un número", "TIPOS2");
@@ -607,10 +620,10 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
         let unificacion = TIPOS.unificar(tipoAnterior, tipo);
         if (TIPOS.fallo(unificacion)) {
           Main.error(bloque, "TIPOS1",
-          obj + " " + mapa.nombre_original + " ya se le había asignado el tipo " + tipoAnterior.str
+          obj + " " + mapa.nombre_original + " ya se había usado como " + tipoAnterior.str
           );
           Main.error(bloque, "TIPOS2",
-          " y ahora se le está asignando el tipo " + tipo.str
+          " y ahora se está usando " + tipo.str
           );
         }
         if (!fallaAnterior) { mapa.tipo = unificacion; }
@@ -621,8 +634,8 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
 
 // asignar variable
 Blockly.Blocks['variables_set'].tipado = function() {
-  let obj = "A la variable";
-  if (Inferencia.esUnArgumento(this.getField("VAR").getText(), this)) { obj = "Al argumento"; }
+  let obj = "La variable";
+  if (Inferencia.esUnArgumento(this.getField("VAR").getText(), this)) { obj = "El argumento"; }
   let v_id = Inferencia.obtenerIdVariableBloque(this);
   TIPOS.tipadoVariable(this, v_id, "VALUE", obj);
 };
@@ -630,7 +643,7 @@ Blockly.Blocks['variables_set'].tipado = function() {
 // definición de función
 Blockly.Blocks['procedures_defreturn'].tipado = function() {
   let v_id = Inferencia.obtenerIdFuncionBloque(this);
-  TIPOS.tipadoVariable(this, v_id, "RETURN", "A la función");
+  TIPOS.tipadoVariable(this, v_id, "RETURN", "La función");
 };
 
 // llamado a un procedimiento

@@ -45,7 +45,7 @@ Main.inicializar = function() {
   Main.redimensionar();     // Llamo a esta función para que ajuste el tamaño al iniciar
   if (false) {
     Blockly.Xml.domToWorkspace(
-    Blockly.Xml.textToDom('<xml><variables><variable id="or(Q;=|s{/2^#++KP]d8">x</variable><variable id="%j!Ik%!rO,[@}Xg;{Y/~">y</variable></variables><block type="procedures_defnoreturn" id="Xt7V{lS|vOwh*H^{Qv!v" x="291" y="82"><mutation><arg name="x" varid="or(Q;=|s{/2^#++KP]d8"></arg><arg name="y" varid="%j!Ik%!rO,[@}Xg;{Y/~"></arg></mutation><field name="NAME">hola</field><comment pinned="false" h="80" w="160">Describe esta función...</comment><statement name="STACK"><block type="variables_set" id="X*H1W(/LXai4:*BH65B]"><field name="VAR" id="or(Q;=|s{/2^#++KP]d8">x</field><value name="VALUE"><block type="math_number" id="nm6GZ`!phiU80nKF.*U0"><field name="NUM">123</field></block></value><next><block type="variables_set" id="yw5:V^5Oi2S7h#*kSp7["><field name="VAR" id="or(Q;=|s{/2^#++KP]d8">x</field><value name="VALUE"><block type="math_number" id="VqgPI0!fvmt2`b*#U.fS"><field name="NUM">123</field></block></value></block></next></block></statement></block><block type="procedures_defnoreturn" id="BHr`nq3c2rMb6hu0uT)V" x="50" y="188"><mutation><arg name="x" varid="or(Q;=|s{/2^#++KP]d8"></arg><arg name="y" varid="%j!Ik%!rO,[@}Xg;{Y/~"></arg></mutation><field name="NAME">chau</field><comment pinned="false" h="80" w="160">Describe esta función...</comment></block><block type="main" id="MAIN" x="76" y="266"><statement name="LOOP"><block type="procedures_callnoreturn" id="qRa{|[gI#Bs3,*u.~yEy"><mutation name="hola"><arg name="x"></arg><arg name="y"></arg></mutation><value name="ARG0"><block type="logic_boolean" id="jh1y|}lQ/pg%v_B,35gX"><field name="BOOL">TRUE</field></block></value></block></statement></block><block type="variables_set" id="nR,+Az;RsneJYFmX6_yx" x="418" y="250"><field name="VAR" id="or(Q;=|s{/2^#++KP]d8">x</field><value name="VALUE"><block type="logic_boolean" id="kAR1GJtL?yA*2_2uP-P:"><field name="BOOL">TRUE</field></block></value></block><block type="logic_boolean" id="3YJ6B#oG!Ec2w?_LlgEO" x="255" y="443"><field name="BOOL">TRUE</field></block></xml>'),
+    Blockly.Xml.textToDom('<xml xmlns="https://developers.google.com/blockly/xml"><variables><variable id="or(Q;=|s{/2^#++KP]d8">x</variable><variable id="%j!Ik%!rO,[@}Xg;{Y/~">y</variable><variable id="Yufn+c.;4~x^mPcbenNa">z</variable></variables><block type="main" id="MAIN" x="76" y="266"><statement name="LOOP"><block type="procedures_callnoreturn" id="qRa{|[gI#Bs3,*u.~yEy"><mutation name="hola"><arg name="x"></arg><arg name="y"></arg><arg name="z"></arg></mutation><value name="ARG0"><block type="logic_boolean" id="jh1y|}lQ/pg%v_B,35gX"><field name="BOOL">TRUE</field></block></value></block></statement></block><block type="variables_set" id="nR,+Az;RsneJYFmX6_yx" x="418" y="250"><field name="VAR" id="or(Q;=|s{/2^#++KP]d8">x</field><value name="VALUE"><block type="logic_boolean" id="kAR1GJtL?yA*2_2uP-P:"><field name="BOOL">TRUE</field></block></value></block><block type="procedures_defnoreturn" id="Xt7V{lS|vOwh*H^{Qv!v" x="168" y="441"><mutation><arg name="x" varid="or(Q;=|s{/2^#++KP]d8"></arg><arg name="y" varid="%j!Ik%!rO,[@}Xg;{Y/~"></arg><arg name="z" varid="Yufn+c.;4~x^mPcbenNa"></arg></mutation><field name="NAME">hola</field><comment pinned="false" h="80" w="160">Describe esta función...</comment><statement name="STACK"><block type="variables_set" id="kNucmGCZ85R}6t+s+OJ:"><field name="VAR" id="Yufn+c.;4~x^mPcbenNa">z</field><value name="VALUE"><block type="lists_create_with" id="8}XMJBI-igD0f)ZKYVMj"><mutation items="3"></mutation><value name="ADD1"><block type="variables_get" id="$Ej0R!se3NJlOTbuee8_"><field name="VAR" id="%j!Ik%!rO,[@}Xg;{Y/~">y</field></block></value></block></value><next><block type="variables_set" id="X*H1W(/LXai4:*BH65B]"><field name="VAR" id="%j!Ik%!rO,[@}Xg;{Y/~">y</field><value name="VALUE"><block type="lists_create_with" id="w|@F;UDD^M5h8:v*55FS"><mutation items="3"></mutation><value name="ADD1"><block type="variables_get" id="fCZ}c[L8}}LLlnJv)Q9H"><field name="VAR" id="or(Q;=|s{/2^#++KP]d8">x</field></block></value></block></value></block></next></block></statement></block></xml>'),
     Main.workspace);
   } else {
     var childBlock = Main.workspace.newBlock("main", "MAIN");
@@ -116,10 +116,12 @@ Main.registrarEventos = function () {
       // Elimino los chequeos de tipo
       for (b_id of event.ids) {
         let bloque = Main.workspace.getBlockById(b_id);
-        if (bloque.outputConnection) { bloque.outputConnection.setCheck(null); }
-        for (input of bloque.inputList) {
-          if (input.connection) {
-            input.setCheck(null);
+        if (bloque) {
+          if (bloque.outputConnection) { bloque.outputConnection.setCheck(null); }
+          for (input of bloque.inputList) {
+            if (input.connection) {
+              input.setCheck(null);
+            }
           }
         }
       }
