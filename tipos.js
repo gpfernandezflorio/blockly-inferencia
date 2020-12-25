@@ -709,11 +709,13 @@ Blockly.Blocks['procedures_callreturn'].tipado = function() {
 Blockly.Blocks['procedures_ifreturn'].tipado = function() {
   TIPOS.verificarTipoOperando(this, 'CONDITION', TIPOS.BINARIO, errorBoolCond, "TIPOS");
   let tope = obtener_bloque_superior(bloque);
-  if (tope && (/*tope.type == 'procedures_defnoreturn' || */tope.type == 'procedures_defreturn')) {
-    let v_id = Inferencia.obtenerIdFuncionBloque(tope);
-    TIPOS.tipadoVariable(this, v_id, "VALUE", "La función");
-  } else {
-    Main.error(this, "PARENT", "Este bloque tiene que estar dentro de la definición de una función");
+  if (tope) {
+    if (/*(tope.type == 'procedures_defnoreturn') || */(tope.type == 'procedures_defreturn')) {
+      let v_id = Inferencia.obtenerIdFuncionBloque(tope);
+      TIPOS.tipadoVariable(this, v_id, "VALUE", "La función");
+    } else {
+      Main.error(this, "PARENT", "Este bloque tiene que estar dentro de la definición de una función");
+    }
   }
 };
 
