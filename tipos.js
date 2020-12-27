@@ -10,12 +10,14 @@ TIPOS.obtenerTipoVariable = function(v) {
 };
 
 TIPOS.redefinirTipoVariable = function(v, tipo) {
-  Inferencia.hayCambios = true;
   if (v.src == "V" && v.v in Inferencia.mapa_de_variables) {
     if (TIPOS.distintos(Inferencia.mapa_de_variables[v.v].tipo, tipo)) {
       Inferencia.mapa_de_variables[v.v].tipo = tipo;
       for (v2 of Inferencia.mapa_de_variables[v.v].otras_variables_que_unifican) {
         TIPOS.redefinirTipoVariable(v2, tipo);
+      }
+      for (bloque of Inferencia.mapa_de_variables[v.v].bloques_dependientes) {
+        bloque.tipado();
       }
     }
   } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
@@ -23,6 +25,9 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
       Inferencia.variables_auxiliares[v.v].tipo = tipo;
       for (v2 of Inferencia.variables_auxiliares[v.v].otras_variables_que_unifican) {
         TIPOS.redefinirTipoVariable(v2, tipo);
+      }
+      for (bloque of Inferencia.variables_auxiliares[v.v].bloques_dependientes) {
+        bloque.tipado();
       }
     }
   }
@@ -105,6 +110,9 @@ TIPOS.fallo = function(tipo) {
 
 // DEFINICIONES DE TIPOS
 
+// Lista de variables frescas
+TIPOS.frescas = [null];
+
 // Retorna el índice de la próxima variable fresca
 TIPOS.fresca = function() {
   TIPOS.i++;
@@ -115,11 +123,13 @@ TIPOS.fresca = function() {
 TIPOS.VAR = function(v_id) {
   if (v_id in Inferencia.mapa_de_variables) { return Inferencia.mapa_de_variables[v_id].tipo; }
   let i = TIPOS.fresca();
-  return {
+  let tipo = {
     id:"VAR", str: function() { return "variable fresca " + this.i; },
     v:v_id, i:i, src:"V", // Variable
     unificar: function(otro) { return otro; }
   };
+  TIPOS.frescas.push(tipo);
+  return tipo;
 };
 
 // Variable fresca auxiliar (no se corresponde a una variable sino a un bloque sin variable asociada)
@@ -131,9 +141,11 @@ TIPOS.AUXVAR = function(b_id) {
     v:b_id, i:i, src:"B", // Bloque
     unificar: function(otro) { return otro; }
   };
+  TIPOS.frescas.push(tipo);
   Inferencia.variables_auxiliares[b_id] = {
     tipo: tipo,
-    otras_variables_que_unifican: []
+    otras_variables_que_unifican: [],
+    bloques_dependientes: []
   };
   return tipo;
 }
@@ -669,7 +681,20 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
           " y ahora se está usando como " + tipo.str()
           );
         }
-        if (!fallaAnterior) { mapa.tipo = unificacion; }
+        if (!fallaAnterior) {
+          for (i of TIPOS.variablesEn(unificacion)) {
+            if (TIPOS.frescas[i]) {
+              let src = TIPOS.frescas[i].src;
+              let id = TIPOS.frescas[i].v;
+              if (src == "V" && id in Inferencia.mapa_de_variables) {
+                Inferencia.mapa_de_variables[id].bloques_dependientes.push(bloque);
+              } else if (src == "B" && id in Inferencia.variables_auxiliares) {
+                Inferencia.variables_auxiliares[id].bloques_dependientes.push(bloque);
+              }
+            }
+          }
+          mapa.tipo = unificacion;
+        }
       }
     }
   }

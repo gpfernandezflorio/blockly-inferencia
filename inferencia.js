@@ -163,7 +163,8 @@ Inferencia.agregarVariableAlMapa = function(nombre, bloque, clase, global) {
         scope: scope,
         nombre_original: nombre,
         tipo: TIPOS.VAR(id_variable),
-        otras_variables_que_unifican: []
+        otras_variables_que_unifican: [],
+        bloques_dependientes: []
       };
     }
     return Inferencia.mapa_de_variables[id_variable];
@@ -210,11 +211,7 @@ Inferencia.ejecutar = function() {
       todosLosBloques[0].push(bloque);
     }
   }
-  Inferencia.hayCambios = true;
-  while(Inferencia.hayCambios) {
-    Inferencia.hayCambios = false;
-    Inferencia.tipado(todosLosBloques);
-  }
+  Inferencia.tipado(todosLosBloques);
 };
 
 Inferencia.tipado = function(todosLosBloques) {
