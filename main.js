@@ -99,7 +99,19 @@ Main.agregarBloquesCustom = function() {
     return '';
   };
 
-  TIPOS.inicializar();
+  Blockly.Blocks['variables_global_def'].variableLibre = function(global) {
+    if (global && Main.modo_variables != "LOCALES") {
+      let nombre = this.getField('VAR').getText();
+      Inferencia.agregarVariableAlMapa(nombre, this, "VAR", true);
+    }
+  };
+
+  Inferencia.inicializar({
+    bloquesSuperiores: bloques_superiores,
+    error: Main.error,
+    advertencia: Main.error,
+    modo_variables: function() { return Main.modo_variables; }
+  });
 }
 
 // Inyecta la interfaz Blockly en la div con id "blockly" y guarda el resultado en Main.workspace
@@ -146,7 +158,7 @@ Main.registrarEventos = function () {
         return;
       }
     }
-    if (Blockly.Events.BLOCK_MOVE && Main.workspace.isDragging()) { return; }
+    if (Main.workspace.isDragging()) { return; }
     if (!Main.procesando && event.type != Blockly.Events.UI) {
       Main.ejecutar();
     }

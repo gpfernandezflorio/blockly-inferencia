@@ -263,45 +263,41 @@ TIPOS.str = function(tipo) {
 
 // BLOQUES CON VARIABLES LIBRES
 
-function obtenerArgumentosDefinicion(bloque) {
+TIPOS.obtenerArgumentosDefinicion = function(bloque) {
   for (argumento of bloque.arguments_) {
     Inferencia.agregarVariableAlMapa(argumento, bloque, "VAR", false);
   }
 }
 
-TIPOS.inicializar = function() {
-  Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {
-    if (global) {
-      obtenerArgumentosDefinicion(this);
-      let nombre = this.getFieldValue('NAME');
-      Inferencia.agregarVariableAlMapa(nombre, this, "PROC", true);
-    }
-  };
+// Antes de comenzar a ejecutar el algoritmo de inferencia
+TIPOS.init = function() {
+  TIPOS.i=0;
+};
 
-  Blockly.Blocks['procedures_defnoreturn'].variableLibre = function(global) {
-    if (global) {
-      obtenerArgumentosDefinicion(this);
-    }
-  };
+Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {
+  if (global) {
+    TIPOS.obtenerArgumentosDefinicion(this);
+    let nombre = this.getFieldValue('NAME');
+    Inferencia.agregarVariableAlMapa(nombre, this, "PROC", true);
+  }
+};
 
-  Blockly.Blocks['variables_global_def'].variableLibre = function(global) {
-    if (global && Main.modo_variables != "LOCALES") {
-      let nombre = this.getField('VAR').getText();
-      Inferencia.agregarVariableAlMapa(nombre, this, "VAR", true);
-    }
-  };
+Blockly.Blocks['procedures_defnoreturn'].variableLibre = function(global) {
+  if (global) {
+    TIPOS.obtenerArgumentosDefinicion(this);
+  }
+};
 
-  Blockly.Blocks['variables_set'].variableLibre = function(global) {
-    if (!global) {
-      let nombre = this.getField('VAR').getText();
-      Inferencia.agregarVariableAlMapa(nombre, this, "VAR", false);
-    }
-  };
-}
+Blockly.Blocks['variables_set'].variableLibre = function(global) {
+  if (!global) {
+    let nombre = this.getField('VAR').getText();
+    Inferencia.agregarVariableAlMapa(nombre, this, "VAR", false);
+  }
+};
 
 // FUNCIONES DE TIPADO PARA CADA BLOQUE
 
-function tiparArgumentosLlamado(bloque) {
+TIPOS.tiparArgumentosLlamado = function(bloque) {
   let nombre_procedimiento = bloque.getField('NAME').getText();
   let scope = {
     id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
@@ -341,8 +337,8 @@ TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
     } else {
       let tipoUnificado = TIPOS.unificar(tipoOperando, tipo);
       if (TIPOS.fallo(tipoUnificado)) {
-        if ((typeof(error)=="string") || Array.isArray(error)) { Main.error(bloque, tag, error); }
-        else if (typeof(error)=="function") { Main.error(bloque, tag, error(tipoOperando)); }
+        if ((typeof(error)=="string") || Array.isArray(error)) { Inferencia.error(bloque, tag, error); }
+        else if (typeof(error)=="function") { Inferencia.error(bloque, tag, error(tipoOperando)); }
         return tipoUnificado;
       } else {
         tipoResultado = tipoUnificado;
@@ -358,8 +354,8 @@ TIPOS.verificarTipoOperandoEntero = function(bloque, input, error, tag, errorEnt
   }
   let tipo = TIPOS.verificarTipoOperando(bloque, input, TIPOS.ENTERO, error, tag);
   if (tipo && TIPOS.distintos(tipo, TIPOS.ENTERO)) {
-    if ((typeof(errorEntero)=="string") || Array.isArray(errorEntero)) { Main.error(bloque, tag, errorEntero); }
-    else if (typeof(errorEntero)=="function") { Main.error(bloque, tag, errorEntero(tipo)); }
+    if ((typeof(errorEntero)=="string") || Array.isArray(errorEntero)) { Inferencia.error(bloque, tag, errorEntero); }
+    else if (typeof(errorEntero)=="function") { Inferencia.error(bloque, tag, errorEntero(tipo)); }
   }
   return tipo;
 }
@@ -378,8 +374,8 @@ TIPOS.operandosDelMismoTipo = function(bloque, inputs, error, tag) {
         if (tipoResultado) {
           let tipoUnificado = TIPOS.unificar(tipoOperando, tipoResultado);
           if (TIPOS.fallo(tipoUnificado)) {
-            if ((typeof(error)=="string") || Array.isArray(error)) { Main.error(bloque, tag, error); }
-            else if (typeof(error)=="function") { Main.error(bloque, tag, error(primeroTipado, tipoResultado, i, tipoOperando)); }
+            if ((typeof(error)=="string") || Array.isArray(error)) { Inferencia.error(bloque, tag, error); }
+            else if (typeof(error)=="function") { Inferencia.error(bloque, tag, error(primeroTipado, tipoResultado, i, tipoOperando)); }
             return tipoUnificado;
           } else {
             tipoResultado = tipoUnificado;
@@ -491,7 +487,7 @@ Blockly.Blocks['controls_for'].tipado = function() {
   }
   tipoVariable = TIPOS.unificar(tipoVariable, tipoIterador);
   if (TIPOS.fallo(tipoVariable)) {
-    Main.error(this, "TIPOS4", "El iterador tiene que ser un número");
+    Inferencia.error(this, "TIPOS4", "El iterador tiene que ser un número");
   }
 };
 
@@ -506,7 +502,7 @@ Blockly.Blocks['controls_forEach'].tipado = function() {
   if (tipoOperando) {
     let alfa = tipoOperando.alfa;
     tipoOperando = TIPOS.unificar(tipoOperando, TIPOS.LISTA(tipoVariable));
-    if (TIPOS.fallo(tipoOperando)) { Main.error(this, "TIPOS2", "El iterador tiene que ser "+alfa.str()); }
+    if (TIPOS.fallo(tipoOperando)) { Inferencia.error(this, "TIPOS2", "El iterador tiene que ser "+alfa.str()); }
   }
 };
 
@@ -674,10 +670,10 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
       } else {
         let unificacion = TIPOS.unificar(tipoAnterior, tipo);
         if (TIPOS.fallo(unificacion)) {
-          Main.error(bloque, "TIPOS1",
+          Inferencia.error(bloque, "TIPOS1",
           obj + " " + mapa.nombre_original + " ya se había usado como " + tipoAnterior.str()
           );
-          Main.error(bloque, "TIPOS2",
+          Inferencia.error(bloque, "TIPOS2",
           " y ahora se está usando como " + tipo.str()
           );
         }
@@ -698,7 +694,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
       }
     }
   }
-}
+};
 
 // asignar variable
 Blockly.Blocks['variables_set'].tipado = function() {
@@ -716,13 +712,13 @@ Blockly.Blocks['procedures_defreturn'].tipado = function() {
 
 // llamado a un procedimiento
 Blockly.Blocks['procedures_callnoreturn'].tipado = function() {
-  tiparArgumentosLlamado(this);
+  TIPOS.tiparArgumentosLlamado(this);
 }
 
 // llamado a función
 // retorno una variable fresca
 Blockly.Blocks['procedures_callreturn'].tipado = function() {
-  tiparArgumentosLlamado(this);
+  TIPOS.tiparArgumentosLlamado(this);
   let id = Inferencia.obtenerIdFuncionBloque(this);
   if (id) return TIPOS.VAR(id);
   // Si llego acá hay un bloque procedures_call sin su procedures_def
@@ -733,13 +729,13 @@ Blockly.Blocks['procedures_callreturn'].tipado = function() {
 
 Blockly.Blocks['procedures_ifreturn'].tipado = function() {
   TIPOS.verificarTipoOperando(this, 'CONDITION', TIPOS.BINARIO, errorBoolCond, "TIPOS");
-  let tope = obtener_bloque_superior(bloque);
+  let tope = Inferencia.topeScope(bloque);
   if (tope) {
     if (/*(tope.type == 'procedures_defnoreturn') || */(tope.type == 'procedures_defreturn')) {
       let v_id = Inferencia.obtenerIdFuncionBloque(tope);
       TIPOS.tipadoVariable(this, v_id, "VALUE", "La función");
     } else {
-      Main.error(this, "PARENT", "Este bloque tiene que estar dentro de la definición de una función");
+      Inferencia.error(this, "PARENT", "Este bloque tiene que estar dentro de la definición de una función");
     }
   }
 };
@@ -787,8 +783,6 @@ Blockly.Blocks['lists_repeat'].tipado = function() {
   }
   return TIPOS.LISTA(TIPOS.AUXVAR(this.id));
 };
-
-
 
 // longitud de lista
 Blockly.Blocks['lists_length'].tipado = function() {
