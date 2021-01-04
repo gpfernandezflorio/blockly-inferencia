@@ -1,5 +1,5 @@
 Main.mostrarMapa = function() {
-  let res = "<h4>Resultado</h4>";
+  let res = `<h4>${Blockly.Msg.TIPOS_RESULTADO}</h4>`;
   const variables_main = [];
   const variables_locales = [];
   const variables_globales = [];
@@ -17,8 +17,8 @@ Main.mostrarMapa = function() {
     }
   }
   if (variables_main.length || variables_locales.length) {
-    res += "<h5>Variables locales</h5>"
-    res += "<table id='t01'><tr><th>scope</th><th>variable</th><th>tipo inferido</th></tr>";
+    res += `<h5>${Blockly.Msg.TIPOS_VARIABLES_LOCALES}</h5>`;
+    res += `<table id='t01'><tr><th>${Blockly.Msg.TIPOS_SCOPE}</th><th>${Blockly.Msg.TIPOS_VARIABLE}</th><th>${Blockly.Msg.TIPOS_TIPO_INFERIDO}</th></tr>`;
     for (mapa of variables_main.concat(variables_locales)) {
       let scope = mapa.scope;
       if (scope) {
@@ -31,16 +31,16 @@ Main.mostrarMapa = function() {
     res += "</table>";
   }
   if (variables_globales.length) {
-    res += "<h5>Variables globales</h5>"
-    res += "<table id='t01'><tr><th>variable</th><th>tipo inferido</th></tr>";
+    res += `<h5>${Blockly.Msg.TIPOS_SOLO_GLOBALES}</h5>`
+    res += `<table id='t01'><tr><th>${Blockly.Msg.TIPOS_VARIABLE}</th><th>${Blockly.Msg.TIPOS_TIPO_INFERIDO}</th></tr>`;
     for (mapa of variables_globales) {
       res += "<tr><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
     }
     res += "</table>";
   }
   if (funciones.length) {
-    res += "<h5>Funciones</h5>"
-    res += "<table id='t01'><tr><th>función</th><th>tipo inferido</th></tr>";
+    res += `<h5>${Blockly.Msg.TIPOS_FUNCIONES}</h5>`
+    res += `<table id='t01'><tr><th>${Blockly.Msg.TIPOS_FUNCION}</th><th>${Blockly.Msg.TIPOS_TIPO_INFERIDO}</th></tr>`;
     for (mapa of funciones) {
       res += "<tr><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
     }
@@ -63,6 +63,27 @@ Main.ejecutar = function() {
       Main.quitarErroresObsoletos();
     }, 200); // La interfaz tarda un poco en actualizarse
   }
+};
+
+
+Main.completarInterfaz = function() {
+  let opcionesIdiomas = '';
+  for (i of Main.argumentosValidos.idioma) {
+    opcionesIdiomas += '<option' + (i==Main.idioma ? ' selected' : '') +'>';
+    opcionesIdiomas += `${Blockly.Msg["TIPOS_IDIOMA_"+i.toUpperCase()]}</option>`
+  }
+  document.getElementById("boton_guardar").innerHTML = Blockly.Msg.TIPOS_GUARDAR;
+  document.getElementById("opciones").innerHTML = `<h4>${Blockly.Msg.TIPOS_OPCIONES}</h4>` +
+  '<table>' +
+    `<tr><td>${Blockly.Msg.TIPOS_IDIOMA}</td><td><select id="opcion_idiomas" onchange="Main.opcion_idiomas();">` +
+      opcionesIdiomas +
+    '</select></td></tr>' +
+    `<tr><td>${Blockly.Msg.TIPOS_VARIABLES}</td><td><select id="opcion_variables" onchange="Main.opcion_variables();">` +
+      `<option>${Blockly.Msg.TIPOS_SOLO_LOCALES}</option>` +
+      `<option>${Blockly.Msg.TIPOS_SOLO_GLOBALES}</option>` +
+      `<option>${Blockly.Msg.TIPOS_AMBAS}</option>` +
+    '</select></td></tr>\
+  </table>';
 };
 
 const bloques_superiores = [

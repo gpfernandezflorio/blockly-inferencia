@@ -1,4 +1,4 @@
-const Main = {modo_variables : "LOCALES"};
+const Main = {};
 
 // Posibles valores para los argumentos que vienen en la URL
   // El primero es el valor por defecto
@@ -34,10 +34,13 @@ Main.agregarFuentesBlockly = function() {
 Main.cargarIdioma = function() {
   Main.idioma = Main.argumentoURL('idioma');
   Main.agregarScriptFuente(`blockly/msg/js/${Main.idioma}.js`); // Carga archivo de idioma de Blockly
+  Main.agregarScriptFuente(`msg/${Main.idioma}.js`); // Carga archivo de idioma de Blockly
 };
 
 // Inicializa todo lo necesario una vez que se termina de cargar la página
 Main.inicializar = function() {
+  Main.completarInterfaz();
+  Main.modo_variables = Inferencia.LOCALES;
   Main.agregarBloquesCustom();
   Main.div = document.getElementById('blockly');
   Main.inyectarBlockly();   // Inyectar la interfaz de Blockly
@@ -45,7 +48,7 @@ Main.inicializar = function() {
   Main.redimensionar();     // Llamo a esta función para que ajuste el tamaño al iniciar
   if (false) {
     Blockly.Xml.domToWorkspace(
-    Blockly.Xml.textToDom('<xml xmlns="https://developers.google.com/blockly/xml"><variables><variable id="J+:lK?ALG2es)8E_N={`">x</variable><variable id="5w.QqGjOvCZ0V[[5Au_F">y</variable><variable id="9tHn{rM,nL66Bw;2Uw~K">z</variable></variables><block type="procedures_defnoreturn" id="fLmY-6EGUz~EWaFnn16|" x="171" y="38"><mutation><arg name="x" varid="J+:lK?ALG2es)8E_N={`"></arg><arg name="y" varid="5w.QqGjOvCZ0V[[5Au_F"></arg><arg name="z" varid="9tHn{rM,nL66Bw;2Uw~K"></arg></mutation><field name="NAME">hacer algo</field><comment pinned="false" h="80" w="160">Describe esta función...</comment><statement name="STACK"><block type="variables_set" id="9rOQJvKyT5jd|O]:al@7"><field name="VAR" id="J+:lK?ALG2es)8E_N={`">x</field><value name="VALUE"><block type="lists_repeat" id="FfXGcdefdRtN]:xJ(ToP"><value name="ITEM"><block type="variables_get" id="ZR`h{c%W){Ahn3_W_74+"><field name="VAR" id="5w.QqGjOvCZ0V[[5Au_F">y</field></block></value><value name="NUM"><shadow type="math_number" id="9xRnXie~+h~`8}Qp#W7?"><field name="NUM">5</field></shadow></value></block></value><next><block type="variables_set" id="BZ:o%|TG=OoK|W?(yqdc"><field name="VAR" id="5w.QqGjOvCZ0V[[5Au_F">y</field><next><block type="variables_set" id="6piSnT`aBVk.7:Zy@2QL"><field name="VAR" id="9tHn{rM,nL66Bw;2Uw~K">z</field><value name="VALUE"><block type="math_number" id="cY7Y!R_!]*7FW@Nl^.=z"><field name="NUM">123</field></block></value><next><block type="text_print" id="82u#.z)-`f_Oas6MLg|N"><value name="TEXT"><shadow type="text" id="Z{e9nXq8[nx;ct[_+y7q"><field name="TEXT">abc</field></shadow></value></block></next></block></next></block></next></block></statement></block><block type="main" id="MAIN" x="50" y="50"></block><block type="lists_repeat" id="J$~)3-({*`SPfb@xtBZi" x="106" y="329"><value name="ITEM"><block type="lists_create_with" id="]hcA*Whw)3KY3{H;ue)m"><mutation items="3"></mutation><value name="ADD1"><block type="variables_get" id="5u]MRhNw(KKoP%79K2mG"><field name="VAR" id="9tHn{rM,nL66Bw;2Uw~K">z</field></block></value><value name="ADD2"><block type="variables_get" id="{~/d+q[.F[6P-$Luif4w"><field name="VAR" id="5w.QqGjOvCZ0V[[5Au_F">y</field></block></value></block></value><value name="NUM"><shadow type="math_number" id="7)|xm(;[*n~|09f.zU7v"><field name="NUM">5</field></shadow></value></block></xml>'),
+    Blockly.Xml.textToDom('<xml xmlns="https://developers.google.com/blockly/xml"><variables><variable id="7*i+vj[f-5|_LY!#edHh">elemento</variable></variables><block type="main" id="MAIN" x="50" y="50"><statement name="LOOP"><block type="variables_set" id="=1P5!x2v48:?#!e(5xud"><field name="VAR" id="7*i+vj[f-5|_LY!#edHh">elemento</field><value name="VALUE"><block type="lists_create_with" id="^kQ3jzXIGx;/kYp8|0C:"><mutation items="3"></mutation><value name="ADD1"><block type="logic_boolean" id="WIb+3Nc`dSmeo^^LqD3I"><field name="BOOL">TRUE</field></block></value></block></value><next><block type="lists_setIndex" id="~T,?IUl)Z{1Zc4eNFzaa"><mutation at="true"></mutation><field name="MODE">SET</field><field name="WHERE">FROM_START</field><value name="LIST"><shadow type="lists_create_with" id="N#_I9gZ9s]9F2d?+Pkm^"><mutation items="0"></mutation></shadow></value><value name="TO"><block type="math_constant" id="C~_%3)=bDPfId^N25^Mc"><field name="CONSTANT">PI</field></block></value></block></next></block></statement></block><block type="variables_get" id="~H-XgCfGoZ~c|8mfP!`P" x="244" y="331"><field name="VAR" id="7*i+vj[f-5|_LY!#edHh">elemento</field></block></xml>'),
     Main.workspace);
   } else {
     var childBlock = Main.workspace.newBlock("main", "MAIN");
@@ -100,7 +103,7 @@ Main.agregarBloquesCustom = function() {
   };
 
   Blockly.Blocks['variables_global_def'].variableLibre = function(global) {
-    if (global && Main.modo_variables != "LOCALES") {
+    if (global && Main.modo_variables != Inferencia.LOCALES) {
       let nombre = this.getField('VAR').getText();
       Inferencia.agregarVariableAlMapa(nombre, this, "VAR", true);
     }
@@ -196,17 +199,35 @@ Main.agregarScriptFuente = function(ruta) {
   document.write(`<script src="${ruta}"></script>\n`);
 };
 
+Main.opcion_idiomas = function() {
+  let opt = document.getElementById("opcion_idiomas").value;
+  for (i of Main.argumentosValidos.idioma) {
+    if (opt == Blockly.Msg["TIPOS_IDIOMA_"+i.toUpperCase()]) {
+      var search = window.location.search;
+      if (search.length <= 1) {
+        search = '?idioma=' + i;
+      } else if (search.match(/[?&]idioma=[^&]*/)) {
+        search = search.replace(/([?&]idioma=)[^&]*/, '$1' + i);
+      } else {
+        search = search.replace(/\?/, '?idioma=' + i + '&');
+      }
+      window.location = window.location.protocol + '//' +
+            window.location.host + window.location.pathname + search;
+    }
+  }
+};
+
 Main.opcion_variables = function() {
   let opt = document.getElementById("opcion_variables").value;
-  if (opt == "Sólo locales") {
-    Main.modo_variables = "LOCALES";
-  } else if (opt == "Sólo globales") {
-    Main.modo_variables = "GLOBALES";
+  if (opt == Blockly.Msg["TIPOS_SOLO_LOCALES"]) {
+    Main.modo_variables = Inferencia.LOCALES;
+  } else if (opt == Blockly.Msg["TIPOS_SOLO_GLOBALES"]) {
+    Main.modo_variables = Inferencia.GLOBALES;
   } else {
-    Main.modo_variables = "AMBAS";
+    Main.modo_variables = Inferencia.AMBAS;
   }
   Main.ejecutar();
-}
+};
 
 // Me guardo los errores actuales para no borrarlos
 Main.recolectarErrores = function() {

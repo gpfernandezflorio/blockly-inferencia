@@ -1,4 +1,8 @@
-const Inferencia = {};
+const Inferencia = {
+  LOCALES: 0,
+  GLOBALES: 1,
+  AMBAS: 2
+};
 
 /** Contenido de infoEntorno:
   - bloquesSuperiores: lista de bloques superiores
@@ -52,7 +56,7 @@ Inferencia.obtenerBloquesSuperiores = function(ws) {
     if (Inferencia.bloquesSuperiores.includes(bloque.type)) {
       bloquesValidos.push(bloque);
     } else {
-      Inferencia.error(bloque, "PARENT", "Este bloque tiene que estar dentro de otro");
+      Inferencia.error(bloque, "PARENT", Blockly.Msg["TIPOS_ERROR_PARENT"]);
     }
   }
   return bloquesValidos;
@@ -173,9 +177,9 @@ Inferencia.obtenerScope = function(bloque, nombre) {
       nombre_original: nombre_procedimiento
     };
   }
-  if (Inferencia.modo_variables() == "GLOBALES") {
+  if (Inferencia.modo_variables() == Inferencia.GLOBALES) {
     return Inferencia.scopeGlobal();
-  } else if (Inferencia.modo_variables() == "AMBAS") {
+  } else if (Inferencia.modo_variables() == Inferencia.AMBAS) {
     if (Inferencia.existeVariableGlobal(nombre)) {
       return Inferencia.scopeGlobal();
     }
@@ -199,12 +203,12 @@ Inferencia.obtenerScope = function(bloque, nombre) {
       if (scope2 && scope2.id_s != "GLOBAL") {
         return {
           id_s: scope2.id_s + " - " + tope.id,
-          nombre_original: scope2.nombre_original + " - ciclo " + Inferencia.numeroDeCiclo(tope)
+          nombre_original: scope2.nombre_original + ` - ${Blockly.Msg.TIPOS_CICLO} ` + Inferencia.numeroDeCiclo(tope)
         }
       }
     }
   }
-  if (Inferencia.modo_variables() != "LOCALES") { return Inferencia.scopeGlobal(); }
+  if (Inferencia.modo_variables() != Inferencia.LOCALES) { return Inferencia.scopeGlobal(); }
   return null;
 };
 
