@@ -163,8 +163,8 @@ TIPOS.LISTA = function(alfa) {
     str: function() { return Blockly.Msg.TIPOS_LISTA_DE.replace("%1", this.alfa.str()); },
     str1: function() { return (this.alfa.id == "VAR" ? Blockly.Msg.TIPOS_LISTA1 : Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", this.alfa.strs())); },
     strs: function() { return (this.alfa.id == "VAR" ? Blockly.Msg.TIPOS_LISTAS : Blockly.Msg.TIPOS_LISTA_DES.replace("%1", this.alfa.strs())); },
-    alfa:alfa,
-    unificar:function(otro) {
+    alfa: alfa,
+    unificar: function(otro) {
       if (otro.id == "LISTA") {
         let tipo_unificado = TIPOS.unificar(this.alfa, otro.alfa);
         if (TIPOS.fallo(tipo_unificado)) {
@@ -190,7 +190,7 @@ TIPOS.ENTERO = {
   // En lugar de describirlo como "número entero", lo describo simplemente como "número"
   str1: function() { return Blockly.Msg.TIPOS_NUMERO1; },
   strs: function() { return Blockly.Msg.TIPOS_NUMEROS; },
-  unificar:function(otro) {
+  unificar: function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return otro;
     }
@@ -204,7 +204,7 @@ TIPOS.FRACCION = {
   str: function() { return Blockly.Msg.TIPOS_FRACCION; },
   str1: function() { return Blockly.Msg.TIPOS_FRACCION1; },
   strs: function() { return Blockly.Msg.TIPOS_FRACCIONS; },
-  unificar:function(otro) {
+  unificar: function(otro) {
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return this;
     }
@@ -218,7 +218,7 @@ TIPOS.BINARIO = {
   str: function() { return Blockly.Msg.TIPOS_BINARIO; },
   str1: function() { return Blockly.Msg.TIPOS_BINARIO1; },
   strs: function() { return Blockly.Msg.TIPOS_BINARIOS; },
-  unificar:function(otro) {
+  unificar: function(otro) {
     if (otro.id == "BINARIO") {
       return this;
     }
@@ -232,7 +232,7 @@ TIPOS.TEXTO = {
   str: function() { return Blockly.Msg.TIPOS_TEXTO; },
   str1: function() { return Blockly.Msg.TIPOS_TEXTO1; },
   strs: function() { return Blockly.Msg.TIPOS_TEXTOS; },
-  unificar:function(otro) {
+  unificar: function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return this;
     }
@@ -246,7 +246,7 @@ TIPOS.CARACTER = {
   str: function() { return Blockly.Msg.TIPOS_CARACTER; },
   str1: function() { return Blockly.Msg.TIPOS_CARACTER1; },
   strs: function() { return Blockly.Msg.TIPOS_CARACTERS; },
-  unificar:function(otro) {
+  unificar: function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return otro;
     }

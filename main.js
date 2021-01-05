@@ -128,7 +128,7 @@ Main.inyectarBlockly = function() {
 };
 
 // Registra handlers para todos los eventos
-Main.registrarEventos = function () {
+Main.registrarEventos = function() {
   Main.workspace.addChangeListener(function(event) {
     if (event.type == Blockly.Events.BLOCK_CREATE) {
       // Elimino los chequeos de tipo
