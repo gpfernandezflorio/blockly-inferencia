@@ -51,8 +51,11 @@ Blockly.Msg["TIPOS_ARGUMENTO1"] = "Argument";
 Blockly.Msg["TIPOS_VARIABLE1"] = "Variable";
 Blockly.Msg["TIPOS_FUNCION1"] = "Function";
 
+Blockly.Msg["TIPOS_ERROR"] = "Error";
+Blockly.Msg["TIPOS_WARNING"] = "Warning";
 Blockly.Msg["TIPOS_ERROR_PARENT"] = "This block has to be inside another block";
 Blockly.Msg["TIPOS_ERROR_PARENT_FUN"] = "This block can only be used inside a function definition";
+Blockly.Msg["TIPOS_ERROR_PARENT_LOOP"] = "This block can only be used inside a loop block";
 Blockly.Msg["TIPOS_ERROR_VARIABLE"] = "%1 %2 has been already used as %3\n but here it is used as %4";
 Blockly.Msg["TIPOS_ERROR_ARGUMENTO"] = "Argument %1 has to be %2";
 Blockly.Msg["TIPOS_ERROR_CONDICION"] = "This block's condition has to be %1";

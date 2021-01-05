@@ -51,8 +51,11 @@ Blockly.Msg["TIPOS_ARGUMENTO1"] = "El argumento";
 Blockly.Msg["TIPOS_VARIABLE1"] = "La variable";
 Blockly.Msg["TIPOS_FUNCION1"] = "La función";
 
+Blockly.Msg["TIPOS_ERROR"] = "Error";
+Blockly.Msg["TIPOS_WARNING"] = "Advertencia";
 Blockly.Msg["TIPOS_ERROR_PARENT"] = "Este bloque tiene que estar dentro de otro";
 Blockly.Msg["TIPOS_ERROR_PARENT_FUN"] = "Este bloque sólo se puede usar dentro de la definición de una función";
+Blockly.Msg["TIPOS_ERROR_PARENT_LOOP"] = "Este bloque sólo se puede usar dentro de un bloque de ciclo";
 Blockly.Msg["TIPOS_ERROR_VARIABLE"] = "%1 %2 ya se había usado como %3\n pero ahora se está usando como %4";
 Blockly.Msg["TIPOS_ERROR_ARGUMENTO"] = "El argumento %1 tiene que ser %2";
 Blockly.Msg["TIPOS_ERROR_CONDICION"] = "La condición tiene que ser %1";

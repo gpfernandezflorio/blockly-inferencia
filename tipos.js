@@ -627,6 +627,19 @@ Blockly.Blocks['controls_forEach'].tipado = function() {
   }
 };
 
+Blockly.Blocks['controls_flow_statements'].tipado = function() {
+  let tope = this;
+  const bloquesLoop = Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.LOOP_TYPES;
+  while(tope) {
+    if (bloquesLoop.includes(tope.type)) { return; }
+    tope = tope.getSurroundParent();
+  }
+  // Si está suelto, ya tiene una advertencia así que esta sólo se la doy si no está suelto
+  if (Inferencia.topeScope(this)) {
+    Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_LOOP);
+  }
+};
+
 // bloque numérico (puede ser entero o fracción)
 Blockly.Blocks['math_number'].tipado = function() {
   if (String(this.getFieldValue('NUM')).includes(".")) { return TIPOS.FRACCION; }
@@ -851,13 +864,13 @@ Blockly.Blocks['procedures_callreturn'].tipado = function() {
 
 Blockly.Blocks['procedures_ifreturn'].tipado = function() {
   TIPOS.verificarTipoOperando(this, 'CONDITION', TIPOS.BINARIO, TIPOS.Errores.BoolCond, "TIPOS");
-  let tope = Inferencia.topeScope(bloque);
+  let tope = Inferencia.topeScope(this);
   if (tope) {
     if (/*(tope.type == 'procedures_defnoreturn') || */(tope.type == 'procedures_defreturn')) {
       let v_id = Inferencia.obtenerIdFuncionBloque(tope);
       TIPOS.tipadoVariable(this, v_id, "VALUE", Blockly.Msg.TIPOS_FUNCION1);
     } else {
-      Inferencia.error(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_FUN);
+      Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_FUN);
     }
   }
 };

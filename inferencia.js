@@ -56,7 +56,7 @@ Inferencia.obtenerBloquesSuperiores = function(ws) {
     if (Inferencia.bloquesSuperiores.includes(bloque.type)) {
       bloquesValidos.push(bloque);
     } else {
-      Inferencia.error(bloque, "PARENT", Blockly.Msg["TIPOS_ERROR_PARENT"]);
+      Inferencia.advertencia(bloque, "PARENT", Blockly.Msg["TIPOS_ERROR_PARENT"]);
     }
   }
   return bloquesValidos;

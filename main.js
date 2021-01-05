@@ -28,6 +28,7 @@ Main.agregarFuentesBlockly = function() {
       Main.agregarScriptFuente(`blockly/generators/javascript/${archivo}.js`); // y sus funciones generadoras
     }
   }
+  Main.agregarScriptFuente('errorIcon.js'); // Agrego los errores de AppInventor
 };
 
 // Determina el idioma actual y lo guarda en Main.idioma
@@ -48,7 +49,7 @@ Main.inicializar = function() {
   Main.redimensionar();     // Llamo a esta función para que ajuste el tamaño al iniciar
   if (false) {
     Blockly.Xml.domToWorkspace(
-    Blockly.Xml.textToDom('<xml xmlns="https://developers.google.com/blockly/xml"><variables><variable id="7*i+vj[f-5|_LY!#edHh">elemento</variable></variables><block type="main" id="MAIN" x="50" y="50"><statement name="LOOP"><block type="variables_set" id="=1P5!x2v48:?#!e(5xud"><field name="VAR" id="7*i+vj[f-5|_LY!#edHh">elemento</field><value name="VALUE"><block type="lists_create_with" id="^kQ3jzXIGx;/kYp8|0C:"><mutation items="3"></mutation><value name="ADD1"><block type="logic_boolean" id="WIb+3Nc`dSmeo^^LqD3I"><field name="BOOL">TRUE</field></block></value></block></value><next><block type="lists_setIndex" id="~T,?IUl)Z{1Zc4eNFzaa"><mutation at="true"></mutation><field name="MODE">SET</field><field name="WHERE">FROM_START</field><value name="LIST"><shadow type="lists_create_with" id="N#_I9gZ9s]9F2d?+Pkm^"><mutation items="0"></mutation></shadow></value><value name="TO"><block type="math_constant" id="C~_%3)=bDPfId^N25^Mc"><field name="CONSTANT">PI</field></block></value></block></next></block></statement></block><block type="variables_get" id="~H-XgCfGoZ~c|8mfP!`P" x="244" y="331"><field name="VAR" id="7*i+vj[f-5|_LY!#edHh">elemento</field></block></xml>'),
+    Blockly.Xml.textToDom('<xml xmlns="https://developers.google.com/blockly/xml"><variables><variable id="7h]I5HuafV}[LGB[p39x">elemento</variable></variables><block type="main" id="MAIN" x="115" y="216"><statement name="LOOP"><block type="variables_set" id="4HcxWX;s|w0PXx;~xtfl"><field name="VAR" id="7h]I5HuafV}[LGB[p39x">elemento</field><value name="VALUE"><block type="text" id="J8{^H]XvBY+%(488`S`V"><field name="TEXT"></field></block></value><next><block type="controls_if" id="D9m3qnDE0Ye?g8|d4Vps"><value name="IF0"><block type="math_number_property" id="kgZ!le#MfY$D1vi%rG/E"><mutation divisor_input="false"></mutation><field name="PROPERTY">EVEN</field><value name="NUMBER_TO_CHECK"><shadow type="math_number" id="]/D.DLdW88TzbUmcLqbr"><field name="NUM">0</field></shadow><block type="math_arithmetic" id="]Js0ahOg8Ou$.l~|+4aX"><field name="OP">ADD</field><value name="A"><shadow type="math_number" id="8q%/2J9YP.1hzUB3?#/e"><field name="NUM">1</field></shadow></value><value name="B"><shadow type="math_number" id="@5*nyE{)wdT]T#2[ca7*"><field name="NUM">1</field></shadow><block type="variables_get" id="0-12k^03KCsB@TAE[dHv"><field name="VAR" id="7h]I5HuafV}[LGB[p39x">elemento</field></block></value></block></value></block></value></block></next></block></statement></block></xml>'),
     Main.workspace);
   } else {
     var childBlock = Main.workspace.newBlock("main", "MAIN");
@@ -109,10 +110,12 @@ Main.agregarBloquesCustom = function() {
     }
   };
 
+  delete Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.onchange;
+
   Inferencia.inicializar({
     bloquesSuperiores: bloques_superiores,
-    error: Main.error,
-    advertencia: Main.error,
+    error: Errores.error,
+    advertencia: Errores.advertencia,
     modo_variables: function() { return Main.modo_variables; }
   });
 }
@@ -227,67 +230,6 @@ Main.opcion_variables = function() {
     Main.modo_variables = Inferencia.AMBAS;
   }
   Main.ejecutar();
-};
-
-// Me guardo los errores actuales para no borrarlos
-Main.recolectarErrores = function() {
-  Main.baseDeErrores = {};
-  for (bloque of Main.workspace.getAllBlocks()) {
-    if (bloque.warning) {
-      let b_id = bloque.id;
-      for (tag in bloque.warning.text_) {
-        if (b_id in Main.baseDeErrores) {
-          Main.baseDeErrores[b_id][tag] = {'texto':bloque.warning.text_[tag],'d':true};
-        } else {
-          Main.baseDeErrores[b_id] = {[tag]: {'texto':bloque.warning.text_[tag],'d':true}}
-        }
-      }
-    }
-  }
-};
-
-// Borro los errores que no hayan sido marcados
-Main.quitarErroresObsoletos = function() {
-  for (b_id in Main.baseDeErrores) {
-    for (tag in Main.baseDeErrores[b_id]) {
-      if (Main.baseDeErrores[b_id][tag].d) {
-        let bloque = Main.workspace.getBlockById(b_id);
-        bloque.setWarningText(null, tag);
-      }
-    }
-  }
-};
-
-// Si el error ya existe, lo marco. Si no, lo agrego
-// tag es string pero mensaje puede ser string o lista de strings
-Main.error = function(bloque, tag, mensaje) {
-  if (typeof(mensaje)=="string") { Main.error(bloque, tag, mensaje.split("\n")); }
-  else if (Array.isArray(mensaje)) {
-    if (mensaje.length == 1) {
-      Main.errorBloque(bloque, tag, mensaje[0]);
-    } else {
-      let i = 0;
-      for (msg of mensaje) {
-        i++;
-        Main.errorBloque(bloque, tag + " - "+i, msg);
-      }
-    }
-  }
-};
-
-// tag y mensaje son strings
-Main.errorBloque = function(bloque, tag, mensaje) {
-  if (bloque.id in Main.baseDeErrores) {
-    if (tag in Main.baseDeErrores[bloque.id]) {
-      Main.baseDeErrores[bloque.id][tag].d = false;
-      if (Main.baseDeErrores[bloque.id][tag].texto != mensaje) {
-        bloque.setWarningText(mensaje, tag);
-      }
-      return;
-    }
-  }
-  bloque.setWarningText(mensaje, tag);
-  bloque.warning.setVisible(true);
 };
 
 Main.guardar = function() {

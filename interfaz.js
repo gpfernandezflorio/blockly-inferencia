@@ -55,12 +55,12 @@ Main.ejecutar = function() {
     Main.procesando = true;
     setTimeout(function() {
       delete Main.procesando;
-      Main.recolectarErrores();
+      Errores.recolectarErroresYAdvertencias(Main.workspace);
       Inferencia.crearMapaDeVariables(Main.workspace);
       Main.mostrarMapa();
       //const codigo = Main.generador.workspaceToCode(Main.workspace);
       //console.log(codigo);
-      Main.quitarErroresObsoletos();
+      Errores.quitarErroresYAdvertenciasObsoletos(Main.workspace);
     }, 200); // La interfaz tarda un poco en actualizarse
   }
 };
