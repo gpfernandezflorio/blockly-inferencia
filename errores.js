@@ -122,3 +122,43 @@ Errores.msgBloqueGenerico = function(clave, bloque, tag, mensaje, manual) {
     bloque[datos.campo].setVisible(true);
   }
 };
+
+Errores.VerificarComparacionEntreFloats = function(bloque, tipo) {
+  if (tipo && (tipo.id == "FRACCION")) {
+    Inferencia.advertencia(bloque, "FLOAT_EQ", Blockly.Msg.TIPOS_ERROR_FLOAT_EQ);
+  }
+};
+
+Errores.verificarDivisionPorCero = function(bloque) {
+  let divisor = bloque.getInputTargetBlock("B");
+  if (divisor && bloque.getFieldValue('OP') == "DIVIDE" &&
+    divisor.type == "math_number" && bloque.getFieldValue("NUM") == "0") {
+      Inferencia.advertencia(bloque, "ZERO_DIV", Blockly.Msg.TIPOS_ERROR_ZERO_DIV);
+    }
+};
+
+Errores.VerificarLogaritmoPositivo = function(bloque) {
+  let operando = bloque.getInputTargetBlock("NUM");
+  if (operando) {
+    if (operando.type == "math_number") {
+      if (operando.getFieldValue("NUM") == 0) {
+        Inferencia.advertencia(bloque, "ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
+      } else if (String(operando.getFieldValue("NUM")).startsWith("-")) {
+        Inferencia.advertencia(bloque, "NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
+      }
+    } else if (operando.type == "math_single" && operando.getFieldValue('OP') == "NEG") {
+      operando = operando.getInputTargetBlock("NUM");
+      if (operando) {
+        if (operando.type == "math_number") {
+          if (operando.getFieldValue("NUM") == 0) {
+            Inferencia.advertencia(bloque, "ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
+          } else if (!String(operando.getFieldValue("NUM")).startsWith("-")) {
+            Inferencia.advertencia(bloque, "NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
+          }
+        }
+      } else {
+        Inferencia.advertencia(bloque, "NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
+      }
+    }
+  }
+};

@@ -580,7 +580,8 @@ Blockly.Blocks['controls_if'].tipado = function() {
 Blockly.Blocks['logic_compare'].tipado = function() {
   let op = this.getFieldValue("OP");
   if (["EQ","NEQ"].includes(op)) {
-    TIPOS.operandosDelMismoTipo(this, ["A","B"], TIPOS.Errores.Op2, "TIPOS");
+    let tipo = TIPOS.operandosDelMismoTipo(this, ["A","B"], TIPOS.Errores.Op2, "TIPOS");
+    Errores.VerificarComparacionEntreFloats(this, tipo);
   } else {
     TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, TIPOS.Errores.NumOp1, "TIPOS1");
     TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, TIPOS.Errores.NumOp2, "TIPOS2");
@@ -675,6 +676,7 @@ Blockly.Blocks['math_number'].tipado = function() {
 
 // operación aritmética binaria
 Blockly.Blocks['math_arithmetic'].tipado = function() {
+  Errores.verificarDivisionPorCero(this);
   let tipoA = TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, TIPOS.Errores.NumOp1, "TIPOS1");
   let tipoB = TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, TIPOS.Errores.NumOp2, "TIPOS2");
   if (tipoA) {
@@ -693,6 +695,7 @@ Blockly.Blocks['math_arithmetic'].tipado = function() {
 // operación aritmética unaria
 Blockly.Blocks['math_single'].tipado = function() {
   let op = this.getFieldValue('OP');
+  if (['LN','LOG10'].includes(op)) { Errores.VerificarLogaritmoPositivo(bloque); }
   let tipo = TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS");
   if (op=="ABS" || op=="NEG") {
     if (tipo) { return tipo; }
