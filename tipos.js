@@ -108,6 +108,30 @@ TIPOS.fallo = function(tipo) {
   return TIPOS.variablesEn(tipo).includes(0);
 };
 
+/** (Tomada de Ardublockly)
+ * Uses regular expressions to identify if the input number is an integer or a
+ * floating point.
+ * @param {string} numberString String of the number to identify.
+ * @return type.
+ */
+TIPOS.identifyNumber = function(numberString) {
+    if (TIPOS.regExpInt_.test(numberString)) {
+      var intValue = parseInt(numberString);
+      if (isNaN(intValue)) {
+        return null;
+      }
+      /*if (intValue > 32767 || intValue < -32768) {
+        return LARGE_NUMBER;
+      }*/
+      return TIPOS.ENTERO;
+    } else if (TIPOS.regExpFloat_.test(numberString)) {
+      return TIPOS.FRACCION;
+    }
+    return null;
+};
+TIPOS.regExpInt_ = new RegExp(/^-?\d+$/);
+TIPOS.regExpFloat_ = new RegExp(/^-?[0-9]*[.][0-9]+$/);
+
 // DEFINICIONES DE TIPOS
 
 // Lista de variables frescas
@@ -642,7 +666,10 @@ Blockly.Blocks['controls_flow_statements'].tipado = function() {
 
 // bloque numérico (puede ser entero o fracción)
 Blockly.Blocks['math_number'].tipado = function() {
-  if (String(this.getFieldValue('NUM')).includes(".")) { return TIPOS.FRACCION; }
+  let tipo = TIPOS.identifyNumber(this.getFieldValue('NUM'));
+  if (tipo) return tipo;
+  // Si llego acá es porque el string es inválido pero eso no debería poder pasar
+  // Por las dudas, devuelvo int
   return TIPOS.ENTERO;
 };
 
@@ -720,9 +747,9 @@ Blockly.Blocks['math_atan2'].tipado = function() {
 };
 
 // bloques de texto
-const fTexto = function() { return TIPOS.TEXTO; };
+TIPOS.fTexto = function() { return TIPOS.TEXTO; };
 for (i of ['text','text_join']) {
-  Blockly.Blocks[i].tipado = fTexto;
+  Blockly.Blocks[i].tipado = TIPOS.fTexto;
 }
 
 // longitud de texto
@@ -931,6 +958,7 @@ Blockly.Blocks['lists_isEmpty'].tipado = function() {
   return TIPOS.BINARIO;
 };
 
+// Índice de elemento en lista
 Blockly.Blocks['lists_indexOf'].tipado = function() {
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
   let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
@@ -959,6 +987,7 @@ Blockly.Blocks['lists_setIndex'].tipado = function() {
   TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, TIPOS.Errores.AlfaModo(tipoListaUnificado.alfa, modo), "TIPOS3");
 };
 
+// Obtener sublista
 Blockly.Blocks['lists_getSublist'].tipado = function() {
   TIPOS.verificarTipoOperandoEntero(this, 'AT1', TIPOS.Errores.IntOp2, "TIPOS2");
   TIPOS.verificarTipoOperandoEntero(this, 'AT2', TIPOS.Errores.IntOp3, "TIPOS3");
@@ -981,6 +1010,7 @@ Blockly.Blocks['lists_split'].tipado = function() {
   return TIPOS.TEXTO;
 };
 
+// Ordernar lista
 Blockly.Blocks['lists_sort'].tipado = function() {
   let op = this.getFieldValue('TYPE');
   let tipoLista;
