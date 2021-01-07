@@ -180,6 +180,20 @@ TIPOS.AUXVAR = function(b_id) {
   return tipo;
 }
 
+// Void
+TIPOS.VOID = {
+  id:"VOID",
+  str: function() { return "void"; },
+  str1: function() { return "void" },
+  strs: function() { return "void" },
+  unificar: function(otro) {
+    if (otro.id == "VOID") {
+      return this;
+    }
+    return TIPOS.INCOMPATIBLES(this, otro);
+  }
+};
+
 // Lista (alfa)
 TIPOS.LISTA = function(alfa) {
   return {
@@ -341,6 +355,9 @@ Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {
 Blockly.Blocks['procedures_defnoreturn'].variableLibre = function(global) {
   if (global) {
     TIPOS.obtenerArgumentosDefinicion(this);
+    let nombre = this.getFieldValue('NAME');
+    let mapa = Inferencia.agregarVariableAlMapa(nombre, this, "PROC", true);
+    mapa.tipo = TIPOS.VOID;
   }
 };
 
