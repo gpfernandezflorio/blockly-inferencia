@@ -105,7 +105,7 @@ TIPOS.variablesEn = function(tipo) {
 };
 
 TIPOS.fallo = function(tipo) {
-  return TIPOS.variablesEn(tipo).includes(0);
+  return (tipo && TIPOS.variablesEn(tipo).includes(0));
 };
 
 /** (Tomada de Ardublockly)
@@ -632,7 +632,7 @@ Blockly.Blocks['controls_repeat_ext'].tipado = function() {
 
 // repetición condicional
 Blockly.Blocks['controls_whileUntil'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, TIPOS.Errores.BoolOp, "TIPOS");
+  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, TIPOS.Errores.BoolCond, "TIPOS");
 };
 
 // repetición con iterador
@@ -658,7 +658,7 @@ Blockly.Blocks['controls_for'].tipado = function() {
 Blockly.Blocks['controls_forEach'].tipado = function() {
   let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
   let tipoOperando = TIPOS.verificarTipoOperando(this, 'LIST', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), TIPOS.Errores.ListOp, "TIPOS1");
-  if (tipoOperando && TIPOS.fallo(tipoOperando)) { return; }
+  if (TIPOS.fallo(tipoOperando)) { return; }
   if (tipoVariable === undefined) { return; }
   tipoVariable = tipoVariable.tipo;
   if (TIPOS.fallo(tipoVariable)) { return; }

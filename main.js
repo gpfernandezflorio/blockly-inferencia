@@ -130,7 +130,7 @@ Main.inyectarBlockly = function() {
 // Registra handlers para todos los eventos
 Main.registrarEventos = function() {
   Main.workspace.addChangeListener(function(event) {
-    console.log(event.type);
+    if (Main.ignorarEvento(event)) { return; }
     if (event.type == Blockly.Events.BLOCK_CREATE) {
       // Elimino los chequeos de tipo
       for (b_id of event.ids) {
@@ -166,11 +166,28 @@ Main.registrarEventos = function() {
       }
     }
     if (Main.workspace.isDragging()) { return; }
-    if (!Main.procesando && event.type != Blockly.Events.UI) {
+    if (!Main.procesando) {
       Main.ejecutar();
     }
   });
   window.addEventListener('resize', Main.redimensionar, false);   // Al cambiar el tamaño de la pantalla
+};
+
+Main.ignorarEvento = function(evento) {
+  // BLOCK_CREATE, BLOCK_DELETE, BLOCK_CHANGE, BLOCK_MOVE, VAR_CREATE, VAR_DELETE, VAR_RENAME
+  // COMMENT_CREATE, COMMENT_DELETE, COMMENT_CHANGE, COMMENT_MOVE, FINISHED_LOADING
+  return [
+      Blockly.Events.UI,
+      Blockly.Events.BLOCK_DRAG,
+      Blockly.Events.SELECTED,
+      Blockly.Events.CLICK,
+      Blockly.Events.MARKER_MOVE,
+      Blockly.Events.BUBBLE_OPEN,
+      Blockly.Events.TRASHCAN_OPEN,
+      Blockly.Events.TOOLBOX_ITEM_SELECT,
+      Blockly.Events.THEME_CHANGE,
+      Blockly.Events.VIEWPORT_CHANGE
+    ].includes(evento.type);
 };
 
 // Esta función se ejecuta cada vez que cambia el tamaño de la ventana del navegador
