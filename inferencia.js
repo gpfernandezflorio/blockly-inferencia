@@ -133,26 +133,41 @@ Inferencia.esUnArgumento = function(nombre, bloque) {
 
 // Algoritmo de inferencia
 Inferencia.ejecutar = function(ws) {
-  let todosLosBloques = [
-    [], // primero los que no son llamadas
+  // Esto tiene el problema de que si una asignación de variable tiene un llamado y otra
+  // abajo no, se ejecuta primero la de abajo entonces queda el error en la de arriba.
+  // Prefiero que quede así y que los bloques de más arriba definan primero, aunque haya
+  // un llamado antes que una definición
+  /*let todosLosBloques = [
+    [], // primero las definiciones
+    [], // después los que no son llamadas
     []  // y por último las llamadas
   ];
   for (bloque of ws.getAllBlocks(true)) {
-    if (bloque.type == 'procedures_callnoreturn' || bloque.type == 'procedures_callreturn') {
-      todosLosBloques[1].push(bloque);
-    } else {
+    if (Inferencia.contieneUnLlamado(bloque)) {
+      todosLosBloques[2].push(bloque);
+    } else if (bloque.type == 'procedures_defnoreturn' || bloque.type == 'procedures_defreturn') {
       todosLosBloques[0].push(bloque);
+    } else {
+      todosLosBloques[1].push(bloque);
     }
-  }
+  }*/
+  let todosLosBloques = ws.getAllBlocks(true);
   Inferencia.tipado(todosLosBloques);
 };
 
+/*Inferencia.contieneUnLlamado = function(bloque) {
+  for (let hijo of Inferencia.todos_los_hijos(bloque)) {
+    if (hijo.type == 'procedures_callnoreturn' || hijo.type == 'procedures_callreturn') {
+      return true;
+    }
+  }
+  return false;
+};*/
+
 Inferencia.tipado = function(todosLosBloques) {
-  for (bloques of todosLosBloques) {
-    for (bloque of bloques) {
-      if (bloque.tipado) {
-        bloque.tipado();
-      }
+  for (bloque of todosLosBloques) {
+    if (bloque.tipado) {
+      bloque.tipado();
     }
   }
 };
