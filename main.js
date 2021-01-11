@@ -103,13 +103,6 @@ Main.agregarBloquesCustom = function() {
     return '';
   };
 
-  Blockly.Blocks['variables_global_def'].variableLibre = function(global) {
-    if (global && Main.modo_variables != Inferencia.LOCALES) {
-      let nombre = this.getField('VAR').getText();
-      Inferencia.agregarVariableAlMapa(nombre, this, "VAR", true);
-    }
-  };
-
   delete Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.onchange;
 
   Inferencia.inicializar({

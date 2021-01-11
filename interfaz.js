@@ -31,7 +31,7 @@ Main.mostrarMapa = function() {
     res += "</table>";
   }
   if (variables_globales.length) {
-    res += `<h5>${Blockly.Msg.TIPOS_SOLO_GLOBALES}</h5>`
+    res += `<h5>${Blockly.Msg.TIPOS_VARIABLES_GLOBALES}</h5>`
     res += `<table id='t01'><tr><th>${Blockly.Msg.TIPOS_VARIABLE}</th><th>${Blockly.Msg.TIPOS_TIPO_INFERIDO}</th></tr>`;
     for (mapa of variables_globales) {
       res += "<tr><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
@@ -87,12 +87,5 @@ Main.completarInterfaz = function() {
 };
 
 const bloques_superiores = [
-  "main", "procedures_defreturn", "procedures_defnoreturn",
-  "ultrasonic_setup", "joystick_setup", "keypad_setup", "color_setup",
-  "h_bridge_setup", "h_bridge_setup_pid", "stepper_setup", "lcd_setup",
-  "spi_setup", "remote_setup", "remote_setup_custom",
-  "event_period", "event_condition",
-  "event_ultrasonic", "event_ldr_analog", "event_ldr", "event_pir",
-  "event_joystick_axis_change", "event_joystick_axis_limit", "event_keypad",
-  "event_remote","define_def", "variables_global_def"
+  "main", "procedures_defreturn", "procedures_defnoreturn", "variables_global_def"
 ];

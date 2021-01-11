@@ -15,6 +15,7 @@ Inferencia.inicializar = function(infoEntorno) {
   Inferencia.error = infoEntorno.error;
   Inferencia.advertencia = infoEntorno.advertencia;
   Inferencia.modo_variables = infoEntorno.modo_variables;
+  TIPOS.agregarBloqueVariableGlobal();
 };
 
 // Retorna el bloque que define el inicio del scope o null si no hay ninguno
@@ -218,7 +219,8 @@ Inferencia.obtenerScope = function(bloque, nombre) {
       if (scope2 && scope2.id_s != "GLOBAL") {
         return {
           id_s: scope2.id_s + " - " + tope.id,
-          nombre_original: scope2.nombre_original + ` - ${Blockly.Msg.TIPOS_CICLO} ` + Inferencia.numeroDeCiclo(tope)
+          nombre_original: scope2.nombre_original + ` - ${Blockly.Msg.TIPOS_CICLO} ` + Inferencia.numeroDeCiclo(tope),
+          padre: scope2
         }
       }
     }

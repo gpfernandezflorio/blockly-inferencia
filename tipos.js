@@ -1050,3 +1050,15 @@ Blockly.Blocks['lists_sort'].tipado = function() {
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   return tipoListaUnificado;
 };
+
+
+TIPOS.agregarBloqueVariableGlobal = function() {
+  Blockly.Blocks['variables_global_def'].variableLibre = function(global) {
+    if (global && Main.modo_variables != Inferencia.LOCALES) {
+      let nombre = this.getField('VAR').getText();
+      Inferencia.agregarVariableAlMapa(nombre, this, "VAR", true);
+    }
+  };
+
+  Blockly.Blocks['variables_global_def'].tipado = Blockly.Blocks['variables_set'].tipado;
+}
