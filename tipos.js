@@ -1013,7 +1013,6 @@ Blockly.Blocks['lists_setIndex'].tipado = function() {
   let modo = this.getFieldValue('MODE');
   let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, TIPOS.Errores.AlfaModo(tipoListaUnificado.alfa, modo), "TIPOS3");
   if (tipoAlfaUnificado && !TIPOS.fallo(tipoAlfaUnificado) && TIPOS.distintos(tipoAlfaUnificado, tipoListaUnificado.alfa)) {
-    console.log("X " + tipoAlfaUnificado.id + " | " + tipoListaUnificado.alfa.id);
     TIPOS.verificarTipoOperando(this, "LIST", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1, "TIPOS1");
   }
 };
