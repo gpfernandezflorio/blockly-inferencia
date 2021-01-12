@@ -981,10 +981,14 @@ Blockly.Blocks['lists_isEmpty'].tipado = function() {
   return TIPOS.BINARIO;
 };
 
+// Clave del input correspondiente a la lista en los bloques indexOf y getIndex
+// Sólo para que siga funcionando en AELE, que en lugar de llamarse "VALUE" se llama "LIST"
+TIPOS.CLAVE_INPUT_INDEX_LIST = "VALUE";
+
 // Índice de elemento en lista
 Blockly.Blocks['lists_indexOf'].tipado = function() {
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, TIPOS.CLAVE_INPUT_INDEX_LIST, tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, TIPOS.Errores.AlfaOp2(tipoListaUnificado.alfa), "TIPOS2");
@@ -994,7 +998,7 @@ Blockly.Blocks['lists_indexOf'].tipado = function() {
 Blockly.Blocks['lists_getIndex'].tipado = function() {
   TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, "TIPOS2", TIPOS.Errores.IntOp2);
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, TIPOS.CLAVE_INPUT_INDEX_LIST, tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   return tipoListaUnificado.alfa;
@@ -1006,8 +1010,12 @@ Blockly.Blocks['lists_setIndex'].tipado = function() {
   let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  var modo = this.getFieldValue('MODE');
-  TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, TIPOS.Errores.AlfaModo(tipoListaUnificado.alfa, modo), "TIPOS3");
+  let modo = this.getFieldValue('MODE');
+  let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, TIPOS.Errores.AlfaModo(tipoListaUnificado.alfa, modo), "TIPOS3");
+  if (tipoAlfaUnificado && !TIPOS.fallo(tipoAlfaUnificado) && TIPOS.distintos(tipoAlfaUnificado, tipoListaUnificado.alfa)) {
+    console.log("X " + tipoAlfaUnificado.id + " | " + tipoListaUnificado.alfa.id);
+    TIPOS.verificarTipoOperando(this, "LIST", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1, "TIPOS1");
+  }
 };
 
 // Obtener sublista
