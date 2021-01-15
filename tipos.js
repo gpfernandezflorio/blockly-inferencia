@@ -482,107 +482,44 @@ TIPOS.Errores = {
       Blockly.Msg.TIPOS_ERROR_2OPS_N.replace("%1", Blockly.Msg["TIPOS_ORDEN_"+(i2+2)]).replace("%2", Blockly.Msg["TIPOS_ORDEN_"+(i1+2)+"O"]),
       Blockly.Msg.TIPOS_ERROR_PERO_ORDEN.replace("%1", Blockly.Msg["TIPOS_ORDEN_"+(i2+2)+"O"]).replace("%2", t2.str1()).replace("%3", Blockly.Msg["TIPOS_ORDEN_"+(i1+2)+"O"]).replace("%4", t1.str1())
     ];},
-  NumOp: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO).replace("%2", Blockly.Msg.TIPOS_NUMERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  NumOp1: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_1)).replace("%2", Blockly.Msg.TIPOS_NUMERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  NumOp2: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_2)).replace("%2", Blockly.Msg.TIPOS_NUMERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  NumOp3: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_3)).replace("%2", Blockly.Msg.TIPOS_NUMERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  IntOp: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO).replace("%2", Blockly.Msg.TIPOS_ENTERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  IntOp1: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_1)).replace("%2", Blockly.Msg.TIPOS_ENTERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  IntOp2: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_2)).replace("%2", Blockly.Msg.TIPOS_ENTERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  IntOp3: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_3)).replace("%2", Blockly.Msg.TIPOS_ENTERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  BoolCond: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_CONDICION).replace("%2", Blockly.Msg.TIPOS_BINARIO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  BoolOp: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO).replace("%2", Blockly.Msg.TIPOS_BINARIO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  BoolOp1: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_1)).replace("%2", Blockly.Msg.TIPOS_BINARIO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  BoolOp2: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_2)).replace("%2", Blockly.Msg.TIPOS_BINARIO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  ListOp: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO).replace("%2", Blockly.Msg.TIPOS_LISTA1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  ListOp1: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_1)).replace("%2", Blockly.Msg.TIPOS_LISTA1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  ListNumOp: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO).replace("%2", Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_NUMEROS)),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  ListTextOp: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO).replace("%2", Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_TEXTOS)),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  TextOp: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO).replace("%2", Blockly.Msg.TIPOS_TEXTO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  TextOp1: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_1)).replace("%2", Blockly.Msg.TIPOS_TEXTO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  TextOp2: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_2)).replace("%2", Blockly.Msg.TIPOS_TEXTO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  IterNum: function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_ITERADOR).replace("%2", Blockly.Msg.TIPOS_NUMERO1),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];},
-  IterAlfa: function(alfa) { return function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_ITERADOR).replace("%2", alfa.str1()),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];};},
-  Dividendo: function(s) { return function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_DIVIDENDO).replace("%2", s),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];};},
-  Divisor: function(s) { return function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_DIVISOR).replace("%2", s),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];};},
-  AlfaOp2: function(alfa) { return function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg.TIPOS_ORDEN_2)).replace("%2", alfa.str1()),
-      Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
-    ];};},
-  AlfaModo: function(alfa, modo) { return function(t) { return [
-      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg["TIPOS_ERROR_"+modo]).replace("%2", alfa.str1()),
+  SX: function(s, x) { return function(t) { return [
+      Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", x).replace("%2", s),
       Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
     ];};}
 };
+TIPOS.Errores.SOp = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_OPERANDO); };
+TIPOS.Errores.SOpN = function(s, n) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg[`TIPOS_ORDEN_${n}`])); };
+TIPOS.Errores.NumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_NUMERO1);
+TIPOS.Errores.NumOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_NUMERO1, n); };
+TIPOS.Errores.NumOp1 = TIPOS.Errores.NumOpN(1);
+TIPOS.Errores.NumOp2 = TIPOS.Errores.NumOpN(2);
+TIPOS.Errores.NumOp3 = TIPOS.Errores.NumOpN(3);
+TIPOS.Errores.IntOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_ENTERO1);
+TIPOS.Errores.IntOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_ENTERO1, n); };
+TIPOS.Errores.IntOp1 = TIPOS.Errores.IntOpN(1);
+TIPOS.Errores.IntOp2 = TIPOS.Errores.IntOpN(2);
+TIPOS.Errores.IntOp3 = TIPOS.Errores.IntOpN(3);
+TIPOS.Errores.BoolCond = TIPOS.Errores.SX(Blockly.Msg.TIPOS_BINARIO1, Blockly.Msg.TIPOS_ERROR_CONDICION);
+TIPOS.Errores.BoolOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_BINARIO1);
+TIPOS.Errores.BoolOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_BINARIO1, n); };
+TIPOS.Errores.BoolOp1 = TIPOS.Errores.BoolOpN(1);
+TIPOS.Errores.BoolOp2 = TIPOS.Errores.BoolOpN(2);
+TIPOS.Errores.TextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_TEXTO1);
+TIPOS.Errores.TextOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_TEXTO1, n); };
+TIPOS.Errores.TextOp1 = TIPOS.Errores.TextOpN(1);
+TIPOS.Errores.TextOp2 = TIPOS.Errores.TextOpN(2);
+TIPOS.Errores.ListOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA1);
+TIPOS.Errores.ListNumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_NUMEROS));
+TIPOS.Errores.ListTextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_TEXTOS));
+TIPOS.Errores.ListOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_LISTA1, n); };
+TIPOS.Errores.ListOp1 = TIPOS.Errores.ListOpN(1);
+TIPOS.Errores.AlfaOpN = function(alfa, n) { return TIPOS.Errores.SOpN(alfa.str1(), n); };
+TIPOS.Errores.AlfaOp2 = function(alfa) { return TIPOS.Errores.AlfaOpN(alfa, 2); };
+TIPOS.Errores.Dividendo = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVIDENDO); };
+TIPOS.Errores.Divisor = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVISOR); };
+TIPOS.Errores.AlfaModo = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg["TIPOS_ERROR_"+modo]); };
+TIPOS.Errores.IterAlfa = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg.TIPOS_ERROR_ITERADOR); };
+TIPOS.Errores.IterNum = TIPOS.Errores.SX(Blockly.Msg.TIPOS_NUMERO1, Blockly.Msg.TIPOS_ERROR_ITERADOR);
 
 // booleano
 Blockly.Blocks['logic_boolean'].tipado = function() { return TIPOS.BINARIO; };
@@ -981,14 +918,10 @@ Blockly.Blocks['lists_isEmpty'].tipado = function() {
   return TIPOS.BINARIO;
 };
 
-// Clave del input correspondiente a la lista en los bloques indexOf y getIndex
-// Sólo para que siga funcionando en AELE, que en lugar de llamarse "VALUE" se llama "LIST"
-TIPOS.CLAVE_INPUT_INDEX_LIST = "VALUE";
-
 // Índice de elemento en lista
 Blockly.Blocks['lists_indexOf'].tipado = function() {
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, TIPOS.CLAVE_INPUT_INDEX_LIST, tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, TIPOS.Errores.AlfaOp2(tipoListaUnificado.alfa), "TIPOS2");
@@ -998,7 +931,7 @@ Blockly.Blocks['lists_indexOf'].tipado = function() {
 Blockly.Blocks['lists_getIndex'].tipado = function() {
   TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, "TIPOS2", TIPOS.Errores.IntOp2);
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, TIPOS.CLAVE_INPUT_INDEX_LIST, tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   return tipoListaUnificado.alfa;
