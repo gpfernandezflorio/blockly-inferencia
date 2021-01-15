@@ -953,7 +953,9 @@ Blockly.Blocks['lists_setIndex'].tipado = function() {
 // Obtener sublista
 Blockly.Blocks['lists_getSublist'].tipado = function() {
   TIPOS.verificarTipoOperandoEntero(this, 'AT1', TIPOS.Errores.NumOp2, "TIPOS2", TIPOS.Errores.IntOp2);
-  TIPOS.verificarTipoOperandoEntero(this, 'AT2', TIPOS.Errores.NumOp3, "TIPOS3", TIPOS.Errores.IntOp3);
+  let posicionAt2 = 2;
+  if (this.getInput('AT1') && this.getInput('AT1').type == Blockly.INPUT_VALUE) { posicionAt2 ++; }
+  TIPOS.verificarTipoOperandoEntero(this, 'AT2', TIPOS.Errores.NumOpN(posicionAt2), "TIPOS3", TIPOS.Errores.IntOpN(posicionAt2));
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
   let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
