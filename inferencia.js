@@ -9,12 +9,14 @@ const Inferencia = {
   - error: función para notificar un error en un bloque
   - advertencia: función para notificar una advertencia en un bloque
   - modo_variables: función que retorne "LOCALES", "GLOBALES" o "AMBAS", según corresponda
+  - bloquesScopeAdicionales (opcional): función que determina el scope de una variable más allá de los scopes ya definidos
 **/
 Inferencia.inicializar = function(infoEntorno) {
   Inferencia.bloquesSuperiores = infoEntorno.bloquesSuperiores;
   Inferencia.error = infoEntorno.error;
   Inferencia.advertencia = infoEntorno.advertencia;
   Inferencia.modo_variables = infoEntorno.modo_variables;
+  Inferencia.bloquesScopeAdicionales = infoEntorno.bloquesScopeAdicionales;
   TIPOS.agregarBloqueVariableGlobal();
 };
 
@@ -223,6 +225,9 @@ Inferencia.obtenerScope = function(bloque, nombre) {
           padre: scope2
         }
       }
+    } else if (Inferencia.bloquesScopeAdicionales) { // Se podrían agregar otros bloques que generen scope (ej: eventos)
+      let scopePrima = Inferencia.bloquesScopeAdicionales(bloque, nombre, tope);
+      if (scopePrima) { return scopePrima; }
     }
   }
   if (Inferencia.modo_variables() != Inferencia.LOCALES) { return Inferencia.scopeGlobal(); }
