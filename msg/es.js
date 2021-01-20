@@ -19,8 +19,8 @@ Blockly.Msg.TIPOS_MAINPROC = 'procedimiento principal';
 Blockly.Msg.TIPOS_CICLO = 'ciclo';
 
 Blockly.Msg.TIPOS_VARIABLE_FRESCA = 'variable fresca';
-Blockly.Msg.TIPOS_VARIABLE_FRESCA1 = 'una variable fresca';
-Blockly.Msg.TIPOS_VARIABLE_FRESCAS = 'variables frescas';
+Blockly.Msg.TIPOS_VARIABLE_FRESCA1 = 'un elemento';
+Blockly.Msg.TIPOS_VARIABLE_FRESCAS = 'elementos';
 Blockly.Msg.TIPOS_ENTERO = 'entero';
 Blockly.Msg.TIPOS_NUMERO1 = 'un número';
 Blockly.Msg.TIPOS_NUMEROS = 'números';

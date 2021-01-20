@@ -19,8 +19,8 @@ Blockly.Msg.TIPOS_MAINPROC = 'main procedure';
 Blockly.Msg.TIPOS_CICLO = 'loop';
 
 Blockly.Msg.TIPOS_VARIABLE_FRESCA = 'fresh variable';
-Blockly.Msg.TIPOS_VARIABLE_FRESCA1 = 'a fresh variable';
-Blockly.Msg.TIPOS_VARIABLE_FRESCAS = 'fresh variables';
+Blockly.Msg.TIPOS_VARIABLE_FRESCA1 = 'an element';
+Blockly.Msg.TIPOS_VARIABLE_FRESCAS = 'elements';
 Blockly.Msg.TIPOS_ENTERO = 'integer';
 Blockly.Msg.TIPOS_NUMERO1 = 'a number';
 Blockly.Msg.TIPOS_NUMEROS = 'numbers';

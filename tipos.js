@@ -75,7 +75,7 @@ TIPOS.distintos = function(t1, t2) {
   if (t1.id=="VAR") {
     return t1.v != t2.v;
   }
-  if (t1.id=="LISTA") {
+  if (t1.alfa && t2.alfa) {
     return TIPOS.distintos(t1.alfa, t2.alfa);
   }
   return false;
@@ -198,8 +198,20 @@ TIPOS.VOID = {
 TIPOS.LISTA = function(alfa) {
   return {
     id:"LISTA",
-    str: function() { return Blockly.Msg.TIPOS_LISTA_DE.replace("%1", this.alfa.strs()); },
-    str1: function() { return (this.alfa.id == "VAR" ? Blockly.Msg.TIPOS_LISTA1 : Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", this.alfa.strs())); },
+    str: function() { return Blockly.Msg.TIPOS_LISTA_DE.replace("%1", this.alfa.str()); },
+    str1: function(opt_count) {
+      let alfa = this.alfa.strs();
+      if (opt_count !== undefined) {
+        if (opt_count == 1) {
+          alfa = this.alfa.str1();
+        } else {
+          alfa = `${opt_count} ${alfa}`;
+        }
+      } else if (this.alfa.id == "VAR") {
+        return Blockly.Msg.TIPOS_LISTA1;
+      }
+      return Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", alfa);
+    },
     strs: function() { return (this.alfa.id == "VAR" ? Blockly.Msg.TIPOS_LISTAS : Blockly.Msg.TIPOS_LISTA_DES.replace("%1", this.alfa.strs())); },
     alfa: alfa,
     unificar: function(otro) {
