@@ -75,6 +75,13 @@ Errores.advertencia = function(bloque, tag, mensaje, manual=false) {
 
 // tag es string pero mensaje puede ser string o lista de strings
 Errores.msgGenerico = function(clave, bloque, tag, mensaje, manual) {
+  if (block.disabled) {
+    if (manual) {
+      block.setErrorText(null);
+      block.setWarningText(null);
+    }
+    return;
+  }
   if (typeof(mensaje)=="string") { Errores.msgGenerico(clave, bloque, tag, mensaje.split("\n"), manual); }
   else if (Array.isArray(mensaje)) {
     mensaje[0] = Blockly.Msg["TIPOS_"+Errores.datos[clave].titulo] + ": " + mensaje[0];
@@ -133,7 +140,7 @@ Errores.verificarDivisionPorCero = function(bloque) {
   let divisor = bloque.getInputTargetBlock("B");
   if (divisor && bloque.getFieldValue('OP') == "DIVIDE" &&
     divisor.type == "math_number" && bloque.getFieldValue("NUM") == "0") {
-      Inferencia.advertencia(bloque, "ZERO_DIV", Blockly.Msg.TIPOS_ERROR_ZERO_DIV);
+      Inferencia.advertencia(bloque, "MATH_ZERO_DIV", Blockly.Msg.TIPOS_ERROR_ZERO_DIV);
     }
 };
 
@@ -142,22 +149,22 @@ Errores.VerificarLogaritmoPositivo = function(bloque) {
   if (operando) {
     if (operando.type == "math_number") {
       if (operando.getFieldValue("NUM") == 0) {
-        Inferencia.advertencia(bloque, "ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
+        Inferencia.advertencia(bloque, "MATH_ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
       } else if (String(operando.getFieldValue("NUM")).startsWith("-")) {
-        Inferencia.advertencia(bloque, "NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
+        Inferencia.advertencia(bloque, "MATH_NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
       }
     } else if (operando.type == "math_single" && operando.getFieldValue('OP') == "NEG") {
       operando = operando.getInputTargetBlock("NUM");
       if (operando) {
         if (operando.type == "math_number") {
           if (operando.getFieldValue("NUM") == 0) {
-            Inferencia.advertencia(bloque, "ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
+            Inferencia.advertencia(bloque, "MATH_ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
           } else if (!String(operando.getFieldValue("NUM")).startsWith("-")) {
-            Inferencia.advertencia(bloque, "NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
+            Inferencia.advertencia(bloque, "MATH_NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
           }
         }
       } else {
-        Inferencia.advertencia(bloque, "NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
+        Inferencia.advertencia(bloque, "MATH_NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
       }
     }
   }

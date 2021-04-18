@@ -251,7 +251,7 @@ Main.guardar = function() {
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-}
+};
 
 // Antes de terminar de cargar la página, llamo a esta función
 Main.preCarga();

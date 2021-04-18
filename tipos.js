@@ -695,6 +695,7 @@ Blockly.Blocks['math_round'].tipado = function() {
 
 // resto
 Blockly.Blocks['math_modulo'].tipado = function() {
+  Errores.verificarDivisionPorCero(this);
   TIPOS.verificarTipoOperandoEntero(this, 'DIVIDEND', TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_NUMERO1), "TIPOS1", TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_ENTERO1));
   TIPOS.verificarTipoOperandoEntero(this, 'DIVISOR', TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_NUMERO1), "TIPOS2", TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_ENTERO1));
   return TIPOS.ENTERO;
@@ -936,7 +937,11 @@ Blockly.Blocks['lists_indexOf'].tipado = function() {
   let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS1");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, TIPOS.Errores.AlfaOp2(tipoListaUnificado.alfa), "TIPOS2");
+  let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, TIPOS.Errores.AlfaOp2(tipoListaUnificado.alfa), "TIPOS2");
+  /*Parece que no hace falta:
+  if (tipoAlfaUnificado && !TIPOS.fallo(tipoAlfaUnificado) && TIPOS.distintos(tipoAlfaUnificado, tipoListaUnificado.alfa)) {
+    TIPOS.verificarTipoOperando(this, "VALUE", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1, "TIPOS1");
+  }*/
   return TIPOS.ENTERO;
 };
 
@@ -957,9 +962,10 @@ Blockly.Blocks['lists_setIndex'].tipado = function() {
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   let modo = this.getFieldValue('MODE');
   let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, TIPOS.Errores.AlfaModo(tipoListaUnificado.alfa, modo), "TIPOS3");
+  /*Parece que no hace falta:
   if (tipoAlfaUnificado && !TIPOS.fallo(tipoAlfaUnificado) && TIPOS.distintos(tipoAlfaUnificado, tipoListaUnificado.alfa)) {
     TIPOS.verificarTipoOperando(this, "LIST", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1, "TIPOS1");
-  }
+  }*/
 };
 
 // Obtener sublista
