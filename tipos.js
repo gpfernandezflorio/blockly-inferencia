@@ -499,39 +499,42 @@ TIPOS.Errores = {
       Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", t.str1())
     ];};}
 };
-TIPOS.Errores.SOp = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_OPERANDO); };
-TIPOS.Errores.SOpN = function(s, n) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg[`TIPOS_ORDEN_${n}`])); };
-TIPOS.Errores.NumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_NUMERO1);
-TIPOS.Errores.NumOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_NUMERO1, n); };
-TIPOS.Errores.NumOp1 = TIPOS.Errores.NumOpN(1);
-TIPOS.Errores.NumOp2 = TIPOS.Errores.NumOpN(2);
-TIPOS.Errores.NumOp3 = TIPOS.Errores.NumOpN(3);
-TIPOS.Errores.IntOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_ENTERO1);
-TIPOS.Errores.IntOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_ENTERO1, n); };
-TIPOS.Errores.IntOp1 = TIPOS.Errores.IntOpN(1);
-TIPOS.Errores.IntOp2 = TIPOS.Errores.IntOpN(2);
-TIPOS.Errores.IntOp3 = TIPOS.Errores.IntOpN(3);
-TIPOS.Errores.BoolCond = TIPOS.Errores.SX(Blockly.Msg.TIPOS_BINARIO1, Blockly.Msg.TIPOS_ERROR_CONDICION);
-TIPOS.Errores.BoolOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_BINARIO1);
-TIPOS.Errores.BoolOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_BINARIO1, n); };
-TIPOS.Errores.BoolOp1 = TIPOS.Errores.BoolOpN(1);
-TIPOS.Errores.BoolOp2 = TIPOS.Errores.BoolOpN(2);
-TIPOS.Errores.TextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_TEXTO1);
-TIPOS.Errores.TextOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_TEXTO1, n); };
-TIPOS.Errores.TextOp1 = TIPOS.Errores.TextOpN(1);
-TIPOS.Errores.TextOp2 = TIPOS.Errores.TextOpN(2);
-TIPOS.Errores.ListOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA1);
-TIPOS.Errores.ListNumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_NUMEROS));
-TIPOS.Errores.ListTextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_TEXTOS));
-TIPOS.Errores.ListOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_LISTA1, n); };
-TIPOS.Errores.ListOp1 = TIPOS.Errores.ListOpN(1);
-TIPOS.Errores.AlfaOpN = function(alfa, n) { return TIPOS.Errores.SOpN(alfa.str1(), n); };
-TIPOS.Errores.AlfaOp2 = function(alfa) { return TIPOS.Errores.AlfaOpN(alfa, 2); };
-TIPOS.Errores.Dividendo = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVIDENDO); };
-TIPOS.Errores.Divisor = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVISOR); };
-TIPOS.Errores.AlfaModo = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg["TIPOS_ERROR_"+modo]); };
-TIPOS.Errores.IterAlfa = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg.TIPOS_ERROR_ITERADOR); };
-TIPOS.Errores.IterNum = TIPOS.Errores.SX(Blockly.Msg.TIPOS_NUMERO1, Blockly.Msg.TIPOS_ERROR_ITERADOR);
+
+TIPOS.inicializar = function() {
+  TIPOS.Errores.SOp = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_OPERANDO); };
+  TIPOS.Errores.SOpN = function(s, n) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_OPERANDO_N.replace("%1", Blockly.Msg[`TIPOS_ORDEN_${n}`])); };
+  TIPOS.Errores.NumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_NUMERO1);
+  TIPOS.Errores.NumOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_NUMERO1, n); };
+  TIPOS.Errores.NumOp1 = TIPOS.Errores.NumOpN(1);
+  TIPOS.Errores.NumOp2 = TIPOS.Errores.NumOpN(2);
+  TIPOS.Errores.NumOp3 = TIPOS.Errores.NumOpN(3);
+  TIPOS.Errores.IntOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_ENTERO1);
+  TIPOS.Errores.IntOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_ENTERO1, n); };
+  TIPOS.Errores.IntOp1 = TIPOS.Errores.IntOpN(1);
+  TIPOS.Errores.IntOp2 = TIPOS.Errores.IntOpN(2);
+  TIPOS.Errores.IntOp3 = TIPOS.Errores.IntOpN(3);
+  TIPOS.Errores.BoolCond = TIPOS.Errores.SX(Blockly.Msg.TIPOS_BINARIO1, Blockly.Msg.TIPOS_ERROR_CONDICION);
+  TIPOS.Errores.BoolOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_BINARIO1);
+  TIPOS.Errores.BoolOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_BINARIO1, n); };
+  TIPOS.Errores.BoolOp1 = TIPOS.Errores.BoolOpN(1);
+  TIPOS.Errores.BoolOp2 = TIPOS.Errores.BoolOpN(2);
+  TIPOS.Errores.TextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_TEXTO1);
+  TIPOS.Errores.TextOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_TEXTO1, n); };
+  TIPOS.Errores.TextOp1 = TIPOS.Errores.TextOpN(1);
+  TIPOS.Errores.TextOp2 = TIPOS.Errores.TextOpN(2);
+  TIPOS.Errores.ListOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA1);
+  TIPOS.Errores.ListNumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_NUMEROS));
+  TIPOS.Errores.ListTextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_TEXTOS));
+  TIPOS.Errores.ListOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_LISTA1, n); };
+  TIPOS.Errores.ListOp1 = TIPOS.Errores.ListOpN(1);
+  TIPOS.Errores.AlfaOpN = function(alfa, n) { return TIPOS.Errores.SOpN(alfa.str1(), n); };
+  TIPOS.Errores.AlfaOp2 = function(alfa) { return TIPOS.Errores.AlfaOpN(alfa, 2); };
+  TIPOS.Errores.Dividendo = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVIDENDO); };
+  TIPOS.Errores.Divisor = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVISOR); };
+  TIPOS.Errores.AlfaModo = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg["TIPOS_ERROR_"+modo]); };
+  TIPOS.Errores.IterAlfa = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg.TIPOS_ERROR_ITERADOR); };
+  TIPOS.Errores.IterNum = TIPOS.Errores.SX(Blockly.Msg.TIPOS_NUMERO1, Blockly.Msg.TIPOS_ERROR_ITERADOR);
+};
 
 // booleano
 Blockly.Blocks['logic_boolean'].tipado = function() { return TIPOS.BINARIO; };
