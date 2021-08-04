@@ -75,10 +75,10 @@ Errores.advertencia = function(bloque, tag, mensaje, manual=false) {
 
 // tag es string pero mensaje puede ser string o lista de strings
 Errores.msgGenerico = function(clave, bloque, tag, mensaje, manual) {
-  if (block.disabled) {
+  if (bloque.disabled) {
     if (manual) {
-      block.setErrorText(null);
-      block.setWarningText(null);
+      bloque.setErrorText(null);
+      bloque.setWarningText(null);
     }
     return;
   }
