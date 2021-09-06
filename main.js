@@ -105,6 +105,7 @@ Main.agregarBloquesCustom = function() {
 
   delete Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.onchange;
 
+  TIPOS.inicializar();
   Inferencia.inicializar({
     bloquesSuperiores: bloques_superiores,
     error: Errores.error,
