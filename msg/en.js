@@ -4,6 +4,7 @@ Blockly.Msg.TIPOS_IDIOMA_ES = 'Spanish';
 Blockly.Msg.TIPOS_IDIOMA_EN = 'English';
 Blockly.Msg.TIPOS_ABRIR = 'Open';
 Blockly.Msg.TIPOS_GUARDAR = 'Save';
+Blockly.Msg.TIPOS_TESTEAR = 'Test';
 Blockly.Msg.TIPOS_VARIABLES = 'Variables';
 Blockly.Msg.TIPOS_VARIABLES_LOCALES = 'Local Variables';
 Blockly.Msg.TIPOS_VARIABLES_GLOBALES = 'Global variables';

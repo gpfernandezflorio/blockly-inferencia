@@ -16,7 +16,7 @@ Main.mostrarMapa = function() {
       variables_locales.push(mapa);
     }
   }
-  if (variables_main.length || variables_locales.length) {
+  if (variables_main.length > 0 || variables_locales.length > 0) {
     res += `<h5>${Blockly.Msg.TIPOS_VARIABLES_LOCALES}</h5>`;
     res += `<table id='t01'><tr><th>${Blockly.Msg.TIPOS_SCOPE}</th><th>${Blockly.Msg.TIPOS_VARIABLE}</th><th>${Blockly.Msg.TIPOS_TIPO_INFERIDO}</th></tr>`;
     for (mapa of variables_main.concat(variables_locales)) {
@@ -74,6 +74,7 @@ Main.completarInterfaz = function() {
   }
   document.getElementById("boton_abrir").innerHTML = Blockly.Msg.TIPOS_ABRIR;
   document.getElementById("boton_guardar").innerHTML = Blockly.Msg.TIPOS_GUARDAR;
+  document.getElementById("boton_testear").innerHTML = Blockly.Msg.TIPOS_TESTEAR;
   document.getElementById("opciones").innerHTML = `<h4>${Blockly.Msg.TIPOS_OPCIONES}</h4>` +
   '<table>' +
     `<tr><td>${Blockly.Msg.TIPOS_IDIOMA}</td><td><select id="opcion_idiomas" onchange="Main.opcion_idiomas();">` +

@@ -244,6 +244,17 @@ Main.opcion_variables = function() {
   Main.ejecutar();
 };
 
+Main.cargarBloques = function(strBloques) {
+  let xmlDom;
+  try {
+    xmlDom = Blockly.Xml.textToDom(strBloques);
+  } catch (e) { return; }
+  if (xmlDom) {
+    Blockly.mainWorkspace.clear();
+    Blockly.Xml.domToWorkspace(xmlDom, Blockly.mainWorkspace);
+  }
+};
+
 Main.abrir = function() {
   let selectFile = document.getElementById('select_file_wrapper');
   if (selectFile !== null) {
@@ -265,14 +276,7 @@ Main.abrir = function() {
     if (archivo) {
       let reader = new FileReader();
       reader.onload = function() {
-        let xmlDom;
-        try {
-          xmlDom = Blockly.Xml.textToDom(reader.result);
-        } catch (e) { return; }
-        if (xmlDom) {
-          Blockly.mainWorkspace.clear();
-          Blockly.Xml.domToWorkspace(xmlDom, Blockly.mainWorkspace);
-        }
+        Main.cargarBloques(reader.result);
       };
       reader.readAsText(archivo);
     }
@@ -288,6 +292,47 @@ Main.guardar = function() {
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
+};
+
+Main.testear = function() {
+  const f = function(next) {
+    let resultado = Testing.proximoTest();
+    if (resultado.fail) { return; }
+    const fin = function() {
+      if (resultado.esElUltimo) {
+        console.log("FIN");
+        Testing.finalizar();
+      } else {
+        next();
+      }
+    }
+    console.log(resultado);
+    if (false/*¿fallo?*/) {
+      // mostrar mensaje de error con opciones para detener o seguir e ignorar
+    } else {
+      fin();
+    }
+  }
+  Testing.iniciar();
+  if (Testing.modo == Testing.MODO_INTERVALO) {
+    const next = function() {
+      setTimeout(function() { f(next) }, Testing.intervalo);
+    };
+    f(next);
+  } else if (Testing.modo == Testing.MODO_INMEDIATO) {
+    const next = function() {
+      f(next);
+    };
+    f(next);
+  } else if (Testing.modo == Testing.MODO_INTERACTIVO) {
+    const next = function() {
+      setTimeout(function() {
+        alert("TEST")
+        f(next);
+      }, 10);
+    };
+    f(next);
+  }
 };
 
 // Antes de terminar de cargar la página, llamo a esta función
