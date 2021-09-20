@@ -84,7 +84,7 @@ Errores.msgGenerico = function(clave, bloque, tag, mensaje, manual) {
   }
   if (typeof(mensaje)=="string") { Errores.msgGenerico(clave, bloque, tag, mensaje.split("\n"), manual); }
   else if (Array.isArray(mensaje)) {
-    mensaje[0] = Blockly.Msg["TIPOS_"+Errores.datos[clave].titulo] + ": " + mensaje[0];
+    mensaje[0] = Errores.armarMsg(clave, mensaje[0])
     if (mensaje.length == 1) {
       Errores.msgBloqueGenerico(clave, bloque, tag, mensaje[0], manual);
     } else {
@@ -96,6 +96,10 @@ Errores.msgGenerico = function(clave, bloque, tag, mensaje, manual) {
     }
   }
 };
+
+Errores.armarMsg = function(clave, mensaje) {
+  return Blockly.Msg["TIPOS_"+Errores.datos[clave].titulo] + ": " + mensaje;
+}
 
 // tag y mensaje son strings
 // Si el error ya existe, lo marco. Si no, lo agrego

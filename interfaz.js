@@ -50,21 +50,22 @@ Main.mostrarMapa = function() {
 };
 
 // Inicia la ejecución
-Main.ejecutar = function() {
+Main.ejecutar = function(f) {
   if (!Main.procesando) {
     Main.procesando = true;
     setTimeout(function() {
       delete Main.procesando;
+      Main.erroresYAdvertencias = {};
       Errores.recolectarErroresYAdvertencias(Main.workspace);
       Inferencia.crearMapaDeVariables(Main.workspace);
       Main.mostrarMapa();
       //const codigo = Main.generador.workspaceToCode(Main.workspace);
       //console.log(codigo);
       Errores.quitarErroresYAdvertenciasObsoletos(Main.workspace);
+      if (f !== undefined) { f(); }
     }, 200); // La interfaz tarda un poco en actualizarse
   }
 };
-
 
 Main.completarInterfaz = function() {
   let opcionesIdiomas = '';

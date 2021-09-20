@@ -534,6 +534,14 @@ TIPOS.inicializar = function() {
   TIPOS.Errores.AlfaModo = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg["TIPOS_ERROR_"+modo]); };
   TIPOS.Errores.IterAlfa = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg.TIPOS_ERROR_ITERADOR); };
   TIPOS.Errores.IterNum = TIPOS.Errores.SX(Blockly.Msg.TIPOS_NUMERO1, Blockly.Msg.TIPOS_ERROR_ITERADOR);
+  TIPOS.Errores.Incompatibles = function(obj, nombre, tipoAnterior, tipoNuevo) { return [
+    Blockly.Msg.TIPOS_ERROR_VARIABLE_1
+      .replace("%1", obj)
+      .replace("%2", nombre)
+      .replace("%3", tipoAnterior),
+    Blockly.Msg.TIPOS_ERROR_VARIABLE_2
+      .replace("%1", tipoNuevo)
+  ];}
 };
 
 // booleano
@@ -806,14 +814,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
       } else {
         let unificacion = TIPOS.unificar(tipoAnterior, tipo);
         if (TIPOS.fallo(unificacion)) {
-          Inferencia.error(bloque, "TIPOS", [
-            Blockly.Msg.TIPOS_ERROR_VARIABLE_1
-              .replace("%1", obj)
-              .replace("%2", mapa.nombre_original)
-              .replace("%3", tipoAnterior.str1()),
-            Blockly.Msg.TIPOS_ERROR_VARIABLE_2
-              .replace("%1", tipo.str1())
-          ]);
+          Inferencia.error(bloque, "TIPOS", TIPOS.Errores.Incompatibles(obj, mapa.nombre_original, tipoAnterior.str1(), tipo.str1()));
         }
         if (!fallaAnterior) {
           for (let i of TIPOS.variablesEn(unificacion)) {

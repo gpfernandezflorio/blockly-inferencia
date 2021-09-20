@@ -43,6 +43,14 @@ Main.inicializar = function() {
   Main.completarInterfaz();
   Main.modo_variables = Inferencia.LOCALES;
   Main.agregarBloquesCustom();
+  TIPOS.inicializar();
+  Inferencia.inicializar({
+    bloquesSuperiores: bloques_superiores,
+    error: Main.error,
+    advertencia: Main.advertencia,
+    modo_variables: function() { return Main.modo_variables; }
+  });
+  Testing.inicializar();
   Main.div = document.getElementById('blockly');
   Main.inyectarBlockly();   // Inyectar la interfaz de Blockly
   Main.registrarEventos();  // Registrar handlers para eventos
@@ -104,14 +112,6 @@ Main.agregarBloquesCustom = function() {
   };
 
   delete Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.onchange;
-
-  TIPOS.inicializar();
-  Inferencia.inicializar({
-    bloquesSuperiores: bloques_superiores,
-    error: Errores.error,
-    advertencia: Errores.advertencia,
-    modo_variables: function() { return Main.modo_variables; }
-  });
 }
 
 // Inyecta la interfaz Blockly en la div con id "blockly" y guarda el resultado en Main.workspace
@@ -232,8 +232,12 @@ Main.opcion_idiomas = function() {
   }
 };
 
-Main.opcion_variables = function() {
-  let opt = document.getElementById("opcion_variables").value;
+Main.opcion_variables = function(opt) {
+  if (opt == undefined) {
+    opt = document.getElementById("opcion_variables").value;
+  } else {
+    document.getElementById("opcion_variables").value = opt;
+  }
   if (opt == Blockly.Msg["TIPOS_SOLO_LOCALES"]) {
     Main.modo_variables = Inferencia.LOCALES;
   } else if (opt == Blockly.Msg["TIPOS_SOLO_GLOBALES"]) {
@@ -296,43 +300,75 @@ Main.guardar = function() {
 
 Main.testear = function() {
   const f = function(next) {
-    let resultado = Testing.proximoTest();
-    if (resultado.fail) { return; }
-    const fin = function() {
-      if (resultado.esElUltimo) {
-        console.log("FIN");
-        Testing.finalizar();
-      } else {
-        next();
+    Testing.proximoTest(function(resultado) {
+      if (resultado.fail) { return; }
+      const fin = function() {
+        if (resultado.esElUltimo) {
+          console.log("FIN");
+          Testing.finalizar();
+        } else {
+          next(resultado);
+        }
       }
-    }
-    console.log(resultado);
-    if (false/*¿fallo?*/) {
-      // mostrar mensaje de error con opciones para detener o seguir e ignorar
-    } else {
-      fin();
-    }
+      for (let msg of resultado.mensajes) {
+        console.log(msg);
+      }
+      if (resultado.exito) {
+        fin();
+      } else if (confirm(`El test "${resultado.nombre}" falló\n\n¿Desea ignorarlo y continuar con el resto de los tests?`)){
+        fin();
+      }
+    });
   }
   Testing.iniciar();
   if (Testing.modo == Testing.MODO_INTERVALO) {
-    const next = function() {
+    const next = function(resultado) {
       setTimeout(function() { f(next) }, Testing.intervalo);
     };
     f(next);
   } else if (Testing.modo == Testing.MODO_INMEDIATO) {
-    const next = function() {
+    const next = function(resultado) {
       f(next);
     };
     f(next);
   } else if (Testing.modo == Testing.MODO_INTERACTIVO) {
-    const next = function() {
+    const next = function(resultado) {
       setTimeout(function() {
-        alert("TEST")
-        f(next);
+        if (resultado.exito) {
+          if (confirm(`El test "${resultado.nombre}" Pasó\n\n¿Pasar al siguiente test?`)) {
+            f(next);
+          }
+        } else {
+          f(next);
+        }
       }, 10);
     };
     f(next);
   }
+};
+
+Main.error = function(bloque, tag, mensaje, manual=false) {
+  if (bloque.id in Main.erroresYAdvertencias) {
+    Main.erroresYAdvertencias[bloque.id].errores.push({tag:tag, mensaje:mensaje});
+  } else {
+    Main.erroresYAdvertencias[bloque.id] = {
+      errores: [{tag:tag, mensaje:mensaje}],
+      advertencias: []
+    };
+  }
+  Errores.error(bloque, tag, mensaje, manual);
+};
+
+Main.advertencia = function(bloque, tag, mensaje, manual=false) {
+  if (bloque.id in Main.erroresYAdvertencias) {
+    Main.erroresYAdvertencias[bloque.id].advertencias.push({tag:tag, mensaje:mensaje});
+  } else {
+    Main.erroresYAdvertencias[bloque.id] = {
+      errores: [],
+      advertencias: [{tag:tag, mensaje:mensaje}]
+    };
+  }
+  Errores.advertencia(bloque, tag, mensaje, manual);
 };
 
 // Antes de terminar de cargar la página, llamo a esta función
