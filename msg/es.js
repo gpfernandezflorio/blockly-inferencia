@@ -2,6 +2,7 @@ Blockly.Msg.TIPOS_OPCIONES = 'Opciones';
 Blockly.Msg.TIPOS_IDIOMA = 'Idioma';
 Blockly.Msg.TIPOS_IDIOMA_ES = 'Español';
 Blockly.Msg.TIPOS_IDIOMA_EN = 'Inglés';
+Blockly.Msg.TIPOS_ABRIR = 'Abrir';
 Blockly.Msg.TIPOS_GUARDAR = 'Guardar';
 Blockly.Msg.TIPOS_VARIABLES = 'Variables';
 Blockly.Msg.TIPOS_VARIABLES_LOCALES = 'Variables locales';

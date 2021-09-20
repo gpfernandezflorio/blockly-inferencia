@@ -244,6 +244,42 @@ Main.opcion_variables = function() {
   Main.ejecutar();
 };
 
+Main.abrir = function() {
+  let selectFile = document.getElementById('select_file_wrapper');
+  if (selectFile !== null) {
+    selectFile.outerHTML = '';
+  }
+  let selectFileDom = document.createElement('INPUT');
+  selectFileDom.type = 'file';
+  selectFileDom.id = 'select_file';
+
+  let selectFileWrapperDom = document.createElement('DIV');
+  selectFileWrapperDom.id = 'select_file_wrapper';
+  selectFileWrapperDom.style.display = 'none';
+  selectFileWrapperDom.appendChild(selectFileDom);
+
+  document.body.appendChild(selectFileWrapperDom);
+  selectFile = document.getElementById('select_file');
+  selectFile.addEventListener('change', function(e) {
+    let archivo = e.target.files[0];
+    if (archivo) {
+      let reader = new FileReader();
+      reader.onload = function() {
+        let xmlDom;
+        try {
+          xmlDom = Blockly.Xml.textToDom(reader.result);
+        } catch (e) { return; }
+        if (xmlDom) {
+          Blockly.mainWorkspace.clear();
+          Blockly.Xml.domToWorkspace(xmlDom, Blockly.mainWorkspace);
+        }
+      };
+      reader.readAsText(archivo);
+    }
+  }, false);
+  selectFile.click();
+};
+
 Main.guardar = function() {
   var element = document.createElement('a');
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(Main.workspace))));

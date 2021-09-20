@@ -72,6 +72,7 @@ Main.completarInterfaz = function() {
     opcionesIdiomas += '<option' + (i==Main.idioma ? ' selected' : '') +'>';
     opcionesIdiomas += `${Blockly.Msg["TIPOS_IDIOMA_"+i.toUpperCase()]}</option>`
   }
+  document.getElementById("boton_abrir").innerHTML = Blockly.Msg.TIPOS_ABRIR;
   document.getElementById("boton_guardar").innerHTML = Blockly.Msg.TIPOS_GUARDAR;
   document.getElementById("opciones").innerHTML = `<h4>${Blockly.Msg.TIPOS_OPCIONES}</h4>` +
   '<table>' +

@@ -83,7 +83,7 @@ TIPOS.distintos = function(t1, t2) {
 
 TIPOS.colisionan = function(uno, otro) {
   const variables_uno = TIPOS.variablesEn(uno);
-  for (v of TIPOS.variablesEn(otro)) {
+  for (let v of TIPOS.variablesEn(otro)) {
     if (variables_uno.includes(v)) {
       return true;
     }
@@ -346,7 +346,7 @@ TIPOS.str = function(tipo) {
 // BLOQUES CON VARIABLES LIBRES
 
 TIPOS.obtenerArgumentosDefinicion = function(bloque) {
-  for (argumento of bloque.arguments_) {
+  for (let argumento of bloque.arguments_) {
     Inferencia.agregarVariableAlMapa(argumento, bloque, "VAR", false);
   }
 }
@@ -723,7 +723,7 @@ Blockly.Blocks['math_atan2'].tipado = function() {
 
 // bloques de texto
 TIPOS.fTexto = function() { return TIPOS.TEXTO; };
-for (i of ['text','text_join']) {
+for (let i of ['text','text_join']) {
   Blockly.Blocks[i].tipado = TIPOS.fTexto;
 }
 
@@ -816,7 +816,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
           ]);
         }
         if (!fallaAnterior) {
-          for (i of TIPOS.variablesEn(unificacion)) {
+          for (let i of TIPOS.variablesEn(unificacion)) {
             if (TIPOS.frescas[i]) {
               let src = TIPOS.frescas[i].src;
               let id = TIPOS.frescas[i].v;
@@ -884,7 +884,7 @@ delete Blockly.Blocks['procedures_ifreturn'].onchange;
 // si todos los elementos son de tipos unificables, retorno lista de tal tipo
 Blockly.Blocks['lists_create_with'].tipado = function() {
   let inputs = []
-  for (var i=0; i<this.itemCount_; i++) {
+  for (let i=0; i<this.itemCount_; i++) {
     inputs.push("ADD"+i);
   }
   let tipo = TIPOS.operandosDelMismoTipo(this, inputs, TIPOS.Errores.OpsList, "TIPOS");

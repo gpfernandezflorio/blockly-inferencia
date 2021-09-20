@@ -55,7 +55,7 @@ Inferencia.crearMapaDeVariables = function(ws) {
 
 Inferencia.obtenerBloquesSuperiores = function(ws) {
   let bloquesValidos = []
-  for (bloque of ws.getTopBlocks(true)) {
+  for (let bloque of ws.getTopBlocks(true)) {
     if (Inferencia.bloquesSuperiores.includes(bloque.type)) {
       bloquesValidos.push(bloque);
     } else {
@@ -67,7 +67,7 @@ Inferencia.obtenerBloquesSuperiores = function(ws) {
 
 // Reviso los bloques que definen variables globales y las agrego al scope GLOBAL
 Inferencia.buscarGlobales = function(bloques) {
-  for (bloque of bloques) {
+  for (let bloque of bloques) {
     if (bloque.variableLibre) {
       bloque.variableLibre(true);
     }
@@ -76,8 +76,8 @@ Inferencia.buscarGlobales = function(bloques) {
 
 // Recorro un scope y agrego sus variables al mapa
 Inferencia.definirVariablesDelMapa = function(bloques_tope) {
-  for (tope of bloques_tope) {
-    for (bloque of Inferencia.todos_los_hijos(tope)) {
+  for (let tope of bloques_tope) {
+    for (let bloque of Inferencia.todos_los_hijos(tope)) {
       if (bloque.variableLibre) {
         bloque.variableLibre(false);
       }
@@ -145,7 +145,7 @@ Inferencia.ejecutar = function(ws) {
     [], // después los que no son llamadas
     []  // y por último las llamadas
   ];
-  for (bloque of ws.getAllBlocks(true)) {
+  for (let bloque of ws.getAllBlocks(true)) {
     if (Inferencia.contieneUnLlamado(bloque)) {
       todosLosBloques[2].push(bloque);
     } else if (bloque.type == 'procedures_defnoreturn' || bloque.type == 'procedures_defreturn') {
@@ -168,7 +168,7 @@ Inferencia.ejecutar = function(ws) {
 };*/
 
 Inferencia.tipado = function(todosLosBloques) {
-  for (bloque of todosLosBloques) {
+  for (let bloque of todosLosBloques) {
     if (bloque.tipado) {
       bloque.tipado();
     }
@@ -243,7 +243,7 @@ Inferencia.scopeGlobal = function() {
 
 Inferencia.todos_los_hijos = function(bloque) {
   let res = [bloque];
-  for (hijo of bloque.getChildren(true)) {
+  for (let hijo of bloque.getChildren(true)) {
     res = res.concat(Inferencia.todos_los_hijos(hijo));
   }
   return res;
