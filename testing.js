@@ -3,17 +3,24 @@ Testing = { intervalo: 2000, MODO_INTERVALO: 0, MODO_INMEDIATO: 1, MODO_INTERACT
 Testing.modo = Testing.MODO_INTERACTIVO;
 
 Testing.iniciar = function() {
-  Testing.proximo = 0;
+  if (Testing.proximo === undefined) {
+    document.getElementById('boton_proximoTest').disabled = false;
+    document.getElementById('boton_anteriorTest').disabled = true;
+    Testing.proximo = 0;
+  }
 };
 
 Testing.proximoTest = function(f) {
   if (Testing.proximo !== undefined && Testing.proximo < Testing.tests.length) {
     Testing.ejecutarTest(Testing.tests[Testing.proximo], function(resultado) {
-      Testing.proximo++;
       if (Testing.proximo == Testing.tests.length) {
+        document.getElementById('boton_proximoTest').disabled = true;
         resultado.esElUltimo = true;
       };
       f(resultado);
+      if (Testing.proximo > 0) {
+        document.getElementById('boton_anteriorTest').disabled = false;
+      }
     });
   } else {
     f({fail: true});
@@ -22,17 +29,15 @@ Testing.proximoTest = function(f) {
 
 Testing.finalizar = function() {
   delete Testing.proximo;
+  document.getElementById('boton_proximoTest').disabled = false;
+  document.getElementById('boton_anteriorTest').disabled = true;
 };
 
 Testing.ejecutarTest = function(test, f) {
   let resultado = {
     nombre: test.nombre
   };
-  Main.procesando = true;
-  Main.opcion_variables(test.scope);
-  Main.cargarBloques(test.bloques);
-  delete Main.procesando;
-  Main.ejecutar(function() {
+  Main.prepararTest(test, function() {
     let exito = true;
     let mensajes = [];
     // Variables encontradas

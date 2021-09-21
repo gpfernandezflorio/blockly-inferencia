@@ -307,6 +307,7 @@ Main.testear = function() {
           console.log("FIN");
           Testing.finalizar();
         } else {
+          Testing.proximo++;
           next(resultado);
         }
       }
@@ -337,6 +338,8 @@ Main.testear = function() {
         if (resultado.exito) {
           if (confirm(`El test "${resultado.nombre}" Pasó\n\n¿Pasar al siguiente test?`)) {
             f(next);
+          } else {
+            Testing.proximo--;
           }
         } else {
           f(next);
@@ -345,6 +348,45 @@ Main.testear = function() {
     };
     f(next);
   }
+};
+
+Main.proximoTest = function() {
+  let actual = Testing.proximo;
+  if (actual === undefined) {
+    actual = -1;
+  } else {
+    document.getElementById('boton_anteriorTest').disabled = false;
+  }
+  if (actual < Testing.tests.length-1) {
+    Testing.proximo = actual + 1;
+    Main.prepararTest(Testing.tests[Testing.proximo]);
+    if (Testing.proximo == Testing.tests.length-1) {
+      document.getElementById('boton_proximoTest').disabled = true;
+    }
+  }
+};
+
+Main.anteriorTest = function() {
+  document.getElementById('boton_proximoTest').disabled = false;
+  let actual = Testing.proximo;
+  if (actual === undefined) {
+    actual = -1;
+  }
+  if (actual > 0) {
+    Testing.proximo = actual - 1;
+    Main.prepararTest(Testing.tests[Testing.proximo]);
+    if (Testing.proximo == 0) {
+      document.getElementById('boton_anteriorTest').disabled = true;
+    }
+  }
+};
+
+Main.prepararTest = function(test, f) {
+  Main.procesando = true;
+  Main.opcion_variables(test.scope);
+  Main.cargarBloques(test.bloques);
+  delete Main.procesando;
+  Main.ejecutar(f);
 };
 
 Main.error = function(bloque, tag, mensaje, manual=false) {
