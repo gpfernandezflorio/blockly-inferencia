@@ -610,10 +610,7 @@ Blockly.Blocks['controls_for'].tipado = function() {
   if ((tipoInicial && !TIPOS.fallo(tipoInicial) && tipoInicial.id == "FRACCION") || (tipoPaso && !TIPOS.fallo(tipoPaso) && tipoPaso.id == "FRACCION")) {
     tipoIterador = TIPOS.FRACCION;
   }
-  tipoVariable = TIPOS.unificar(tipoVariable, tipoIterador);
-  if (TIPOS.fallo(tipoVariable)) {
-    Inferencia.error(this, "TIPOS4", TIPOS.Errores.IterNum);
-  }
+  TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), tipoIterador, Blockly.Msg.TIPOS_VARIABLE1);
 };
 
 // repetición en lista
@@ -626,8 +623,7 @@ Blockly.Blocks['controls_forEach'].tipado = function() {
   if (TIPOS.fallo(tipoVariable)) { return; }
   if (tipoOperando) {
     let alfa = tipoOperando.alfa;
-    tipoOperando = TIPOS.unificar(tipoOperando, TIPOS.LISTA(tipoVariable));
-    if (TIPOS.fallo(tipoOperando)) { Inferencia.error(this, "TIPOS2", TIPOS.Errores.IterAlfa(alfa)); }
+    TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), alfa, Blockly.Msg.TIPOS_VARIABLE1);
   }
 };
 
@@ -796,7 +792,7 @@ Blockly.Blocks['variables_get'].tipado = function() {
   return tipoVariable.tipo;
 };
 
-TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
+TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
   if (v_id in Inferencia.mapa_de_variables) {
     let mapa = Inferencia.mapa_de_variables[v_id];
     let tipoAnterior = mapa.tipo;
@@ -806,9 +802,16 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento, obj) {
         tipoAnterior = tipoAnterior.sugerido;
       } else { return; }
     }
-    let bloqueArgumento = bloque.getInputTargetBlock(argumento);
-    if (bloqueArgumento && bloqueArgumento.tipado) {
-      let tipo = bloqueArgumento.tipado();
+    let tipo = argumento_o_tipo;
+    if (typeof argumento_o_tipo == 'string') {
+      let bloqueArgumento = bloque.getInputTargetBlock(argumento_o_tipo);
+      if (bloqueArgumento && bloqueArgumento.tipado) {
+        tipo = bloqueArgumento.tipado();
+      } else {
+        tipo = undefined;
+      }
+    }
+    if (tipo) {
       if (TIPOS.fallo(tipo)) {
         if (!fallaAnterior) { mapa.tipo = TIPOS.DIFERIDO(tipo); }
       } else {
