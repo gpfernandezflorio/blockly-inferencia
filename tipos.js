@@ -392,24 +392,26 @@ TIPOS.tiparArgumentosLlamado = function(bloque) {
   while(bloque.getInput('ARG' + n)) {
     let nombreArg = bloque.arguments_[n];
     let idArg = Inferencia.obtenerIdVariable(nombreArg, scope, "VAR");
-    let tipoMapa = Inferencia.mapa_de_variables[idArg].tipo;
-    let tipoArg = tipoMapa;
-    let fallaAnterior = TIPOS.fallo(tipoArg);
-    if (fallaAnterior) {
-      if (tipoArg.idError == "INCOMPATIBLES") {
-        fallaAnterior = false;
-        tipoArg = tipoArg.sugerido;
+    if (idArg in Inferencia.mapa_de_variables) {
+      let tipoMapa = Inferencia.mapa_de_variables[idArg].tipo;
+      let tipoArg = tipoMapa;
+      let fallaAnterior = TIPOS.fallo(tipoArg);
+      if (fallaAnterior) {
+        if (tipoArg.idError == "INCOMPATIBLES") {
+          fallaAnterior = false;
+          tipoArg = tipoArg.sugerido;
+        }
       }
-    }
-    if (!fallaAnterior) {
-      let tipoUnificado = TIPOS.verificarTipoOperando(bloque, 'ARG' + n, tipoArg, function(tipoOperando) {
-        return [
-          Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_ARGUMENTO.replace("%1", nombreArg)).replace("%2", tipoArg.str1()),
-          Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", tipoOperando.str1())
-        ]; }, "TIPOS"+n);
-      if (tipoUnificado) {
-        if (TIPOS.fallo(tipoUnificado) && tipoUnificado.idError == "INCOMPATIBLES") { tipoUnificado.sugerido = tipoUnificado.t2; }
-        if (!TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
+      if (!fallaAnterior) {
+        let tipoUnificado = TIPOS.verificarTipoOperando(bloque, 'ARG' + n, tipoArg, function(tipoOperando) {
+          return [
+            Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_ARGUMENTO.replace("%1", nombreArg)).replace("%2", tipoArg.str1()),
+            Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", tipoOperando.str1())
+          ]; }, "TIPOS"+n);
+        if (tipoUnificado) {
+          if (TIPOS.fallo(tipoUnificado) && tipoUnificado.idError == "INCOMPATIBLES") { tipoUnificado.sugerido = tipoUnificado.t2; }
+          if (!TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
+        }
       }
     }
     n++;
