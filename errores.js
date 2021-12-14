@@ -136,7 +136,7 @@ Errores.msgBloqueGenerico = function(clave, bloque, tag, mensaje, manual) {
 
 Errores.VerificarComparacionEntreFloats = function(bloque, tipo) {
   if (tipo && (tipo.id == "FRACCION")) {
-    Inferencia.advertencia(bloque, "FLOAT_EQ", Blockly.Msg.TIPOS_ERROR_FLOAT_EQ);
+    Inferencia.advertencia(bloque, "MATH_FLOAT_EQ", Blockly.Msg.TIPOS_ERROR_FLOAT_EQ);
   }
 };
 
