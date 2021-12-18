@@ -155,6 +155,11 @@ Inferencia.ejecutar = function(ws) {
     }
   }*/
   let todosLosBloques = ws.getAllBlocks(true);
+  /* Lo ejecuto dos veces para que la primera se resuelvan los tipos de
+    las variables y la segunda se hagan las verificaciones de tipado con los
+    tipos de las variables ya resueltos.
+  */
+  Inferencia.tipado(todosLosBloques);
   Inferencia.tipado(todosLosBloques);
 };
 
