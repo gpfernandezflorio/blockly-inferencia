@@ -59,7 +59,7 @@ Errores.quitarGenerico = function(ws, clave) {
     for (tag in datos.automaticos[b_id]) {
       if (datos.automaticos[b_id][tag].d) {
         let bloque = ws.getBlockById(b_id);
-        bloque[datos.funcionBlockly](null, tag);
+        if (bloque) { bloque[datos.funcionBlockly](null, tag); }
       }
     }
   }
