@@ -17,7 +17,7 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
         TIPOS.redefinirTipoVariable(v2, tipo);
       }
       for (bloque of Inferencia.mapa_de_variables[v.v].bloques_dependientes) {
-        bloque.tipado();
+        Inferencia.tipo(bloque);
       }
     }
   } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
@@ -27,7 +27,7 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
         TIPOS.redefinirTipoVariable(v2, tipo);
       }
       for (bloque of Inferencia.variables_auxiliares[v.v].bloques_dependientes) {
-        bloque.tipado();
+        Inferencia.tipo(bloque);
       }
     }
   }
@@ -421,8 +421,8 @@ TIPOS.tiparArgumentosLlamado = function(bloque) {
 TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
   let tipoResultado = undefined;
   let operando = bloque.getInputTargetBlock(input);
-  if (operando && operando.tipado) {
-    let tipoOperando = operando.tipado();
+  let tipoOperando = Inferencia.tipo(operando);
+  if (tipoOperando) {
     if (TIPOS.fallo(tipoOperando)) {
       return TIPOS.DIFERIDO(tipoOperando);
     } else {
@@ -457,8 +457,8 @@ TIPOS.operandosDelMismoTipo = function(bloque, inputs, error, tag) {
   for (let i=0; i<inputs.length; i++) {
     let input = inputs[i]
     let operando = bloque.getInputTargetBlock(input);
-    if (operando && operando.tipado) {
-      let tipoOperando = operando.tipado();
+    let tipoOperando = Inferencia.tipo(operando);
+    if (tipoOperando) {
       if (TIPOS.fallo(tipoOperando)) {
         return TIPOS.DIFERIDO(tipoOperando);
       } else {
@@ -807,11 +807,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
     let tipo = argumento_o_tipo;
     if (typeof argumento_o_tipo == 'string') {
       let bloqueArgumento = bloque.getInputTargetBlock(argumento_o_tipo);
-      if (bloqueArgumento && bloqueArgumento.tipado) {
-        tipo = bloqueArgumento.tipado();
-      } else {
-        tipo = undefined;
-      }
+      tipo = Inferencia.tipo(bloqueArgumento);
     }
     if (tipo) {
       if (TIPOS.fallo(tipo)) {
@@ -919,8 +915,8 @@ Blockly.Blocks['math_on_list'].tipado = function() {
 Blockly.Blocks['lists_repeat'].tipado = function() {
   TIPOS.verificarTipoOperandoEntero(this, 'NUM', TIPOS.Errores.NumOp2, "TIPOS", TIPOS.Errores.IntOp2);
   let bloque = this.getInputTargetBlock("ITEM");
-  if (bloque && bloque.tipado) {
-    let tipoElem = bloque.tipado();
+  let tipoElem = Inferencia.tipo(bloque);
+  if (tipoElem) {
     if (!TIPOS.fallo(tipoElem)) {
       return TIPOS.LISTA(tipoElem);
     }

@@ -55,7 +55,7 @@ Inferencia.crearMapaDeVariables = function(ws) {
 
 Inferencia.obtenerBloquesSuperiores = function(ws) {
   let bloquesValidos = []
-  for (let bloque of ws.getTopBlocks(true)) {
+  for (let bloque of ws.getTopBlocks(true).filter((x) => Inferencia.esBloqueUtil(x))) {
     if (Inferencia.bloquesSuperiores.includes(bloque.type)) {
       bloquesValidos.push(bloque);
     } else {
@@ -154,7 +154,7 @@ Inferencia.ejecutar = function(ws) {
       todosLosBloques[1].push(bloque);
     }
   }*/
-  let todosLosBloques = ws.getAllBlocks(true);
+  let todosLosBloques = ws.getAllBlocks(true).filter((x) => Inferencia.esBloqueUtil(x));
   /* Lo ejecuto dos veces para que la primera se resuelvan los tipos de
     las variables y la segunda se hagan las verificaciones de tipado con los
     tipos de las variables ya resueltos.
@@ -251,7 +251,7 @@ Inferencia.todos_los_hijos = function(bloque) {
   for (let hijo of bloque.getChildren(true)) {
     res = res.concat(Inferencia.todos_los_hijos(hijo));
   }
-  return res;
+  return res.filter((x) => Inferencia.esBloqueUtil(x));
 };
 
 Inferencia.obtenerIdFuncionBloque = function(bloque) { // el bloque debe ser procedures_callreturn
@@ -273,4 +273,19 @@ Inferencia.obtenerIdVariable = function(nombre_original, scope, prefijo) {
     scope = "_";
   }
   return prefijo + scope + nombre_original;
+};
+
+Inferencia.tipo = function(bloque) {
+  if (
+    bloque &&
+    Inferencia.esBloqueUtil(bloque) &&
+    bloque.tipado
+  ) {
+    return bloque.tipado();
+  }
+  return undefined;
+};
+
+Inferencia.esBloqueUtil = function(bloque) {
+  return bloque.isEnabled() && !bloque.isDisposed();
 };
