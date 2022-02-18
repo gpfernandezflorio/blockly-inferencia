@@ -909,6 +909,9 @@ Blockly.Blocks['math_on_list'].tipado = function() {
   let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, error, "TIPOS");
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
+  if (["AVERAGE", "STD_DEV"].includes(op)) {
+    return TIPOS.FRACCION;
+  }
   return tipoListaUnificado.alfa;
 };
 
