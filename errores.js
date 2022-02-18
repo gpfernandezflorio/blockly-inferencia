@@ -159,24 +159,52 @@ Errores.VerificarLogaritmoPositivo = function(bloque) {
   let operando = bloque.getInputTargetBlock("NUM");
   if (operando) {
     if (operando.type == "math_number") {
-      if (operando.getFieldValue("NUM") == 0) {
-        Inferencia.advertencia(bloque, "MATH_ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
-      } else if (String(operando.getFieldValue("NUM")).startsWith("-")) {
-        Inferencia.advertencia(bloque, "MATH_NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
-      }
+      Errores.VerificarQue(bloque, operando.getFieldValue("NUM"), [
+        {f:(x) => x==0, tag:"MATH_ZERO_LOG", msg:"TIPOS_ERROR_ZERO_LOG"},
+        {f:(x) => x<0, tag:"MATH_NEG_LOG", msg:"TIPOS_ERROR_NEG_LOG"}
+      ]);
     } else if (operando.type == "math_single" && operando.getFieldValue('OP') == "NEG") {
       operando = operando.getInputTargetBlock("NUM");
       if (operando) {
         if (operando.type == "math_number") {
-          if (operando.getFieldValue("NUM") == 0) {
-            Inferencia.advertencia(bloque, "MATH_ZERO_LOG", Blockly.Msg.TIPOS_ERROR_ZERO_LOG);
-          } else if (!String(operando.getFieldValue("NUM")).startsWith("-")) {
-            Inferencia.advertencia(bloque, "MATH_NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
-          }
+          Errores.VerificarQue(bloque, operando.getFieldValue("NUM"), [
+            {f:(x) => x==0, tag:"MATH_ZERO_LOG", msg:"TIPOS_ERROR_ZERO_LOG"},
+            {f:(x) => x>0, tag:"MATH_NEG_LOG", msg:"TIPOS_ERROR_NEG_LOG"}
+          ]);
         }
       } else {
         Inferencia.advertencia(bloque, "MATH_NEG_LOG", Blockly.Msg.TIPOS_ERROR_NEG_LOG);
       }
+    }
+  }
+};
+
+Errores.VerificarRaizNoNegativa = function(bloque) {
+  let operando = bloque.getInputTargetBlock("NUM");
+  if (operando) {
+    if (operando.type == "math_number") {
+      Errores.VerificarQue(bloque, operando.getFieldValue("NUM"), [
+        {f:(x) => x<0, tag:"MATH_NEG_ROOT", msg:"TIPOS_ERROR_NEG_ROOT"}
+      ]);
+    } else if (operando.type == "math_single" && operando.getFieldValue('OP') == "NEG") {
+      operando = operando.getInputTargetBlock("NUM");
+      if (operando) {
+        if (operando.type == "math_number") {
+          Errores.VerificarQue(bloque, operando.getFieldValue("NUM"), [
+            {f:(x) => x>0, tag:"MATH_NEG_ROOT", msg:"TIPOS_ERROR_NEG_ROOT"}
+          ]);
+        }
+      } else {
+        Inferencia.advertencia(bloque, "MATH_NEG_ROOT", Blockly.Msg.TIPOS_ERROR_NEG_ROOT);
+      }
+    }
+  }
+};
+
+Errores.VerificarQue = function(bloque, valor, verificaciones) {
+  for (let v of verificaciones) {
+    if (v.f(valor)) {
+      Inferencia.advertencia(bloque, v.tag, Blockly.Msg[v.msg]);
     }
   }
 };

@@ -80,6 +80,7 @@ Blockly.Msg.TIPOS_ERROR_FLOAT_EQ = 'It is not safe to compare float numbers by e
 Blockly.Msg.TIPOS_ERROR_ZERO_DIV = 'It is not safe to divide by zero.';
 Blockly.Msg.TIPOS_ERROR_ZERO_LOG = 'It is not safe to get the logarith of zero.';
 Blockly.Msg.TIPOS_ERROR_NEG_LOG = 'It is not safe to get the logarith of a negative number.';
+Blockly.Msg.TIPOS_ERROR_NEG_ROOT = 'It is not safe to get the root of a negative number.';
 Blockly.Msg.TIPOS_ORDEN_1 = 'first';
 Blockly.Msg.TIPOS_ORDEN_2 = 'second';
 Blockly.Msg.TIPOS_ORDEN_3 = 'third';

@@ -80,6 +80,7 @@ Blockly.Msg.TIPOS_ERROR_FLOAT_EQ = 'No es seguro comparar fracciones por igualda
 Blockly.Msg.TIPOS_ERROR_ZERO_DIV = 'No es seguro dividir por cero.';
 Blockly.Msg.TIPOS_ERROR_ZERO_LOG = 'No es seguro obtener el logaritmo de cero.';
 Blockly.Msg.TIPOS_ERROR_NEG_LOG = 'No es seguro obtener el logaritmo de un número negativo.';
+Blockly.Msg.TIPOS_ERROR_NEG_ROOT = 'No es seguro obtener la raíz de un número negativo.';
 Blockly.Msg.TIPOS_ORDEN_1 = 'primer';
 Blockly.Msg.TIPOS_ORDEN_2 = 'segundo';
 Blockly.Msg.TIPOS_ORDEN_3 = 'tercer';

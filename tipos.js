@@ -672,7 +672,8 @@ Blockly.Blocks['math_arithmetic'].tipado = function() {
 // operación aritmética unaria
 Blockly.Blocks['math_single'].tipado = function() {
   let op = this.getFieldValue('OP');
-  if (['LN','LOG10'].includes(op)) { Errores.VerificarLogaritmoPositivo(bloque); }
+  if (['LN','LOG10'].includes(op)) { Errores.VerificarLogaritmoPositivo(this); }
+  if (op == 'ROOT') { Errores.VerificarRaizNoNegativa(this); }
   let tipo = TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS");
   if (op=="ABS" || op=="NEG") {
     if (tipo) { return tipo; }
