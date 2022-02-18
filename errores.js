@@ -143,7 +143,7 @@ Errores.VerificarComparacionEntreFloats = function(bloque, tipo) {
 Errores.verificarDivisionPorCero = function(bloque) {
   let divisor = bloque.getInputTargetBlock("B");
   if (divisor && bloque.getFieldValue('OP') == "DIVIDE" &&
-    divisor.type == "math_number" && bloque.getFieldValue("NUM") == "0") {
+    divisor.type == "math_number" && divisor.getFieldValue("NUM") == "0") {
       Inferencia.advertencia(bloque, "MATH_ZERO_DIV", Blockly.Msg.TIPOS_ERROR_ZERO_DIV);
     }
 };
