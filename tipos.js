@@ -693,6 +693,7 @@ Blockly.Blocks['math_constant'].tipado = function() { return TIPOS.FRACCION; };
 // propiedad matemática
 Blockly.Blocks['math_number_property'].tipado = function() {
   if (this.getFieldValue('PROPERTY') == 'DIVISIBLE_BY') {
+    Errores.verificarModuloCero(this);
     TIPOS.verificarTipoOperandoEntero(this, 'NUMBER_TO_CHECK', TIPOS.Errores.NumOp1, "TIPOS1", TIPOS.Errores.IntOp1);
     TIPOS.verificarTipoOperandoEntero(this, 'DIVISOR', TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_NUMERO1), "TIPOS2", TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_ENTERO1));
   } else {
@@ -709,7 +710,7 @@ Blockly.Blocks['math_round'].tipado = function() {
 
 // resto
 Blockly.Blocks['math_modulo'].tipado = function() {
-  Errores.verificarDivisionPorCero(this);
+  Errores.verificarModuloCero(this);
   TIPOS.verificarTipoOperandoEntero(this, 'DIVIDEND', TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_NUMERO1), "TIPOS1", TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_ENTERO1));
   TIPOS.verificarTipoOperandoEntero(this, 'DIVISOR', TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_NUMERO1), "TIPOS2", TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_ENTERO1));
   return TIPOS.ENTERO;

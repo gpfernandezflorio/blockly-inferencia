@@ -148,6 +148,13 @@ Errores.verificarDivisionPorCero = function(bloque) {
     }
 };
 
+Errores.verificarModuloCero = function(bloque) {
+  let divisor = bloque.getInputTargetBlock("DIVISOR");
+  if (divisor && divisor.type == "math_number" && divisor.getFieldValue("NUM") == "0") {
+    Inferencia.advertencia(bloque, "MATH_ZERO_DIV", Blockly.Msg.TIPOS_ERROR_ZERO_DIV);
+  }
+};
+
 Errores.VerificarLogaritmoPositivo = function(bloque) {
   let operando = bloque.getInputTargetBlock("NUM");
   if (operando) {
