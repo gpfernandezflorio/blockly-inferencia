@@ -692,7 +692,12 @@ Blockly.Blocks['math_constant'].tipado = function() { return TIPOS.FRACCION; };
 
 // propiedad matemática
 Blockly.Blocks['math_number_property'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'NUMBER_TO_CHECK', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS");
+  if (this.getFieldValue('PROPERTY') == 'DIVISIBLE_BY') {
+    TIPOS.verificarTipoOperandoEntero(this, 'NUMBER_TO_CHECK', TIPOS.Errores.NumOp1, "TIPOS1", TIPOS.Errores.IntOp1);
+    TIPOS.verificarTipoOperandoEntero(this, 'DIVISOR', TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_NUMERO1), "TIPOS2", TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_ENTERO1));
+  } else {
+    TIPOS.verificarTipoOperando(this, 'NUMBER_TO_CHECK', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS");
+  }
   return TIPOS.BINARIO;
 };
 
