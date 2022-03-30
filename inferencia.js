@@ -48,7 +48,7 @@ Inferencia.crearMapaDeVariables = function(ws) {
   Inferencia.variables_auxiliares = {};
   TIPOS.init();
   let bloques_tope = Inferencia.obtenerBloquesSuperiores(ws);
-  Inferencia.buscarGlobales(bloques_tope);
+  Inferencia.buscarGlobales(bloques_tope, ws);
   Inferencia.definirVariablesDelMapa(bloques_tope);
   Inferencia.ejecutar(ws);
 };
@@ -66,11 +66,20 @@ Inferencia.obtenerBloquesSuperiores = function(ws) {
 }
 
 // Reviso los bloques que definen variables globales y las agrego al scope GLOBAL
-Inferencia.buscarGlobales = function(bloques) {
+Inferencia.buscarGlobales = function(bloques, ws) {
   for (let bloque of bloques) {
     if (bloque.variableLibre) {
       bloque.variableLibre(true);
     }
+  }
+  // En caso de que se permitan los bloques de uso sin su definición asociada...
+  for (let bloque of
+        ws.getBlocksByType('procedures_callreturn').concat(
+        ws.getBlocksByType('procedures_callnoreturn'))
+    .filter((x) => Inferencia.esBloqueUtil(x))) {
+    let nombre = bloque.getProcedureCall();
+    TIPOS.obtenerArgumentosDefinicion(bloque, Inferencia.scopeProcedimiento(nombre));
+    Inferencia.nuevaVariable(nombre, Inferencia.scopeGlobal(), "PROC");
   }
 };
 
@@ -85,27 +94,39 @@ Inferencia.definirVariablesDelMapa = function(bloques_tope) {
   }
 };
 
-Inferencia.agregarVariableAlMapa = function(nombre, bloque, clase, global) {
+Inferencia.agregarVariableAlMapa = function(nombre, bloque_o_scope, clase, global) {
   let scope;
-  if (global) {
-    scope = Inferencia.scopeGlobal();
+  if (bloque_o_scope.id_s) {
+    scope = bloque_o_scope;
   } else {
-    scope = Inferencia.obtenerScope(bloque, nombre);
+    if (global) {
+      scope = Inferencia.scopeGlobal();
+    } else {
+      scope = Inferencia.obtenerScope(bloque_o_scope, nombre);
+    }
   }
   if (scope) {
-    let id_variable = Inferencia.obtenerIdVariable(nombre, scope, clase);
-    if (!(id_variable in Inferencia.mapa_de_variables)) {
-      Inferencia.mapa_de_variables[id_variable] = {
-        scope: scope,
-        nombre_original: nombre,
-        tipo: TIPOS.VAR(id_variable),
-        otras_variables_que_unifican: [],
-        bloques_dependientes: []
-      };
-    }
-    return Inferencia.mapa_de_variables[id_variable];
+    return Inferencia.nuevaVariable(nombre, scope, clase);
   }
   return undefined;
+};
+
+Inferencia.nuevaVariable = function(nombre, scope, clase) {
+  let id_variable = Inferencia.obtenerIdVariable(nombre, scope, clase);
+  let nuevaDefinicion;
+  if (id_variable in Inferencia.mapa_de_variables) {
+    nuevaDefinicion = Inferencia.mapa_de_variables[id_variable];
+  } else {
+    nuevaDefinicion = {
+      scope: scope,
+      nombre_original: nombre,
+      tipo: TIPOS.VAR(id_variable),
+      otras_variables_que_unifican: [],
+      bloques_dependientes: []
+    };
+    Inferencia.mapa_de_variables[id_variable] = nuevaDefinicion;
+  }
+  return nuevaDefinicion;
 };
 
 Inferencia.asociarParDeVariables = function(v1, v2) {
@@ -191,14 +212,18 @@ Inferencia.numeroDeCiclo = function(bloque) {
   return i;
 };
 
+Inferencia.scopeProcedimiento = function(nombre) {
+  return {
+    id_s: Inferencia.obtenerIdVariable(nombre, null, "PROC"),
+    nombre_original: nombre
+  };
+}
+
 Inferencia.obtenerScope = function(bloque, nombre) {
   let tope = Inferencia.esUnArgumento(nombre, bloque);
   if (tope) {
-    let nombre_procedimiento = tope.getField('NAME').getText();
-    return {
-      id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
-      nombre_original: nombre_procedimiento
-    };
+    let nombre_procedimiento = tope.getProcedureDef()[0];
+    return Inferencia.scopeProcedimiento(nombre_procedimiento);
   }
   if (Inferencia.modo_variables() == Inferencia.GLOBALES) {
     return Inferencia.scopeGlobal();
@@ -210,11 +235,8 @@ Inferencia.obtenerScope = function(bloque, nombre) {
   tope = Inferencia.topeScope(bloque, nombre);
   if (tope) {
     if (tope.type == 'procedures_defnoreturn' || tope.type == 'procedures_defreturn') {
-      let nombre_procedimiento = tope.getField('NAME').getText();
-      return {
-        id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
-        nombre_original: nombre_procedimiento
-      };
+      let nombre_procedimiento = tope.getProcedureDef()[0];
+      return Inferencia.scopeProcedimiento(nombre_procedimiento);
     } else if (tope.type == "main") {
       return {
         id_s: "MAIN",

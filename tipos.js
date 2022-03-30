@@ -345,9 +345,10 @@ TIPOS.str = function(tipo) {
 
 // BLOQUES CON VARIABLES LIBRES
 
-TIPOS.obtenerArgumentosDefinicion = function(bloque) {
+TIPOS.obtenerArgumentosDefinicion = function(bloque, opt_scope) {
+  if (opt_scope === undefined) { opt_scope = bloque; }
   for (let argumento of bloque.arguments_) {
-    Inferencia.agregarVariableAlMapa(argumento, bloque, "VAR", false);
+    Inferencia.agregarVariableAlMapa(argumento, opt_scope, "VAR", false);
   }
 }
 
@@ -359,7 +360,7 @@ TIPOS.init = function() {
 Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {
   if (global) {
     TIPOS.obtenerArgumentosDefinicion(this);
-    let nombre = this.getFieldValue('NAME');
+    let nombre = this.getProcedureDef()[0];
     Inferencia.agregarVariableAlMapa(nombre, this, "PROC", true);
   }
 };
@@ -367,7 +368,7 @@ Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {
 Blockly.Blocks['procedures_defnoreturn'].variableLibre = function(global) {
   if (global) {
     TIPOS.obtenerArgumentosDefinicion(this);
-    let nombre = this.getFieldValue('NAME');
+    let nombre = this.getProcedureDef()[0];
     let mapa = Inferencia.agregarVariableAlMapa(nombre, this, "PROC", true);
     mapa.tipo = TIPOS.VOID;
   }
@@ -383,7 +384,7 @@ Blockly.Blocks['variables_set'].variableLibre = function(global) {
 // FUNCIONES DE TIPADO PARA CADA BLOQUE
 
 TIPOS.tiparArgumentosLlamado = function(bloque) {
-  let nombre_procedimiento = bloque.getField('NAME').getText();
+  let nombre_procedimiento = bloque.getProcedureCall();
   let scope = {
     id_s: Inferencia.obtenerIdVariable(nombre_procedimiento, null, "PROC"),
     nombre_original: nombre_procedimiento
