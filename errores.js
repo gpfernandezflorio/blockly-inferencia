@@ -134,6 +134,19 @@ Errores.msgBloqueGenerico = function(clave, bloque, tag, mensaje, manual) {
   }
 };
 
+Errores.advertenciaRecolectadaAntes = function(bloque, tag) {
+  return Errores.recolectadoAntesGenerico(bloque, tag, Errores.datos["WRN"]);
+};
+
+Errores.errorRecolectadoAntes = function(bloque, tag) {
+  return Errores.recolectadoAntesGenerico(bloque, tag, Errores.datos["ERR"]);
+};
+
+Errores.recolectadoAntesGenerico = function(bloque, tag, datos) {
+  return datos.automaticos && datos.automaticos[bloque.id] &&
+    Object.keys(datos.automaticos[bloque.id]).some((x) => x.startsWith(tag));
+};
+
 Errores.VerificarComparacionEntreFloats = function(bloque, tipo) {
   if (tipo && (tipo.id == "FRACCION")) {
     Inferencia.advertencia(bloque, "MATH_FLOAT_EQ", Blockly.Msg.TIPOS_ERROR_FLOAT_EQ);
