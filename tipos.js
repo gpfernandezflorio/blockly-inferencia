@@ -112,22 +112,21 @@ TIPOS.fallo = function(tipo) {
  * Uses regular expressions to identify if the input number is an integer or a
  * floating point.
  * @param {string} numberString String of the number to identify.
- * @return type.
  */
 TIPOS.identifyNumber = function(numberString) {
-    if (TIPOS.regExpInt_.test(numberString)) {
-      var intValue = parseInt(numberString);
-      if (isNaN(intValue)) {
-        return null;
-      }
-      /*if (intValue > 32767 || intValue < -32768) {
-        return LARGE_NUMBER;
-      }*/
-      return TIPOS.ENTERO;
-    } else if (TIPOS.regExpFloat_.test(numberString)) {
-      return TIPOS.FRACCION;
+  if (TIPOS.regExpInt_.test(numberString)) {
+    var intValue = parseInt(numberString);
+    if (isNaN(intValue)) {
+      return null;
     }
-    return null;
+    /*if (intValue > 32767 || intValue < -32768) {
+      return LARGE_NUMBER;
+    }*/
+    return TIPOS.ENTERO;
+  } else if (TIPOS.regExpFloat_.test(numberString)) {
+    return TIPOS.FRACCION;
+  }
+  return null;
 };
 TIPOS.regExpInt_ = new RegExp(/^-?\d+$/);
 TIPOS.regExpFloat_ = new RegExp(/^-?[0-9]*[.][0-9]+$/);
