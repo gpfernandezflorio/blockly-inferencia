@@ -155,6 +155,12 @@ Inferencia.esUnArgumento = function(nombre, bloque) {
   return undefined;
 };
 
+Inferencia.esUnaVariableLocal = function(nombre, bloque) {
+  let scope = Inferencia.obtenerScope(bloque, nombre);
+  if (!scope) { return true; }
+  return scope.id_s != "GLOBAL" && !Inferencia.esUnArgumento(nombre, bloque);
+};
+
 // Algoritmo de inferencia
 Inferencia.ejecutar = function(ws) {
   // Esto tiene el problema de que si una asignación de variable tiene un llamado y otra
