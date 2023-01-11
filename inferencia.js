@@ -309,5 +309,5 @@ Inferencia.tipo = function(bloque) {
 };
 
 Inferencia.esBloqueUtil = function(bloque) {
-  return bloque.isEnabled() && !bloque.isDisposed();
+  return bloque.isEnabled() && !bloque.getInheritedDisabled() && !bloque.isDisposed();
 };
