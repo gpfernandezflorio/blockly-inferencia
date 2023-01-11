@@ -5,6 +5,7 @@ const Inferencia = {
 };
 
 /** Contenido de infoEntorno:
+  - todosLosBloques: función que dado un workspace devuelve la lista de bloques a recorrer
   - bloquesSuperiores: lista de bloques superiores
   - error: función para notificar un error en un bloque
   - advertencia: función para notificar una advertencia en un bloque
@@ -12,6 +13,7 @@ const Inferencia = {
   - bloquesScopeAdicionales (opcional): función que determina el scope de una variable más allá de los scopes ya definidos
 **/
 Inferencia.inicializar = function(infoEntorno) {
+  Inferencia.todosLosBloques = infoEntorno.todosLosBloques;
   Inferencia.bloquesSuperiores = infoEntorno.bloquesSuperiores;
   Inferencia.error = infoEntorno.error;
   Inferencia.advertencia = infoEntorno.advertencia;
@@ -181,7 +183,7 @@ Inferencia.ejecutar = function(ws) {
       todosLosBloques[1].push(bloque);
     }
   }*/
-  let todosLosBloques = ws.getAllBlocks(true).filter((x) => Inferencia.esBloqueUtil(x));
+  let todosLosBloques = Inferencia.todosLosBloques(ws).filter((x) => Inferencia.esBloqueUtil(x));
   /* Lo ejecuto dos veces para que la primera se resuelvan los tipos de
     las variables y la segunda se hagan las verificaciones de tipado con los
     tipos de las variables ya resueltos.

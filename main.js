@@ -45,6 +45,7 @@ Main.inicializar = function() {
   Main.agregarBloquesCustom();
   TIPOS.inicializar();
   Inferencia.inicializar({
+    todosLosBloques: (ws) => ws.getAllBlocks(true),
     bloquesSuperiores: bloques_superiores,
     error: Main.error,
     advertencia: Main.advertencia,
