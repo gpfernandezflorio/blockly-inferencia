@@ -552,9 +552,6 @@ TIPOS.agregarFuncionesBloques = function() {
   for (let b in Blockly.Blocks) {
     if (!('tipado' in Blockly.Blocks[b])) { // Algunos los defino a mano
       Blockly.Blocks[b].tipado = function() {
-        if (b in TIPOS.tipadoExtra) {
-          TIPOS.tipadoExtra[b].call(this);
-        }
         let lista_inputs = TIPOS.tiposInput[b] || [];
         if (typeof lista_inputs == 'function') {
           lista_inputs = lista_inputs.call(this);
@@ -570,6 +567,9 @@ TIPOS.agregarFuncionesBloques = function() {
             let tipo = i.t == 'NUMERO' ? TIPOS.ENTERO : (i.t in TIPOS ? TIPOS[i.t] : i.t);
             tipos_inputs[i.k] = TIPOS.verificarTipoOperando(this, i.k, tipo, msgs[0]);
           }
+        }
+        if (b in TIPOS.tipadoExtra) {
+          TIPOS.tipadoExtra[b].call(this, tipos_inputs);
         }
         if (b in TIPOS.tipoSalida) {
           let salida = TIPOS.tipoSalida[b];
@@ -863,7 +863,7 @@ TIPOS.tiposInput = {
 };
 
 TIPOS.tipadoExtra = {
-  controls_flow_statements: function() {
+  controls_flow_statements: function(tipos_inputs) {
     let tope = this;
     const bloquesLoop = Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.LOOP_TYPES;
     while(tope) {
@@ -875,30 +875,30 @@ TIPOS.tipadoExtra = {
       Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_LOOP);
     }
   },
-  math_arithmetic: function() { Errores.verificarDivisionPorCero(this); },
-  math_single: function() {
+  math_arithmetic: function(tipos_inputs) { Errores.verificarDivisionPorCero(this); },
+  math_single: function(tipos_inputs) {
     let op = this.getFieldValue('OP');
     if (['LN','LOG10'].includes(op)) { Errores.VerificarLogaritmoPositivo(this); }
     else if (op == 'ROOT') { Errores.VerificarRaizNoNegativa(this); }
   },
-  math_modulo: function() { Errores.verificarModuloCero(this); },
-  variables_set: function() {
+  math_modulo: function(tipos_inputs) { Errores.verificarModuloCero(this); },
+  variables_set: function(tipos_inputs) {
     let obj = Blockly.Msg.TIPOS_VARIABLE1;
     if (Inferencia.esUnArgumento(this.getField("VAR").getText(), this)) { obj = Blockly.Msg.TIPOS_ARGUMENTO1; }
     let v_id = Inferencia.obtenerIdVariableBloque(this);
     TIPOS.tipadoVariable(this, v_id, "VALUE", obj);
   },
-  procedures_defreturn: function() {
+  procedures_defreturn: function(tipos_inputs) {
     let v_id = Inferencia.obtenerIdFuncionBloque(this);
     TIPOS.tipadoVariable(this, v_id, "RETURN", Blockly.Msg.TIPOS_FUNCION1);
   },
-  procedures_callnoreturn: function() {
+  procedures_callnoreturn: function(tipos_inputs) {
     TIPOS.tiparArgumentosLlamado(this);
   },
-  procedures_callreturn: function() {
+  procedures_callreturn: function(tipos_inputs) {
     TIPOS.tiparArgumentosLlamado(this);
   },
-  procedures_ifreturn: function() {
+  procedures_ifreturn: function(tipos_inputs) {
     let tope = Inferencia.topeScope(this);
     if (tope) {
       if (/*(tope.type == 'procedures_defnoreturn') || */(tope.type == 'procedures_defreturn')) {
