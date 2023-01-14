@@ -44,6 +44,7 @@ Main.inicializar = function() {
   Main.modo_variables = Inferencia.LOCALES;
   Main.agregarBloquesCustom();
   TIPOS.inicializar();
+  TIPOS.agregarFuncionesBloques();
   Inferencia.inicializar({
     todosLosBloques: (ws) => ws.getAllBlocks(true),
     bloquesSuperiores: bloques_superiores,

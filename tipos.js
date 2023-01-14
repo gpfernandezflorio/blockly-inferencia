@@ -546,6 +546,9 @@ TIPOS.inicializar = function() {
     Blockly.Msg.TIPOS_ERROR_VARIABLE_2
       .replace("%1", tipoNuevo)
   ];}
+};
+
+TIPOS.agregarFuncionesBloques = function() {
   for (let b in Blockly.Blocks) {
     if (!('tipado' in Blockly.Blocks[b])) { // Algunos los defino a mano
       Blockly.Blocks[b].tipado = function() {
