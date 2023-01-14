@@ -380,8 +380,6 @@ Blockly.Blocks['variables_set'].variableLibre = function(global) {
   }
 };
 
-// FUNCIONES DE TIPADO PARA CADA BLOQUE
-
 TIPOS.tiparArgumentosLlamado = function(bloque) {
   let nombre_procedimiento = bloque.getProcedureCall();
   let scope = {
@@ -407,7 +405,7 @@ TIPOS.tiparArgumentosLlamado = function(bloque) {
           return [
             Blockly.Msg.TIPOS_ERROR_GENERICO.replace("%1", Blockly.Msg.TIPOS_ERROR_ARGUMENTO.replace("%1", nombreArg)).replace("%2", tipoArg.str1()),
             Blockly.Msg.TIPOS_ERROR_PERO.replace("%1", tipoOperando.str1())
-          ]; }, "TIPOS_ARG"+n);
+          ]; });
         if (tipoUnificado) {
           if (TIPOS.fallo(tipoUnificado) && tipoUnificado.idError == "INCOMPATIBLES") { tipoUnificado.sugerido = tipoUnificado.t2; }
           if (!TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
@@ -418,7 +416,7 @@ TIPOS.tiparArgumentosLlamado = function(bloque) {
   }
 };
 
-TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
+TIPOS.verificarTipoOperando = function(bloque, input, tipo, error) {
   let tipoResultado = undefined;
   let operando = bloque.getInputTargetBlock(input);
   let tipoOperando = Inferencia.tipo(operando);
@@ -428,8 +426,8 @@ TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
     } else {
       let tipoUnificado = TIPOS.unificar(tipoOperando, tipo);
       if (TIPOS.fallo(tipoUnificado)) {
-        if ((typeof(error)=="string") || Array.isArray(error)) { Inferencia.error(bloque, tag, error); }
-        else if (typeof(error)=="function") { Inferencia.error(bloque, tag, error(tipoOperando)); }
+        if ((typeof(error)=="string") || Array.isArray(error)) { Inferencia.error(bloque, `TIPOS_${input}`, error); }
+        else if (typeof(error)=="function") { Inferencia.error(bloque, `TIPOS_${input}`, error(tipoOperando)); }
         return tipoUnificado;
       } else {
         tipoResultado = tipoUnificado;
@@ -439,14 +437,14 @@ TIPOS.verificarTipoOperando = function(bloque, input, tipo, error, tag) {
   return tipoResultado;
 };
 
-TIPOS.verificarTipoOperandoEntero = function(bloque, input, error, tag, errorEntero=null) {
+TIPOS.verificarTipoOperandoEntero = function(bloque, input, error, errorEntero=null) {
   if (!errorEntero) {
     errorEntero = error;
   }
-  let tipo = TIPOS.verificarTipoOperando(bloque, input, TIPOS.ENTERO, error, tag);
+  let tipo = TIPOS.verificarTipoOperando(bloque, input, TIPOS.ENTERO, error);
   if (tipo && TIPOS.distintos(tipo, TIPOS.ENTERO)) {
-    if ((typeof(errorEntero)=="string") || Array.isArray(errorEntero)) { Inferencia.error(bloque, tag, errorEntero); }
-    else if (typeof(errorEntero)=="function") { Inferencia.error(bloque, tag, errorEntero(tipo)); }
+    if ((typeof(errorEntero)=="string") || Array.isArray(errorEntero)) { Inferencia.error(bloque, `TIPOS_${input}`, errorEntero); }
+    else if (typeof(errorEntero)=="function") { Inferencia.error(bloque, `TIPOS_${input}`, errorEntero(tipo)); }
   }
   return tipo;
 };
@@ -533,6 +531,10 @@ TIPOS.inicializar = function() {
   TIPOS.Errores.AlfaOp2 = function(alfa) { return TIPOS.Errores.AlfaOpN(alfa, 2); };
   TIPOS.Errores.Dividendo = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVIDENDO); };
   TIPOS.Errores.Divisor = function(s) { return TIPOS.Errores.SX(s, Blockly.Msg.TIPOS_ERROR_DIVISOR); };
+  TIPOS.Errores.DivnNum = TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_NUMERO1);
+  TIPOS.Errores.DivnInt = TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_ENTERO1);
+  TIPOS.Errores.DivsNum = TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_NUMERO1);
+  TIPOS.Errores.DivsInt = TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_ENTERO1);
   TIPOS.Errores.AlfaModo = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg["TIPOS_ERROR_"+modo]); };
   TIPOS.Errores.IterAlfa = function(alfa, modo) { return TIPOS.Errores.SX(alfa.str1(), Blockly.Msg.TIPOS_ERROR_ITERADOR); };
   TIPOS.Errores.IterNum = TIPOS.Errores.SX(Blockly.Msg.TIPOS_NUMERO1, Blockly.Msg.TIPOS_ERROR_ITERADOR);
@@ -544,67 +546,374 @@ TIPOS.inicializar = function() {
     Blockly.Msg.TIPOS_ERROR_VARIABLE_2
       .replace("%1", tipoNuevo)
   ];}
-};
-
-// booleano
-Blockly.Blocks['logic_boolean'].tipado = function() { return TIPOS.BINARIO; };
-
-// alternativa condicional
-Blockly.Blocks['controls_if'].tipado = function() {
-  let n = 0;
-  while(this.getInput('IF' + n)) {
-    TIPOS.verificarTipoOperando(this, 'IF' + n, TIPOS.BINARIO, TIPOS.Errores.BoolCond, "TIPOS_IF"+n);
-    n++;
+  for (let b in Blockly.Blocks) {
+    if (!('tipado' in Blockly.Blocks[b])) { // Algunos los defino a mano
+      Blockly.Blocks[b].tipado = function() {
+        if (b in TIPOS.tipadoExtra) {
+          TIPOS.tipadoExtra[b].call(this);
+        }
+        let lista_inputs = TIPOS.tiposInput[b] || [];
+        if (typeof lista_inputs == 'function') {
+          lista_inputs = lista_inputs.call(this);
+        }
+        let tipos_inputs = {};
+        for (let i of lista_inputs) {
+          let msgs = i.msg;
+          if (!Array.isArray(i.msg)) { msgs = [i.msg]; }
+          msgs = msgs.map(x => TIPOS.Errores[x]);
+          if (i.t == 'ENTERO') {
+            tipos_inputs[i.k] = TIPOS.verificarTipoOperandoEntero(this, i.k, msgs[0], msgs[1]);
+          } else {
+            let tipo = i.t == 'NUMERO' ? TIPOS.ENTERO : (i.t in TIPOS ? TIPOS[i.t] : i.t);
+            tipos_inputs[i.k] = TIPOS.verificarTipoOperando(this, i.k, tipo, msgs[0]);
+          }
+        }
+        if (b in TIPOS.tipoSalida) {
+          let salida = TIPOS.tipoSalida[b];
+          if (typeof salida == 'function') {
+            salida = salida.call(this, tipos_inputs);
+          }
+          return salida;
+        }
+      };
+    }
   }
 };
 
-Blockly.Blocks['logic_compare'].tipado = function() {
-  let op = this.getFieldValue("OP");
-  if (["EQ","NEQ"].includes(op)) {
-    let tipo = TIPOS.operandosDelMismoTipo(this, ["A","B"], TIPOS.Errores.Op2, "TIPOS_EQ");
-    Errores.VerificarComparacionEntreFloats(this, tipo);
-  } else {
-    TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, TIPOS.Errores.NumOp1, "TIPOS_A");
-    TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, TIPOS.Errores.NumOp2, "TIPOS_B");
+/*
+  Devuelve el tipo que espera el bloque dado en el input dado o:
+  - Si espera un número (no importa si es ENTERO o FRACCION) devuelve
+    el string NUMERO (que no es un id de tipo)
+  - Si no espera ningún tipo en particular (por ejemplo las variables)
+    devuelve undefined
+  bloque : BlockSvg
+  input_key : string
+*/
+TIPOS.tipoEsperado = function(bloque, input_key) {
+  if (bloque.type in TIPOS.tiposInput) {
+    let lista_inputs = TIPOS.tiposInput[bloque.type];
+    if (typeof lista_inputs == 'function') {
+      lista_inputs = lista_inputs.call(bloque);
+    }
+    for (let i of lista_inputs) {
+      if (i.k == input_key) {
+        return i.t in TIPOS ? TIPOS[i.t] : i.t;
+      }
+    }
   }
-  return TIPOS.BINARIO;
+  /* algunos bloques puedem no tener tipo esperado
+    * logic_compare (cuando la operación es == o !=)
+    * text_join
+    * text_prompt_ext
+    * variables_set
+    * variables_global_def
+    * procedures_defreturn
+    * lists_create_with
+    * lists_repeat (el input ITEM)
+    * lists_indexOf (el input FIND, que en realidad depende del input VALUE)
+    * lists_setIndex (el input TO, que en realidad depende del input LIST)
+  */
+  return undefined;
 };
 
-Blockly.Blocks['logic_operation'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'A', TIPOS.BINARIO, TIPOS.Errores.BoolOp1, "TIPOS_A");
-  TIPOS.verificarTipoOperando(this, 'B', TIPOS.BINARIO, TIPOS.Errores.BoolOp2, "TIPOS_B");
-  return TIPOS.BINARIO;
+// FUNCIONES DE TIPADO PARA CADA BLOQUE
+
+TIPOS.tipoSalida = {
+  logic_boolean: TIPOS.BINARIO,
+  logic_operation: TIPOS.BINARIO,
+  logic_negate: TIPOS.BINARIO,
+  logic_ternary: function(tipos_inputs) {
+    let tipo = TIPOS.operandosDelMismoTipo(this, ["THEN","ELSE"], TIPOS.Errores.OpsTernario, "TIPOS_EQ");
+    if (tipo===undefined) tipo = TIPOS.AUXVAR(this.id);
+    return tipo;
+  },
+  logic_compare: TIPOS.BINARIO,
+  math_number: function(tipos_inputs) {
+    let tipo = TIPOS.identifyNumber(this.getFieldValue('NUM'));
+    if (tipo) return tipo;
+    // Si llego acá es porque el string es inválido pero eso no debería poder pasar
+    // Por las dudas, devuelvo int
+    return TIPOS.ENTERO;
+  },
+  math_arithmetic: function(t) {
+    if (t.A) {
+      if (TIPOS.fallo(t.A)) { return t.A; }
+      if (t.B) {
+        if (TIPOS.fallo(t.B)) { return t.B; }
+        return TIPOS.unificar(t.A, t.B); // No puede fallar porque ambos unifican con entero
+      }
+      return t.A;
+    } else if (t.B) {
+      return t.B;
+    }
+    return TIPOS.ENTERO;
+  },
+  math_single: function(t) {
+    if (["ABS","NEG"].includes(this.getFieldValue('OP'))) {
+      if (t.NUM) { return t.NUM; }
+      return TIPOS.ENTERO;
+    }
+    return TIPOS.FRACCION;
+  },
+  math_trig: TIPOS.FRACCION,
+  math_constant: TIPOS.FRACCION,
+  math_round: TIPOS.ENTERO,
+  math_modulo: TIPOS.ENTERO,
+  math_random_int: TIPOS.ENTERO,
+  math_random_float: TIPOS.FRACCION,
+  math_atan2: TIPOS.FRACCION,
+  text: TIPOS.TEXTO,
+  text_join: TIPOS.TEXTO,
+  text_isEmpty: TIPOS.BINARIO,
+  text_prompt_ext: function(tipos_inputs) {
+    return TIPOS[this.getFieldValue('TYPE')=="TEXT" ? 'TEXTO' : 'ENTERO'];
+  },
+  variables_get: function(tipos_inputs) {
+    // si ya está en el mapa, retorno lo que está en el mapa
+    // si no, creo una nueva variable fresca y la agrego al mapa
+    let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
+    return (tipoVariable === undefined) ? TIPOS.AUXVAR(this.id) : tipoVariable.tipo;
+  },
+  procedures_callreturn: function(tipos_inputs) {
+    let id = Inferencia.obtenerIdFuncionBloque(this);
+    if (id) return TIPOS.VAR(id);
+    // Si llego acá hay un bloque procedures_call sin su procedures_def
+    // Tengo que devolver algo para que no falle el algoritmo pero igual en
+    // la próxima iteración este bloque va a desaparecer
+    return TIPOS.AUXVAR(this.id);
+  },
+  math_on_list: function(t) {
+    let op = this.getFieldValue('OP');
+    let tipo = t.LIST === undefined
+      ? TIPOS.LISTA(op=="RANDOM" ? TIPOS.AUXVAR(this.id) : TIPOS.ENTERO)
+      : t.LIST;
+    if (TIPOS.fallo(tipo)) { return tipo; }
+    if (["AVERAGE", "STD_DEV"].includes(op)) {
+      return TIPOS.FRACCION;
+    }
+    return tipo.alfa;
+  },
+  lists_repeat: function(tipos_inputs) {
+    let tipoElem = Inferencia.tipo(this.getInputTargetBlock("ITEM"));
+    if (tipoElem) {
+      if (!TIPOS.fallo(tipoElem)) {
+        return TIPOS.LISTA(tipoElem);
+      }
+    }
+    return TIPOS.LISTA(TIPOS.AUXVAR(this.id));
+  },
+  lists_length: TIPOS.ENTERO,
+  lists_isEmpty: TIPOS.BINARIO,
+  lists_getIndex: function(t) {
+    let tipo = t.VALUE === undefined
+      ? TIPOS.LISTA(TIPOS.AUXVAR(this.id))
+      : t.VALUE;
+    if (TIPOS.fallo(tipo)) { return tipo; }
+    return tipo.alfa;
+  },
+  lists_getSublist: function(t) {
+    let tipo = t.LIST === undefined
+      ? TIPOS.LISTA(TIPOS.AUXVAR(this.id))
+      : t.LIST;
+    return tipo;
+  },
+  lists_split: function(tipos_inputs) {
+    let is_list = this.getFieldValue('MODE') == 'SPLIT';
+    return is_list ? TIPOS.LISTA(TIPOS.TEXTO) : TIPOS.TEXTO;
+  },
+  lists_sort: function(t) {
+    let is_numeric = this.getFieldValue('TYPE') == "NUMERIC";
+    let tipo = t.LIST === undefined
+      ? TIPOS.LISTA(TIPOS[is_numeric ? 'ENTERO' : 'TEXTO'])
+      : t.LIST;
+    return tipo;
+  }
 };
 
-Blockly.Blocks['logic_negate'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, TIPOS.Errores.BoolOp, "TIPOS_BOOL");
-  return TIPOS.BINARIO;
+TIPOS.tiposInput = {
+  logic_operation:[
+    {k:'A', t:'BINARIO', msg:'BoolOp1'},
+    {k:'B', t:'BINARIO', msg:'BoolOp2'}
+  ],
+  logic_negate: [{k:'BOOL', t:'BINARIO', msg:'BoolOp'}],
+  logic_ternary: [{k:'IF', t:'BINARIO', msg:'BoolOp1'}],
+  logic_compare: function() {
+    let op = this.getFieldValue("OP");
+    if (["EQ","NEQ"].includes(op)) {
+      let tipo = TIPOS.operandosDelMismoTipo(this, ["A","B"], TIPOS.Errores.Op2, "TIPOS_EQ");
+      Errores.VerificarComparacionEntreFloats(this, tipo);
+      return [];
+    }
+    return [
+      {k:'A', t:'NUMERO', msg:'NumOp1'},
+      {k:'B', t:'NUMERO', msg:'NumOp2'}
+    ];
+  },
+  controls_if: function() {
+    let res = []; let n = 0;
+    while(this.getInput('IF' + n)) {
+      res.push({k:'IF' + n, t:'BINARIO', msg:'BoolCond'});
+      n++;
+    }
+    return res;
+  },
+  controls_repeat_ext: [{k:'TIMES', t:'ENTERO', msg:['NumOp','IntOp']}],
+  controls_whileUntil: [{k:'BOOL', t:'BINARIO', msg:'BoolCond'}],
+  math_arithmetic: [
+    {k:'A', t:'NUMERO', msg:'NumOp1'},
+    {k:'B', t:'NUMERO', msg:'NumOp2'}
+  ],
+  math_single: [{k:'NUM', t:'NUMERO', msg:'NumOp'}],
+  math_trig: [{k:'NUM', t:'NUMERO', msg:'NumOp'}],
+  math_number_property: function() {
+    if (this.getFieldValue('PROPERTY') == 'DIVISIBLE_BY') {
+      Errores.verificarModuloCero(this);
+      return [
+        {k:'NUMBER_TO_CHECK', t:'ENTERO', msg:['NumOp1','IntOp1']},
+        {k:'DIVISOR', t:'ENTERO', msg:['DivsNum','DivsInt']}
+      ];
+    }
+    return [{k:'NUMBER_TO_CHECK', t:'NUMERO', msg:'NumOp'}]
+  },
+  math_round: [{k:'NUM', t:'NUMERO', msg:'NumOp'}],
+  math_modulo: [
+    {k:'DIVIDEND', t:'ENTERO', msg:['DivnNum','DivnInt']},
+    {k:'DIVISOR', t:'ENTERO', msg:['DivsNum','DivsInt']}
+  ],
+  math_random_int: [
+    {k:'FROM', t:'NUMERO', msg:'NumOp1'},
+    {k:'TO', t:'NUMERO', msg:'NumOp2'}
+  ],
+  math_atan2: [
+    {k:'X', t:'NUMERO', msg:'NumOp1'},
+    {k:'Y', t:'NUMERO', msg:'NumOp2'}
+  ],
+  text_isEmpty: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
+  procedures_ifreturn: [{k:'CONDITION', t:'BINARIO', msg:'BoolCond'}],
+  math_on_list: function() {
+    let op = this.getFieldValue('OP');
+    return [{k:'LIST',
+      t:(op=="RANDOM")
+        ? TIPOS.LISTA(TIPOS.AUXVAR(this.id))
+        : TIPOS.LISTA(TIPOS.ENTERO),
+      msg:(op=="RANDOM") ? 'ListOp' : 'ListNumOp'
+    }];
+  },
+  lists_repeat: [{k:'NUM', t:'ENTERO', msg:['NumOp2','IntOp2']}],
+  lists_length: function() {
+    return [{k:'VALUE', t:TIPOS.LISTA(TIPOS.AUXVAR(this.id)), msg:'ListOp'}];
+  },
+  lists_isEmpty: function() {
+    return [{k:'VALUE', t:TIPOS.LISTA(TIPOS.AUXVAR(this.id)), msg:'ListOp'}];
+  },
+  lists_getIndex: function() {
+    return [
+      {k:'VALUE', t:TIPOS.LISTA(TIPOS.AUXVAR(this.id)), msg:'ListOp1'},
+      {k:'AT', t:'ENTERO', msg:['NumOp2','IntOp2']}
+    ];
+  },
+  lists_getSublist: function() {
+    let posicionAt2 = 2;
+    if (this.getInput('AT1') && this.getInput('AT1').type == Blockly.INPUT_VALUE) { posicionAt2 ++; }
+    return [
+      {k:'LIST', t:TIPOS.LISTA(TIPOS.AUXVAR(this.id)), msg:'ListOp1'},
+      {k:'AT1', t:'ENTERO', msg:['NumOp2','IntOp2']},
+      {k:'AT2', t:'ENTERO', msg:[TIPOS.Errores.NumOpN(posicionAt2),TIPOS.Errores.IntOpN(posicionAt2)]}
+    ];
+  },
+  lists_split: function() {
+    let is_text = this.getFieldValue('MODE') == 'SPLIT';
+    return [
+      {k:'DELIM', t:'TEXTO', msg:'TextOp2'},
+      {k:'INPUT',
+        t:(is_text
+          ? 'TEXTO'
+          : TIPOS.LISTA(TIPOS.AUXVAR(this.id))
+        ), msg:`${is_text ? 'Text' : 'List'}Op1`
+      }
+    ];
+  },
+  lists_sort: function() {
+    let is_numeric = this.getFieldValue('TYPE') == "NUMERIC";
+    return [{k:'LIST', t:TIPOS.LISTA(TIPOS[is_numeric ? 'ENTERO' : 'TEXTO']),
+      msg:`List${is_numeric ? 'Num' : 'Text'}Op`
+    }];
+  }
+  /* Los siguientes sólo los agrego para TIPOS.tipoEsperado porque la función
+    de tipado se define aparte */
+  ,
+  controls_for: [
+    {k:'FROM', t:'NUMERO', msg:'NumOp1'},
+    {k:'TO', t:'NUMERO', msg:'NumOp2'},
+    {k:'BY', t:'NUMERO', msg:'NumOp3'}
+  ],
+  controls_forEach: function() {
+    return [{k:'LIST', t:TIPOS.LISTA(TIPOS.AUXVAR(this.id)), msg:'ListOp'}];
+  },
+  lists_indexOf: function() {
+    return [{k:'VALUE', t:TIPOS.LISTA(TIPOS.AUXVAR(this.id)), msg:'ListOp1'}]
+  },
+  lists_setIndex: function() { return [
+    {k:'LIST', t:TIPOS.LISTA(TIPOS.AUXVAR(this.id)), msg:'ListOp1'},
+    {k:'AT', t:'ENTERO', msg:['NumOp2','IntOp2']}
+  ];}
 };
 
-// operador ternario
-Blockly.Blocks['logic_ternary'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'IF', TIPOS.BINARIO, TIPOS.Errores.BoolOp1, "TIPOS_IF");
-  let tipo = TIPOS.operandosDelMismoTipo(this, ["THEN","ELSE"], TIPOS.Errores.OpsTernario, "TIPOS_EQ");
-  if (tipo===undefined) tipo = TIPOS.AUXVAR(this.id);
-  return tipo;
-};
-
-// repetición simple
-Blockly.Blocks['controls_repeat_ext'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'TIMES', TIPOS.Errores.NumOp, "TIPOS_TIMES", TIPOS.Errores.IntOp);
-};
-
-// repetición condicional
-Blockly.Blocks['controls_whileUntil'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'BOOL', TIPOS.BINARIO, TIPOS.Errores.BoolCond, "TIPOS_BOOL");
+TIPOS.tipadoExtra = {
+  controls_flow_statements: function() {
+    let tope = this;
+    const bloquesLoop = Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.LOOP_TYPES;
+    while(tope) {
+      if (bloquesLoop.includes(tope.type)) { return; }
+      tope = tope.getSurroundParent();
+    }
+    // Si está suelto, ya tiene una advertencia así que esta sólo se la doy si no está suelto
+    if (Inferencia.topeScope(this)) {
+      Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_LOOP);
+    }
+  },
+  math_arithmetic: function() { Errores.verificarDivisionPorCero(this); },
+  math_single: function() {
+    let op = this.getFieldValue('OP');
+    if (['LN','LOG10'].includes(op)) { Errores.VerificarLogaritmoPositivo(this); }
+    else if (op == 'ROOT') { Errores.VerificarRaizNoNegativa(this); }
+  },
+  math_modulo: function() { Errores.verificarModuloCero(this); },
+  variables_set: function() {
+    let obj = Blockly.Msg.TIPOS_VARIABLE1;
+    if (Inferencia.esUnArgumento(this.getField("VAR").getText(), this)) { obj = Blockly.Msg.TIPOS_ARGUMENTO1; }
+    let v_id = Inferencia.obtenerIdVariableBloque(this);
+    TIPOS.tipadoVariable(this, v_id, "VALUE", obj);
+  },
+  procedures_defreturn: function() {
+    let v_id = Inferencia.obtenerIdFuncionBloque(this);
+    TIPOS.tipadoVariable(this, v_id, "RETURN", Blockly.Msg.TIPOS_FUNCION1);
+  },
+  procedures_callnoreturn: function() {
+    TIPOS.tiparArgumentosLlamado(this);
+  },
+  procedures_callreturn: function() {
+    TIPOS.tiparArgumentosLlamado(this);
+  },
+  procedures_ifreturn: function() {
+    let tope = Inferencia.topeScope(this);
+    if (tope) {
+      if (/*(tope.type == 'procedures_defnoreturn') || */(tope.type == 'procedures_defreturn')) {
+        let v_id = Inferencia.obtenerIdFuncionBloque(tope);
+        TIPOS.tipadoVariable(this, v_id, "VALUE", Blockly.Msg.TIPOS_FUNCION1);
+      } else {
+        Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_FUN);
+      }
+    }
+  }
 };
 
 // repetición con iterador
 Blockly.Blocks['controls_for'].tipado = function() {
   let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
-  let tipoInicial = TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, TIPOS.Errores.NumOp1, "TIPOS_FROM");
-  TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, TIPOS.Errores.NumOp2, "TIPOS_TO");
-  let tipoPaso = TIPOS.verificarTipoOperando(this, 'BY', TIPOS.ENTERO, TIPOS.Errores.NumOp3, "TIPOS_BY");
+  let tipoInicial = TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, TIPOS.Errores.NumOp1);
+  TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, TIPOS.Errores.NumOp2);
+  let tipoPaso = TIPOS.verificarTipoOperando(this, 'BY', TIPOS.ENTERO, TIPOS.Errores.NumOp3);
   if (tipoVariable === undefined) { return; }
   tipoVariable = tipoVariable.tipo;
   if (TIPOS.fallo(tipoVariable)) { return; }
@@ -618,7 +927,7 @@ Blockly.Blocks['controls_for'].tipado = function() {
 // repetición en lista
 Blockly.Blocks['controls_forEach'].tipado = function() {
   let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
-  let tipoOperando = TIPOS.verificarTipoOperando(this, 'LIST', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), TIPOS.Errores.ListOp, "TIPOS_LIST");
+  let tipoOperando = TIPOS.verificarTipoOperando(this, 'LIST', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), TIPOS.Errores.ListOp);
   if (TIPOS.fallo(tipoOperando)) { return; }
   if (tipoVariable === undefined) { return; }
   tipoVariable = tipoVariable.tipo;
@@ -629,176 +938,44 @@ Blockly.Blocks['controls_forEach'].tipado = function() {
   }
 };
 
-Blockly.Blocks['controls_flow_statements'].tipado = function() {
-  let tope = this;
-  const bloquesLoop = Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.LOOP_TYPES;
-  while(tope) {
-    if (bloquesLoop.includes(tope.type)) { return; }
-    tope = tope.getSurroundParent();
-  }
-  // Si está suelto, ya tiene una advertencia así que esta sólo se la doy si no está suelto
-  if (Inferencia.topeScope(this)) {
-    Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_LOOP);
-  }
-};
-
-// bloque numérico (puede ser entero o fracción)
-Blockly.Blocks['math_number'].tipado = function() {
-  let tipo = TIPOS.identifyNumber(this.getFieldValue('NUM'));
-  if (tipo) return tipo;
-  // Si llego acá es porque el string es inválido pero eso no debería poder pasar
-  // Por las dudas, devuelvo int
-  return TIPOS.ENTERO;
-};
-
-// operación aritmética binaria
-Blockly.Blocks['math_arithmetic'].tipado = function() {
-  Errores.verificarDivisionPorCero(this);
-  let tipoA = TIPOS.verificarTipoOperando(this, 'A', TIPOS.ENTERO, TIPOS.Errores.NumOp1, "TIPOS_A");
-  let tipoB = TIPOS.verificarTipoOperando(this, 'B', TIPOS.ENTERO, TIPOS.Errores.NumOp2, "TIPOS_B");
-  if (tipoA) {
-    if (TIPOS.fallo(tipoA)) { return tipoA; }
-    if (tipoB) {
-      if (TIPOS.fallo(tipoB)) { return tipoB; }
-      return TIPOS.unificar(tipoA, tipoB); // No puede fallar porque ambos unifican con entero
-    }
-    return tipoA;
-  } else if (tipoB) {
-    return tipoB;
-  }
-  return TIPOS.ENTERO;
-};
-
-// operación aritmética unaria
-Blockly.Blocks['math_single'].tipado = function() {
-  let op = this.getFieldValue('OP');
-  if (['LN','LOG10'].includes(op)) { Errores.VerificarLogaritmoPositivo(this); }
-  if (op == 'ROOT') { Errores.VerificarRaizNoNegativa(this); }
-  let tipo = TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS_NUM");
-  if (op=="ABS" || op=="NEG") {
-    if (tipo) { return tipo; }
-    return TIPOS.ENTERO;
-  }
-  return TIPOS.FRACCION;
-};
-
-// operación trigonométrica
-Blockly.Blocks['math_trig'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS_NUM");
-  return TIPOS.FRACCION;
-};
-
-// constante matemática
-Blockly.Blocks['math_constant'].tipado = function() { return TIPOS.FRACCION; };
-
-// propiedad matemática
-Blockly.Blocks['math_number_property'].tipado = function() {
-  if (this.getFieldValue('PROPERTY') == 'DIVISIBLE_BY') {
-    Errores.verificarModuloCero(this);
-    TIPOS.verificarTipoOperandoEntero(this, 'NUMBER_TO_CHECK', TIPOS.Errores.NumOp1, "TIPOS_NUMBER_TO_CHECK", TIPOS.Errores.IntOp1);
-    TIPOS.verificarTipoOperandoEntero(this, 'DIVISOR', TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_NUMERO1), "TIPOS_DIVISOR", TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_ENTERO1));
-  } else {
-    TIPOS.verificarTipoOperando(this, 'NUMBER_TO_CHECK', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS_NUMBER_TO_CHECK");
-  }
-  return TIPOS.BINARIO;
-};
-
-// redondear
-Blockly.Blocks['math_round'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'NUM', TIPOS.ENTERO, TIPOS.Errores.NumOp, "TIPOS_NUM");
-  return TIPOS.ENTERO;
-};
-
-// resto
-Blockly.Blocks['math_modulo'].tipado = function() {
-  Errores.verificarModuloCero(this);
-  TIPOS.verificarTipoOperandoEntero(this, 'DIVIDEND', TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_NUMERO1), "TIPOS_DIVIDEND", TIPOS.Errores.Dividendo(Blockly.Msg.TIPOS_ENTERO1));
-  TIPOS.verificarTipoOperandoEntero(this, 'DIVISOR', TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_NUMERO1), "TIPOS_DIVISOR", TIPOS.Errores.Divisor(Blockly.Msg.TIPOS_ENTERO1));
-  return TIPOS.ENTERO;
-};
-
-// entero aleatorio
-Blockly.Blocks['math_random_int'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'FROM', TIPOS.ENTERO, TIPOS.Errores.NumOp1, "TIPOS_FROM");
-  TIPOS.verificarTipoOperando(this, 'TO', TIPOS.ENTERO, TIPOS.Errores.NumOp2, "TIPOS_TO");
-  return TIPOS.ENTERO;
-};
-
-// flotante aleatorio
-Blockly.Blocks['math_random_float'].tipado = function() { return TIPOS.FRACCION; };
-
-// arcotangente
-Blockly.Blocks['math_atan2'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'X', TIPOS.ENTERO, TIPOS.Errores.NumOp1, "TIPOS_X");
-  TIPOS.verificarTipoOperando(this, 'Y', TIPOS.ENTERO, TIPOS.Errores.NumOp2, "TIPOS_Y");
-  return TIPOS.FRACCION;
-};
-
-// bloques de texto
-TIPOS.fTexto = function() { return TIPOS.TEXTO; };
-for (let i of ['text','text_join']) {
-  Blockly.Blocks[i].tipado = TIPOS.fTexto;
-}
-
 // longitud de texto
 Blockly.Blocks['text_length'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp, "TIPOS_VALUE");
+  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp);
   return TIPOS.ENTERO;
-};
-
-// texto vacío
-Blockly.Blocks['text_isEmpty'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp, "TIPOS_VALUE");
-  return TIPOS.BINARIO;
 };
 
 // encontrar texto
 Blockly.Blocks['text_indexOf'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp1, "TIPOS_VALUE");
-  TIPOS.verificarTipoOperando(this, 'FIND', TIPOS.TEXTO, TIPOS.Errores.TextOp2, "TIPOS_FIND");
+  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp1);
+  TIPOS.verificarTipoOperando(this, 'FIND', TIPOS.TEXTO, TIPOS.Errores.TextOp2);
   return TIPOS.ENTERO;
 };
 
 // indexar texto
 Blockly.Blocks['text_charAt'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp1, "TIPOS_VALUE");
-  TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, "TIPOS_AT", TIPOS.Errores.IntOp2);
+  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp1);
+  TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, TIPOS.Errores.IntOp2);
   return TIPOS.CARACTER;
 };
 
 // indexar texto
 Blockly.Blocks['text_getSubstring'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'STRING', TIPOS.TEXTO, TIPOS.Errores.TextOp1, "TIPOS_STRING");
-  TIPOS.verificarTipoOperandoEntero(this, 'AT1', TIPOS.Errores.NumOp2, "TIPOS_AT1", TIPOS.Errores.IntOp2,);
-  TIPOS.verificarTipoOperandoEntero(this, 'AT2', TIPOS.Errores.NumOp3, "TIPOS_AT2", TIPOS.Errores.IntOp3,);
+  //TIPOS.verificarTipoOperando(this, 'STRING', TIPOS.TEXTO, TIPOS.Errores.TextOp1);
+  TIPOS.verificarTipoOperandoEntero(this, 'AT1', TIPOS.Errores.NumOp2, TIPOS.Errores.IntOp2,);
+  TIPOS.verificarTipoOperandoEntero(this, 'AT2', TIPOS.Errores.NumOp3, TIPOS.Errores.IntOp3,);
   return TIPOS.TEXTO;
 };
 
 // case
 Blockly.Blocks['text_changeCase'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, TIPOS.Errores.TextOp, "TIPOS_TEXT");
+  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, TIPOS.Errores.TextOp);
   return TIPOS.TEXTO;
 };
 
 // espacios
 Blockly.Blocks['text_trim'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, TIPOS.Errores.TextOp, "TIPOS_TEXT");
+  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, TIPOS.Errores.TextOp);
   return TIPOS.TEXTO;
-};
-
-// longitud de texto
-Blockly.Blocks['text_prompt_ext'].tipado = function() {
-  if (this.getFieldValue('TYPE')=="TEXT") { return TIPOS.TEXTO; }
-  return TIPOS.ENTERO;
-};
-
-// obtener variable
-// si ya está en el mapa, retorno lo que está en el mapa
-// si no, creo una nueva variable fresca y la agrego al mapa
-Blockly.Blocks['variables_get'].tipado = function() {
-  let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
-  if (tipoVariable === undefined) { return TIPOS.AUXVAR(this.id); }
-  return tipoVariable.tipo;
 };
 
 TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
@@ -843,50 +1020,6 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
   }
 };
 
-// asignar variable
-Blockly.Blocks['variables_set'].tipado = function() {
-  let obj = Blockly.Msg.TIPOS_VARIABLE1;
-  if (Inferencia.esUnArgumento(this.getField("VAR").getText(), this)) { obj = Blockly.Msg.TIPOS_ARGUMENTO1; }
-  let v_id = Inferencia.obtenerIdVariableBloque(this);
-  TIPOS.tipadoVariable(this, v_id, "VALUE", obj);
-};
-
-// definición de función
-Blockly.Blocks['procedures_defreturn'].tipado = function() {
-  let v_id = Inferencia.obtenerIdFuncionBloque(this);
-  TIPOS.tipadoVariable(this, v_id, "RETURN", Blockly.Msg.TIPOS_FUNCION1);
-};
-
-// llamado a un procedimiento
-Blockly.Blocks['procedures_callnoreturn'].tipado = function() {
-  TIPOS.tiparArgumentosLlamado(this);
-}
-
-// llamado a función
-// retorno una variable fresca
-Blockly.Blocks['procedures_callreturn'].tipado = function() {
-  TIPOS.tiparArgumentosLlamado(this);
-  let id = Inferencia.obtenerIdFuncionBloque(this);
-  if (id) return TIPOS.VAR(id);
-  // Si llego acá hay un bloque procedures_call sin su procedures_def
-  // Tengo que devolver algo para que no falle el algoritmo pero igual en
-  // la próxima iteración este bloque va a desaparecer
-  return TIPOS.AUXVAR(this.id);
-};
-
-Blockly.Blocks['procedures_ifreturn'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'CONDITION', TIPOS.BINARIO, TIPOS.Errores.BoolCond, "TIPOS_CONDITION");
-  let tope = Inferencia.topeScope(this);
-  if (tope) {
-    if (/*(tope.type == 'procedures_defnoreturn') || */(tope.type == 'procedures_defreturn')) {
-      let v_id = Inferencia.obtenerIdFuncionBloque(tope);
-      TIPOS.tipadoVariable(this, v_id, "VALUE", Blockly.Msg.TIPOS_FUNCION1);
-    } else {
-      Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_FUN);
-    }
-  }
-};
-
 delete Blockly.Blocks['procedures_ifreturn'].onchange;
 
 // bloque de lista
@@ -902,130 +1035,33 @@ Blockly.Blocks['lists_create_with'].tipado = function() {
   return TIPOS.LISTA(tipo);
 };
 
-Blockly.Blocks['math_on_list'].tipado = function() {
-  let op = this.getFieldValue('OP');
-  let tipoLista;
-  let error;
-  if (op=="RANDOM") {
-    tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-    error = TIPOS.Errores.ListOp;
-  } else {
-    tipoLista = TIPOS.LISTA(TIPOS.ENTERO);
-    error = TIPOS.Errores.ListNumOp;
-  }
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, error, "TIPOS_LIST");
-  if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
-  if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  if (["AVERAGE", "STD_DEV"].includes(op)) {
-    return TIPOS.FRACCION;
-  }
-  return tipoListaUnificado.alfa;
-};
-
-Blockly.Blocks['lists_repeat'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'NUM', TIPOS.Errores.NumOp2, "TIPOS_NUM", TIPOS.Errores.IntOp2);
-  let bloque = this.getInputTargetBlock("ITEM");
-  let tipoElem = Inferencia.tipo(bloque);
-  if (tipoElem) {
-    if (!TIPOS.fallo(tipoElem)) {
-      return TIPOS.LISTA(tipoElem);
-    }
-  }
-  return TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-};
-
-// longitud de lista
-Blockly.Blocks['lists_length'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), TIPOS.Errores.ListOp, "TIPOS_VALUE");
-  return TIPOS.ENTERO;
-};
-
-// lista vacía
-Blockly.Blocks['lists_isEmpty'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), TIPOS.Errores.ListOp, "TIPOS_VALUE");
-  return TIPOS.BINARIO;
-};
-
 // Índice de elemento en lista
 Blockly.Blocks['lists_indexOf'].tipado = function() {
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS_VALUE");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1);
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, TIPOS.Errores.AlfaOp2(tipoListaUnificado.alfa), "TIPOS_FIND");
+  let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'FIND', tipoListaUnificado.alfa, TIPOS.Errores.AlfaOp2(tipoListaUnificado.alfa));
   /*Parece que no hace falta:
   if (tipoAlfaUnificado && !TIPOS.fallo(tipoAlfaUnificado) && TIPOS.distintos(tipoAlfaUnificado, tipoListaUnificado.alfa)) {
-    TIPOS.verificarTipoOperando(this, "VALUE", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1, "TIPOS_VALUE");
+    TIPOS.verificarTipoOperando(this, "VALUE", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1);
   }*/
   return TIPOS.ENTERO;
 };
 
-Blockly.Blocks['lists_getIndex'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, "TIPOS_AT", TIPOS.Errores.IntOp2);
-  let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "VALUE", tipoLista, TIPOS.Errores.ListOp1, "TIPOS_VALUE");
-  if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
-  if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  return tipoListaUnificado.alfa;
-};
-
 Blockly.Blocks['lists_setIndex'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, "TIPOS_AT", TIPOS.Errores.IntOp2);
+  TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, TIPOS.Errores.IntOp2);
   let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, TIPOS.Errores.ListOp1, "TIPOS_LIST");
+  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, TIPOS.Errores.ListOp1);
   if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
   if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
   let modo = this.getFieldValue('MODE');
-  let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, TIPOS.Errores.AlfaModo(tipoListaUnificado.alfa, modo), "TIPOS_TO");
+  let tipoAlfaUnificado = TIPOS.verificarTipoOperando(this, 'TO', tipoListaUnificado.alfa, TIPOS.Errores.AlfaModo(tipoListaUnificado.alfa, modo));
   /*Parece que no hace falta:
   if (tipoAlfaUnificado && !TIPOS.fallo(tipoAlfaUnificado) && TIPOS.distintos(tipoAlfaUnificado, tipoListaUnificado.alfa)) {
-    TIPOS.verificarTipoOperando(this, "LIST", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1, "TIPOS_LIST");
+    TIPOS.verificarTipoOperando(this, "LIST", TIPOS.LISTA(tipoAlfaUnificado), TIPOS.Errores.ListOp1);
   }*/
 };
-
-// Obtener sublista
-Blockly.Blocks['lists_getSublist'].tipado = function() {
-  TIPOS.verificarTipoOperandoEntero(this, 'AT1', TIPOS.Errores.NumOp2, "TIPOS_AT1", TIPOS.Errores.IntOp2);
-  let posicionAt2 = 2;
-  if (this.getInput('AT1') && this.getInput('AT1').type == Blockly.INPUT_VALUE) { posicionAt2 ++; }
-  TIPOS.verificarTipoOperandoEntero(this, 'AT2', TIPOS.Errores.NumOpN(posicionAt2), "TIPOS_AT2", TIPOS.Errores.IntOpN(posicionAt2));
-  let tipoLista = TIPOS.LISTA(TIPOS.AUXVAR(this.id));
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, TIPOS.Errores.ListOp1, "TIPOS_LIST");
-  if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
-  if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  return tipoListaUnificado;
-};
-
-// conversión texto <-> lista
-Blockly.Blocks['lists_split'].tipado = function() {
-  TIPOS.verificarTipoOperando(this, 'DELIM', TIPOS.TEXTO, TIPOS.Errores.TextOp2, "TIPOS_DELIM");
-  let modo = this.getFieldValue('MODE');
-  if (modo == 'SPLIT') {
-    TIPOS.verificarTipoOperando(this, 'INPUT', TIPOS.TEXTO, TIPOS.Errores.TextOp1, "TIPOS_INPUT");
-    return TIPOS.LISTA(TIPOS.TEXTO);
-  }
-  TIPOS.verificarTipoOperando(this, 'INPUT', TIPOS.LISTA(TIPOS.AUXVAR(this.id)), TIPOS.Errores.ListOp1, "TIPOS_INPUT");
-  return TIPOS.TEXTO;
-};
-
-// Ordernar lista
-Blockly.Blocks['lists_sort'].tipado = function() {
-  let op = this.getFieldValue('TYPE');
-  let tipoLista;
-  let error;
-  if (op=="NUMERIC") {
-    tipoLista = TIPOS.LISTA(TIPOS.ENTERO);
-    error = TIPOS.Errores.ListNumOp;
-  } else {
-    tipoLista = TIPOS.LISTA(TIPOS.TEXTO);
-    error = TIPOS.Errores.ListTextOp;
-  }
-  let tipoListaUnificado = TIPOS.verificarTipoOperando(this, "LIST", tipoLista, error, "TIPOS_LIST");
-  if (tipoListaUnificado===undefined) { tipoListaUnificado=tipoLista; }
-  if (TIPOS.fallo(tipoListaUnificado)) { return tipoListaUnificado; }
-  return tipoListaUnificado;
-};
-
 
 TIPOS.agregarBloqueVariableGlobal = function() {
   Blockly.Blocks['variables_global_def'].variableLibre = function(global) {
