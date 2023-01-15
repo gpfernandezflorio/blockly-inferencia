@@ -548,6 +548,15 @@ TIPOS.inicializar = function() {
   ];}
 };
 
+TIPOS.verificacionesTipadoPorClave = {
+  ENTERO: function(bloque, k, msgs) {
+    return TIPOS.verificarTipoOperandoEntero(bloque, k, msgs[0], msgs[1]);
+  },
+  NUMERO: function(bloque, k, msgs) {
+    return TIPOS.verificarTipoOperando(this, k, TIPOS.ENTERO, msgs[0]);
+  }
+};
+
 TIPOS.agregarFuncionesBloques = function() {
   for (let b in Blockly.Blocks) {
     if (!('tipado' in Blockly.Blocks[b])) { // Algunos los defino a mano
@@ -558,13 +567,13 @@ TIPOS.agregarFuncionesBloques = function() {
         }
         let tipos_inputs = {};
         for (let i of lista_inputs) {
-          let msgs = i.msg;
+          let msgs = 'msg' in i ? i.msg : [];
           if (!Array.isArray(i.msg)) { msgs = [i.msg]; }
-          msgs = msgs.map(x => TIPOS.Errores[x]);
-          if (i.t == 'ENTERO') {
-            tipos_inputs[i.k] = TIPOS.verificarTipoOperandoEntero(this, i.k, msgs[0], msgs[1]);
+          msgs = msgs.map(x => x in TIPOS.Errores ? TIPOS.Errores[x] : x);
+          if (i.t in TIPOS.verificacionesTipadoPorClave) {
+            tipos_inputs[i.k] = TIPOS.verificacionesTipadoPorClave[i.t](this, i.k, msgs);
           } else {
-            let tipo = i.t == 'NUMERO' ? TIPOS.ENTERO : (i.t in TIPOS ? TIPOS[i.t] : i.t);
+            let tipo = i.t in TIPOS ? TIPOS[i.t] : i.t;
             tipos_inputs[i.k] = TIPOS.verificarTipoOperando(this, i.k, tipo, msgs[0]);
           }
         }
@@ -715,10 +724,9 @@ TIPOS.tipoSalida = {
     return tipo.alfa;
   },
   lists_getSublist: function(t) {
-    let tipo = t.LIST === undefined
+    return t.LIST === undefined
       ? TIPOS.LISTA(TIPOS.AUXVAR(this.id))
       : t.LIST;
-    return tipo;
   },
   lists_split: function(tipos_inputs) {
     let is_list = this.getFieldValue('MODE') == 'SPLIT';
