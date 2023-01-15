@@ -553,7 +553,7 @@ TIPOS.verificacionesTipadoPorClave = {
     return TIPOS.verificarTipoOperandoEntero(bloque, k, msgs[0], msgs[1]);
   },
   NUMERO: function(bloque, k, msgs) {
-    return TIPOS.verificarTipoOperando(this, k, TIPOS.ENTERO, msgs[0]);
+    return TIPOS.verificarTipoOperando(bloque, k, TIPOS.ENTERO, msgs[0]);
   }
 };
 
