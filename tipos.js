@@ -568,7 +568,7 @@ TIPOS.agregarFuncionesBloques = function() {
         let tipos_inputs = {};
         for (let i of lista_inputs) {
           let msgs = 'msg' in i ? i.msg : [];
-          if (!Array.isArray(i.msg)) { msgs = [i.msg]; }
+          if (!Array.isArray(msgs)) { msgs = [msgs]; }
           msgs = msgs.map(x => x in TIPOS.Errores ? TIPOS.Errores[x] : x);
           if (i.t in TIPOS.verificacionesTipadoPorClave) {
             tipos_inputs[i.k] = TIPOS.verificacionesTipadoPorClave[i.t](this, i.k, msgs);
