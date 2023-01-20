@@ -305,13 +305,32 @@ Inferencia.obtenerIdVariable = function(nombre_original, scope, prefijo) {
   return prefijo + scope + nombre_original;
 };
 
-Inferencia.tipo = function(bloque) {
+Inferencia.tipadoBloque = function(bloque) {
   if (
     bloque &&
     Inferencia.esBloqueUtil(bloque) &&
     bloque.tipado
   ) {
     return bloque.tipado();
+  }
+  return undefined;
+};
+
+Inferencia.tipo = function(bloque) {
+  if (
+    bloque &&
+    Inferencia.esBloqueUtil(bloque)
+  ) {
+    if (bloque.type in TIPOS.tipoSalida) {
+      let salida = TIPOS.tipoSalida[bloque.type];
+      if (typeof salida == 'function') {
+        let tipos_inputs = TIPOS.tiposEsperados.call(bloque);
+        salida = salida.call(bloque, tipos_inputs);
+      }
+      return salida;
+    } else if (bloque.tipado) {
+      return bloque.tipado();
+    }
   }
   return undefined;
 };

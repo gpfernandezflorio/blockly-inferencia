@@ -17,7 +17,7 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
         TIPOS.redefinirTipoVariable(v2, tipo);
       }
       for (bloque of Inferencia.mapa_de_variables[v.v].bloques_dependientes) {
-        Inferencia.tipo(bloque);
+        Inferencia.tipadoBloque(bloque);
       }
     }
   } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
@@ -27,7 +27,7 @@ TIPOS.redefinirTipoVariable = function(v, tipo) {
         TIPOS.redefinirTipoVariable(v2, tipo);
       }
       for (bloque of Inferencia.variables_auxiliares[v.v].bloques_dependientes) {
-        Inferencia.tipo(bloque);
+        Inferencia.tipadoBloque(bloque);
       }
     }
   }
@@ -561,22 +561,7 @@ TIPOS.agregarFuncionesBloques = function() {
   for (let b in Blockly.Blocks) {
     if (!('tipado' in Blockly.Blocks[b])) { // Algunos los defino a mano
       Blockly.Blocks[b].tipado = function() {
-        let lista_inputs = TIPOS.tiposInput[b] || [];
-        if (typeof lista_inputs == 'function') {
-          lista_inputs = lista_inputs.call(this);
-        }
-        let tipos_inputs = {};
-        for (let i of lista_inputs) {
-          let msgs = 'msg' in i ? i.msg : [];
-          if (!Array.isArray(msgs)) { msgs = [msgs]; }
-          msgs = msgs.map(x => x in TIPOS.Errores ? TIPOS.Errores[x] : x);
-          if (i.t in TIPOS.verificacionesTipadoPorClave) {
-            tipos_inputs[i.k] = TIPOS.verificacionesTipadoPorClave[i.t](this, i.k, msgs);
-          } else {
-            let tipo = i.t in TIPOS ? TIPOS[i.t] : i.t;
-            tipos_inputs[i.k] = TIPOS.verificarTipoOperando(this, i.k, tipo, msgs[0]);
-          }
-        }
+        let tipos_inputs = TIPOS.tiposEsperados.call(this);
         if (b in TIPOS.tipadoExtra) {
           TIPOS.tipadoExtra[b].call(this, tipos_inputs);
         }
@@ -590,6 +575,26 @@ TIPOS.agregarFuncionesBloques = function() {
       };
     }
   }
+};
+
+TIPOS.tiposEsperados = function() {
+  let lista_inputs = TIPOS.tiposInput[this.b] || [];
+  if (typeof lista_inputs == 'function') {
+    lista_inputs = lista_inputs.call(this);
+  }
+  let tipos_inputs = {};
+  for (let i of lista_inputs) {
+    let msgs = 'msg' in i ? i.msg : [];
+    if (!Array.isArray(msgs)) { msgs = [msgs]; }
+    msgs = msgs.map(x => x in TIPOS.Errores ? TIPOS.Errores[x] : x);
+    if (i.t in TIPOS.verificacionesTipadoPorClave) {
+      tipos_inputs[i.k] = TIPOS.verificacionesTipadoPorClave[i.t](this, i.k, msgs);
+    } else {
+      let tipo = i.t in TIPOS ? TIPOS[i.t] : i.t;
+      tipos_inputs[i.k] = TIPOS.verificarTipoOperando(this, i.k, tipo, msgs[0]);
+    }
+  }
+  return tipos_inputs;
 };
 
 /*
