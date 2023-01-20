@@ -578,7 +578,7 @@ TIPOS.agregarFuncionesBloques = function() {
 };
 
 TIPOS.tiposEsperados = function() {
-  let lista_inputs = TIPOS.tiposInput[this.b] || [];
+  let lista_inputs = TIPOS.tiposInput[this.type] || [];
   if (typeof lista_inputs == 'function') {
     lista_inputs = lista_inputs.call(this);
   }
