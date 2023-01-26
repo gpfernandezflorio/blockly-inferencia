@@ -630,6 +630,7 @@ TIPOS.tipoEsperado = function(bloque, input_key) {
   }
   /* algunos bloques pueden no tener tipo esperado
     * logic_compare (cuando la operación es == o !=)
+    * logic_ternary
     * variables_set
     * variables_global_def
     * procedures_defreturn
@@ -637,6 +638,7 @@ TIPOS.tipoEsperado = function(bloque, input_key) {
     * lists_repeat (el input ITEM)
     * lists_indexOf (el input FIND, que en realidad depende del input VALUE)
     * lists_setIndex (el input TO, que en realidad depende del input LIST)
+    * text_join
     * todos los que esperan textos si TIPOS.subtiparTexto es 'solo_entradas'
   */
   return undefined;
@@ -823,14 +825,6 @@ TIPOS.tiposInput = {
     {k:'Y', t:'NUMERO', msg:'NumOp2'}
   ],
   text_prompt_ext: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
-  text_join: function() {
-    let res = []; let n = 0;
-    while(this.getInput('ADD' + n)) {
-      res.push({k:'ADD' + n, t:'TEXTO', msg:TIPOS.Errores.TextOpN(n+1)});
-      n++;
-    }
-    return res;
-  },
   text_isEmpty: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
   text_length: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
   text_indexOf: [
