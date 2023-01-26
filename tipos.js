@@ -682,6 +682,12 @@ TIPOS.tipoSalida = {
   text: TIPOS.TEXTO,
   text_join: TIPOS.TEXTO,
   text_isEmpty: TIPOS.BINARIO,
+  text_length: TIPOS.ENTERO,
+  text_indexOf: TIPOS.ENTERO,
+  text_charAt: TIPOS.CARACTER,
+  text_getSubstring: TIPOS.TEXTO,
+  text_changeCase: TIPOS.TEXTO,
+  text_trim: TIPOS.TEXTO,
   text_prompt_ext: function(tipos_inputs) {
     return TIPOS[this.getFieldValue('TYPE')=="TEXT" ? 'TEXTO' : 'ENTERO'];
   },
@@ -804,7 +810,23 @@ TIPOS.tiposInput = {
     {k:'X', t:'NUMERO', msg:'NumOp1'},
     {k:'Y', t:'NUMERO', msg:'NumOp2'}
   ],
-  text_isEmpty: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
+  // text_isEmpty: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
+  // text_length: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
+  text_indexOf: [
+      // {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
+      {k:'FIND', t:'TEXTO', msg:'TextOp2'}
+  ],
+  text_charAt: [
+      // {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
+      {k:'AT', t:'ENTERO', msg:['NumOp2','IntOp2']}
+  ],
+  text_getSubstring: [
+      // {k:'STRING', t:'TEXTO', msg:'TextOp1'},
+      {k:'AT1', t:'ENTERO', msg:['NumOp2','IntOp2']},
+      {k:'AT2', t:'ENTERO', msg:['NumOp3','IntOp3']}
+  ],
+  // text_changeCase: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
+  // text_trim: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
   procedures_ifreturn: [{k:'CONDITION', t:'BINARIO', msg:'BoolCond'}],
   math_on_list: function() {
     let op = this.getFieldValue('OP');
@@ -952,46 +974,6 @@ Blockly.Blocks['controls_forEach'].tipado = function() {
     let alfa = tipoOperando.alfa;
     TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), alfa, Blockly.Msg.TIPOS_VARIABLE1);
   }
-};
-
-// longitud de texto
-Blockly.Blocks['text_length'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp);
-  return TIPOS.ENTERO;
-};
-
-// encontrar texto
-Blockly.Blocks['text_indexOf'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp1);
-  TIPOS.verificarTipoOperando(this, 'FIND', TIPOS.TEXTO, TIPOS.Errores.TextOp2);
-  return TIPOS.ENTERO;
-};
-
-// indexar texto
-Blockly.Blocks['text_charAt'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'VALUE', TIPOS.TEXTO, TIPOS.Errores.TextOp1);
-  TIPOS.verificarTipoOperandoEntero(this, 'AT', TIPOS.Errores.NumOp2, TIPOS.Errores.IntOp2);
-  return TIPOS.CARACTER;
-};
-
-// indexar texto
-Blockly.Blocks['text_getSubstring'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'STRING', TIPOS.TEXTO, TIPOS.Errores.TextOp1);
-  TIPOS.verificarTipoOperandoEntero(this, 'AT1', TIPOS.Errores.NumOp2, TIPOS.Errores.IntOp2,);
-  TIPOS.verificarTipoOperandoEntero(this, 'AT2', TIPOS.Errores.NumOp3, TIPOS.Errores.IntOp3,);
-  return TIPOS.TEXTO;
-};
-
-// case
-Blockly.Blocks['text_changeCase'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, TIPOS.Errores.TextOp);
-  return TIPOS.TEXTO;
-};
-
-// espacios
-Blockly.Blocks['text_trim'].tipado = function() {
-  //TIPOS.verificarTipoOperando(this, 'TEXT', TIPOS.TEXTO, TIPOS.Errores.TextOp);
-  return TIPOS.TEXTO;
 };
 
 TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
