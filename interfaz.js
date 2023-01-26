@@ -85,6 +85,11 @@ Main.completarInterfaz = function() {
       `<option>${Blockly.Msg.TIPOS_SOLO_LOCALES}</option>` +
       `<option>${Blockly.Msg.TIPOS_SOLO_GLOBALES}</option>` +
       `<option>${Blockly.Msg.TIPOS_AMBAS}</option>` +
+    '</select></td></tr>' +
+    `<tr><td>${Blockly.Msg.TIPOS_SUBTIPADO_TEXTO}</td><td><select id="opcion_subtipado_texto" onchange="Main.opcion_subtipado_texto();">` +
+      `<option>${Blockly.Msg.TIPOS_SIEMPRE}</option>` +
+      `<option>${Blockly.Msg.TIPOS_NUNCA}</option>` +
+      `<option>${Blockly.Msg.TIPOS_SOLO_ENTRADAS}</option>` +
     '</select></td></tr>\
   </table>';
 };

@@ -1,4 +1,5 @@
 TIPOS = {i:0};
+TIPOS.subtiparTexto = 'siempre'; // 'nunca', 'solo_entradas'
 
 TIPOS.obtenerTipoVariable = function(v) {
   if (v.src == "V" && v.v in Inferencia.mapa_de_variables) {
@@ -214,6 +215,7 @@ TIPOS.LISTA = function(alfa) {
     strs: function() { return (this.alfa.id == "VAR" ? Blockly.Msg.TIPOS_LISTAS : Blockly.Msg.TIPOS_LISTA_DES.replace("%1", this.alfa.strs())); },
     alfa: alfa,
     unificar: function(otro) {
+      if (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO") { return otro; }
       if (otro.id == "LISTA") {
         let tipo_unificado = TIPOS.unificar(this.alfa, otro.alfa);
         if (TIPOS.fallo(tipo_unificado)) {
@@ -240,7 +242,7 @@ TIPOS.ENTERO = {
   str1: function() { return Blockly.Msg.TIPOS_NUMERO1; },
   strs: function() { return Blockly.Msg.TIPOS_NUMEROS; },
   unificar: function(otro) {
-    if (otro.id == "FRACCION" || otro.id == "ENTERO") {
+    if (otro.id == "FRACCION" || otro.id == "ENTERO" || (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO")) {
       return otro;
     }
     return TIPOS.INCOMPATIBLES(this, otro);
@@ -254,6 +256,7 @@ TIPOS.FRACCION = {
   str1: function() { return Blockly.Msg.TIPOS_FRACCION1; },
   strs: function() { return Blockly.Msg.TIPOS_FRACCIONS; },
   unificar: function(otro) {
+    if (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO") { return otro; }
     if (otro.id == "FRACCION" || otro.id == "ENTERO") {
       return this;
     }
@@ -268,8 +271,8 @@ TIPOS.BINARIO = {
   str1: function() { return Blockly.Msg.TIPOS_BINARIO1; },
   strs: function() { return Blockly.Msg.TIPOS_BINARIOS; },
   unificar: function(otro) {
-    if (otro.id == "BINARIO") {
-      return this;
+    if (otro.id == "BINARIO" || (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO")) {
+      return otro;
     }
     return TIPOS.INCOMPATIBLES(this, otro);
   }
@@ -282,6 +285,7 @@ TIPOS.TEXTO = {
   str1: function() { return Blockly.Msg.TIPOS_TEXTO1; },
   strs: function() { return Blockly.Msg.TIPOS_TEXTOS; },
   unificar: function(otro) {
+    if (TIPOS.subtiparTexto == 'siempre' && otro.id != "VOID") { return this; }
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return this;
     }
@@ -298,6 +302,9 @@ TIPOS.CARACTER = {
   unificar: function(otro) {
     if (otro.id == "CARACTER" || otro.id == "TEXTO") {
       return otro;
+    }
+    if (TIPOS.subtiparTexto == 'siempre' && otro.id != "VOID") {
+      return TIPOS.TEXTO;
     }
     return TIPOS.INCOMPATIBLES(this, otro);
   }
@@ -582,6 +589,9 @@ TIPOS.tiposEsperados = function() {
   if (typeof lista_inputs == 'function') {
     lista_inputs = lista_inputs.call(this);
   }
+  if (TIPOS.subtiparTexto == 'solo_entradas') {
+    lista_inputs = lista_inputs.filter(x => x.t != "TEXTO");
+  }
   let tipos_inputs = {};
   for (let i of lista_inputs) {
     let msgs = 'msg' in i ? i.msg : [];
@@ -618,10 +628,8 @@ TIPOS.tipoEsperado = function(bloque, input_key) {
       }
     }
   }
-  /* algunos bloques puedem no tener tipo esperado
+  /* algunos bloques pueden no tener tipo esperado
     * logic_compare (cuando la operación es == o !=)
-    * text_join
-    * text_prompt_ext
     * variables_set
     * variables_global_def
     * procedures_defreturn
@@ -629,6 +637,7 @@ TIPOS.tipoEsperado = function(bloque, input_key) {
     * lists_repeat (el input ITEM)
     * lists_indexOf (el input FIND, que en realidad depende del input VALUE)
     * lists_setIndex (el input TO, que en realidad depende del input LIST)
+    * todos los que esperan textos si TIPOS.subtiparTexto es 'solo_entradas'
   */
   return undefined;
 };
@@ -688,6 +697,9 @@ TIPOS.tipoSalida = {
   text_getSubstring: TIPOS.TEXTO,
   text_changeCase: TIPOS.TEXTO,
   text_trim: TIPOS.TEXTO,
+  text_reverse: TIPOS.TEXTO,
+  text_replace: TIPOS.TEXTO,
+  text_count: TIPOS.ENTERO,
   text_prompt_ext: function(tipos_inputs) {
     return TIPOS[this.getFieldValue('TYPE')=="TEXT" ? 'TEXTO' : 'ENTERO'];
   },
@@ -810,23 +822,42 @@ TIPOS.tiposInput = {
     {k:'X', t:'NUMERO', msg:'NumOp1'},
     {k:'Y', t:'NUMERO', msg:'NumOp2'}
   ],
-  // text_isEmpty: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
-  // text_length: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
+  text_prompt_ext: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
+  text_join: function() {
+    let res = []; let n = 0;
+    while(this.getInput('ADD' + n)) {
+      res.push({k:'ADD' + n, t:'TEXTO', msg:TIPOS.Errores.TextOpN(n+1)});
+      n++;
+    }
+    return res;
+  },
+  text_isEmpty: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
+  text_length: [{k:'VALUE', t:'TEXTO', msg:'TextOp'}],
   text_indexOf: [
-      // {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
+      {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
       {k:'FIND', t:'TEXTO', msg:'TextOp2'}
   ],
   text_charAt: [
-      // {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
+      {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
       {k:'AT', t:'ENTERO', msg:['NumOp2','IntOp2']}
   ],
   text_getSubstring: [
-      // {k:'STRING', t:'TEXTO', msg:'TextOp1'},
+      {k:'STRING', t:'TEXTO', msg:'TextOp1'},
       {k:'AT1', t:'ENTERO', msg:['NumOp2','IntOp2']},
       {k:'AT2', t:'ENTERO', msg:['NumOp3','IntOp3']}
   ],
-  // text_changeCase: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
-  // text_trim: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
+  text_changeCase: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
+  text_trim: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
+  text_reverse: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
+  text_replace: [
+      {k:'FROM', t:'TEXTO', msg:'TextOp1'},
+      {k:'TO', t:'TEXTO', msg:'TextOp2'},
+      {k:'TEXT', t:'TEXTO', msg:'TextOp3'}
+  ],
+  text_count: [
+      {k:'SUB', t:'TEXTO', msg:'TextOp1'},
+      {k:'TEXT', t:'TEXTO', msg:'TextOp2'}
+  ],
   procedures_ifreturn: [{k:'CONDITION', t:'BINARIO', msg:'BoolCond'}],
   math_on_list: function() {
     let op = this.getFieldValue('OP');

@@ -250,6 +250,22 @@ Main.opcion_variables = function(opt) {
   Main.ejecutar();
 };
 
+Main.opcion_subtipado_texto = function(opt) {
+  if (opt == undefined) {
+    opt = document.getElementById("opcion_subtipado_texto").value;
+  } else {
+    document.getElementById("opcion_subtipado_texto").value = opt;
+  }
+  if (opt == Blockly.Msg["TIPOS_SOLO_ENTRADAS"]) {
+    TIPOS.subtiparTexto = 'solo_entradas';
+  } else if (opt == Blockly.Msg["TIPOS_SIEMPRE"]) {
+    TIPOS.subtiparTexto = 'siempre';
+  } else {
+    TIPOS.subtiparTexto = 'nunca';
+  }
+  Main.ejecutar();
+};
+
 Main.cargarBloques = function(strBloques) {
   let xmlDom;
   try {
