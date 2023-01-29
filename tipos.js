@@ -866,7 +866,7 @@ TIPOS.tiposInput = {
   text_replace: [
       {k:'FROM', t:'TEXTO', msg:'TextOp1'},
       {k:'TO', t:'TEXTO', msg:'TextOp2'},
-      {k:'TEXT', t:'TEXTO', msg:'TextOp3'}
+      {k:'TEXT', t:'TEXTO', msg:TIPOS.Errores.TextOpN(3)}
   ],
   text_count: [
       {k:'SUB', t:'TEXTO', msg:'TextOp1'},
