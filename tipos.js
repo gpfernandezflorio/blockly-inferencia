@@ -532,6 +532,7 @@ TIPOS.inicializar = function() {
   TIPOS.Errores.ListOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA1);
   TIPOS.Errores.ListNumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_NUMEROS));
   TIPOS.Errores.ListTextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_TEXTOS));
+  TIPOS.Errores.ListTextOp1 = TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_TEXTOS), 1);
   TIPOS.Errores.ListOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_LISTA1, n); };
   TIPOS.Errores.ListOp1 = TIPOS.Errores.ListOpN(1);
   TIPOS.Errores.AlfaOpN = function(alfa, n) { return TIPOS.Errores.SOpN(alfa.str1(), n); };
@@ -831,15 +832,34 @@ TIPOS.tiposInput = {
       {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
       {k:'FIND', t:'TEXTO', msg:'TextOp2'}
   ],
-  text_charAt: [
-      {k:'VALUE', t:'TEXTO', msg:'TextOp1'},
-      {k:'AT', t:'ENTERO', msg:['NumOp2','IntOp2']}
-  ],
-  text_getSubstring: [
-      {k:'STRING', t:'TEXTO', msg:'TextOp1'},
-      {k:'AT1', t:'ENTERO', msg:['NumOp2','IntOp2']},
-      {k:'AT2', t:'ENTERO', msg:['NumOp3','IntOp3']}
-  ],
+  text_charAt: function() {
+    let res = {k:'VALUE', t:'TEXTO', msg:'TextOp'};
+    if (this.getFieldValue('WHERE').startsWith('FROM_')) {
+      res.msg = 'TextOp1';
+      return [res, {k:'AT', t:'ENTERO', msg:['NumOp2','IntOp2']}];
+    }
+    return [res];
+  },
+  text_getSubstring: function() {
+    let res = {k:'STRING', t:'TEXTO', msg:'TextOp'};
+    let at1 = this.getFieldValue('WHERE1').startsWith('FROM_');
+    let at2 = this.getFieldValue('WHERE2').startsWith('FROM_');
+    if (at1 || at2) {
+      res.msg = 'TextOp1';
+      res = [res];
+    } else {
+      return [res]
+    }
+    let i2 = 2;
+    if (at1) {
+      res.push({k:'AT1', t:'ENTERO', msg:['NumOp2','IntOp2']});
+      i2++;
+    }
+    if (at2) {
+      res.push({k:'AT2', t:'ENTERO', msg:[`NumOp${i2}`,`IntOp${i2}`]})
+    };
+    return res;
+  },
   text_changeCase: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
   text_trim: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
   text_reverse: [{k:'TEXT', t:'TEXTO', msg:'TextOp'}],
@@ -891,8 +911,8 @@ TIPOS.tiposInput = {
       {k:'INPUT',
         t:(is_text
           ? 'TEXTO'
-          : TIPOS.LISTA(TIPOS.AUXVAR(this.id))
-        ), msg:`${is_text ? 'Text' : 'List'}Op1`
+          : TIPOS.LISTA(TIPOS.TEXTO)
+        ), msg: `${is_text ? '' : 'List'}TextOp1`
       }
     ];
   },
