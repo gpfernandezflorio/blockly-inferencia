@@ -203,9 +203,7 @@ Inferencia.ejecutar = function(ws) {
 
 Inferencia.tipado = function(todosLosBloques) {
   for (let bloque of todosLosBloques) {
-    if (bloque.tipado) {
-      bloque.tipado();
-    }
+    Inferencia.tipadoBloque(bloque);
   }
 };
 
@@ -305,7 +303,15 @@ Inferencia.obtenerIdVariable = function(nombre_original, scope, prefijo) {
   return prefijo + scope + nombre_original;
 };
 
+/*
+  Invoca a la función de tipado del bloque dado. Genera errores y advertencias
+    y realiza los chequeos adicionales.
+*/
 Inferencia.tipadoBloque = function(bloque) {
+  let errorEnArgumentos = Inferencia.errorEnArgumentos(bloque);
+  if (errorEnArgumentos) {
+    return TIPOS.DIFERIDO(errorEnArgumentos);
+  }
   if (
     bloque &&
     Inferencia.esBloqueUtil(bloque) &&
@@ -316,7 +322,16 @@ Inferencia.tipadoBloque = function(bloque) {
   return undefined;
 };
 
+/*
+  Devuelve el tipo del bloque dado. Si puede, evita invocar a la función de
+    tipado del bloque así que no necesariamente genera errores o advertencias
+    ni realiza chequeos adicionales.
+*/
 Inferencia.tipo = function(bloque) {
+  let errorEnArgumentos = Inferencia.errorEnArgumentos(bloque);
+  if (errorEnArgumentos) {
+    return TIPOS.DIFERIDO(errorEnArgumentos);
+  }
   if (
     bloque &&
     Inferencia.esBloqueUtil(bloque)
@@ -333,6 +348,22 @@ Inferencia.tipo = function(bloque) {
     }
   }
   return undefined;
+};
+
+/*
+  Busca errores en los argumentos del bloque dado. Si encuentra alguno, lo
+    devuelve. Si no, devuelve null.
+*/
+Inferencia.errorEnArgumentos = function(bloque) {
+  if (bloque) {
+    let tipos_inputs = TIPOS.tiposEsperados.call(bloque);
+    for (let k in tipos_inputs) {
+      if (TIPOS.fallo(tipos_inputs[k])) {
+        return tipos_inputs[k];
+      }
+    }
+  }
+  return null;
 };
 
 Inferencia.esBloqueUtil = function(bloque) {
