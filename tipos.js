@@ -529,6 +529,7 @@ TIPOS.inicializar = function() {
   TIPOS.Errores.TextOpN = function(n) { return TIPOS.Errores.SOpN(Blockly.Msg.TIPOS_TEXTO1, n); };
   TIPOS.Errores.TextOp1 = TIPOS.Errores.TextOpN(1);
   TIPOS.Errores.TextOp2 = TIPOS.Errores.TextOpN(2);
+  TIPOS.Errores.TextOp3 = TIPOS.Errores.TextOpN(3);
   TIPOS.Errores.ListOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA1);
   TIPOS.Errores.ListNumOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_NUMEROS));
   TIPOS.Errores.ListTextOp = TIPOS.Errores.SOp(Blockly.Msg.TIPOS_LISTA_DE1.replace("%1", Blockly.Msg.TIPOS_TEXTOS));
@@ -866,7 +867,7 @@ TIPOS.tiposInput = {
   text_replace: [
       {k:'FROM', t:'TEXTO', msg:'TextOp1'},
       {k:'TO', t:'TEXTO', msg:'TextOp2'},
-      {k:'TEXT', t:'TEXTO', msg:TIPOS.Errores.TextOpN(3)}
+      {k:'TEXT', t:'TEXTO', msg:'TextOp3'}
   ],
   text_count: [
       {k:'SUB', t:'TEXTO', msg:'TextOp1'},
