@@ -771,7 +771,11 @@ TIPOS.tipos_input = function(bloque) {
       lista_inputs = lista_inputs.filter(x => x.t != "TEXTO");
     }
     for (let i of lista_inputs) {
-      resultado.push(TIPOS.duplicar_tipo(i));
+      let input_duplicado = Object.assign({}, i);
+      if ('t' in input_duplicado) {
+        input_duplicado.t = TIPOS.duplicar_tipo(input_duplicado.t);
+      }
+      resultado.push(input_duplicado);
     }
   }
   return resultado;
