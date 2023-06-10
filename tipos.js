@@ -782,7 +782,7 @@ TIPOS.tipos_input = function(bloque) {
 };
 
 TIPOS.duplicar_tipo = function(tipo_original) {
-  if ('duplicar' in tipo_original) {
+  if (typeof tipo_original == 'object' && 'duplicar' in tipo_original) {
     return tipo_original.duplicar();
   }
   return tipo_original;
