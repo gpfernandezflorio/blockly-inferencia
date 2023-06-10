@@ -214,6 +214,9 @@ TIPOS.LISTA = function(alfa) {
     },
     strs: function() { return (this.alfa.id == "VAR" ? Blockly.Msg.TIPOS_LISTAS : Blockly.Msg.TIPOS_LISTA_DES.replace("%1", this.alfa.strs())); },
     alfa: alfa,
+    duplicar: function() {
+      return TIPOS.LISTA(TIPOS.duplicar_tipo(this.alfa));
+    },
     unificar: function(otro) {
       if (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO") { return otro; }
       if (otro.id == "LISTA") {
@@ -587,13 +590,7 @@ TIPOS.agregarFuncionesBloques = function() {
 };
 
 TIPOS.tiposEsperados = function() {
-  let lista_inputs = TIPOS.tiposInput[this.type] || [];
-  if (typeof lista_inputs == 'function') {
-    lista_inputs = lista_inputs.call(this);
-  }
-  if (TIPOS.subtiparTexto == 'solo_entradas') {
-    lista_inputs = lista_inputs.filter(x => x.t != "TEXTO");
-  }
+  let lista_inputs = TIPOS.tipos_input(this);
   let tipos_inputs = {};
   for (let i of lista_inputs) {
     let msgs = 'msg' in i ? i.msg : [];
@@ -619,15 +616,10 @@ TIPOS.tiposEsperados = function() {
   input_key : string
 */
 TIPOS.tipoEsperado = function(bloque, input_key) {
-  if (bloque.type in TIPOS.tiposInput) {
-    let lista_inputs = TIPOS.tiposInput[bloque.type];
-    if (typeof lista_inputs == 'function') {
-      lista_inputs = lista_inputs.call(bloque);
-    }
-    for (let i of lista_inputs) {
-      if (i.k == input_key) {
-        return i.t in TIPOS ? TIPOS[i.t] : i.t;
-      }
+  let lista_inputs = TIPOS.tipos_input(bloque);
+  for (let i of lista_inputs) {
+    if (i.k == input_key) {
+      return i.t in TIPOS ? TIPOS[i.t] : i.t;
     }
   }
   /* algunos bloques pueden no tener tipo esperado
@@ -766,6 +758,30 @@ TIPOS.tipoSalida = {
       : t.LIST;
     return tipo;
   }
+};
+
+TIPOS.tipos_input = function(bloque) {
+  let resultado = [];
+  if (bloque.type in TIPOS.tiposInput) {
+    let lista_inputs = TIPOS.tiposInput[bloque.type];
+    if (typeof lista_inputs == 'function') {
+      lista_inputs = lista_inputs.call(bloque);
+    }
+    if (TIPOS.subtiparTexto == 'solo_entradas') {
+      lista_inputs = lista_inputs.filter(x => x.t != "TEXTO");
+    }
+    for (let i of lista_inputs) {
+      resultado.push(TIPOS.duplicar_tipo(i));
+    }
+  }
+  return resultado;
+};
+
+TIPOS.duplicar_tipo = function(tipo_original) {
+  if ('duplicar' in tipo_original) {
+    return tipo_original.duplicar();
+  }
+  return tipo_original;
 };
 
 TIPOS.tiposInput = {
