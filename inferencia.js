@@ -309,17 +309,18 @@ Inferencia.obtenerIdVariable = function(nombre_original, scope, prefijo) {
 */
 Inferencia.tipadoBloque = function(bloque) {
   let errorEnArgumentos = Inferencia.errorEnArgumentos(bloque);
-  if (errorEnArgumentos) {
-    return TIPOS.DIFERIDO(errorEnArgumentos);
-  }
+  let tipado = undefined;
   if (
     bloque &&
     Inferencia.esBloqueUtil(bloque) &&
     bloque.tipado
-  ) {
-    return bloque.tipado();
+  ) { // Necesito ejecutar tipadoExtra aunque haya errores en los argumentos
+    tipado = bloque.tipado();
   }
-  return undefined;
+  if (errorEnArgumentos) {
+    return TIPOS.DIFERIDO(errorEnArgumentos);
+  }
+  return tipado;
 };
 
 /*
