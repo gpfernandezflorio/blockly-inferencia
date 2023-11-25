@@ -10,24 +10,30 @@ TIPOS.obtenerTipoVariable = function(v) {
   return null;
 };
 
+/* v puede ser:
+    * un mapa guardado en Inferencia.mapa_de_variables o en Inferencia.variables_auxiliares
+    * un tipo variable
+*/
 TIPOS.redefinirTipoVariable = function(v, tipo) {
-  if (v.src == "V" && v.v in Inferencia.mapa_de_variables) {
-    if (TIPOS.distintos(Inferencia.mapa_de_variables[v.v].tipo, tipo)) {
-      Inferencia.mapa_de_variables[v.v].tipo = tipo;
-      for (v2 of Inferencia.mapa_de_variables[v.v].otras_variables_que_unifican) {
-        TIPOS.redefinirTipoVariable(v2, tipo);
-      }
-      for (bloque of Inferencia.mapa_de_variables[v.v].bloques_dependientes) {
-        Inferencia.tipadoBloque(bloque);
-      }
+  let mapa;
+  if (['id', 'src', 'v', 'i'].every(c => c in v) && v.id == "VAR") {
+    // es un tipo variable
+    if (v.src == "V" && v.v in Inferencia.mapa_de_variables) {
+      mapa = Inferencia.mapa_de_variables[v.v];
+    } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
+      mapa = Inferencia.variables_auxiliares[v.v];
     }
-  } else if (v.src == "B" && v.v in Inferencia.variables_auxiliares) {
-    if (TIPOS.distintos(Inferencia.variables_auxiliares[v.v].tipo, tipo)) {
-      Inferencia.variables_auxiliares[v.v].tipo = tipo;
-      for (v2 of Inferencia.variables_auxiliares[v.v].otras_variables_que_unifican) {
+  } else {
+    // es un mapa
+    mapa = v;
+  }
+  if (mapa) {
+    if (TIPOS.distintos(mapa.tipo, tipo)) {
+      mapa.tipo = tipo;
+      for (v2 of mapa.otras_variables_que_unifican) {
         TIPOS.redefinirTipoVariable(v2, tipo);
       }
-      for (bloque of Inferencia.variables_auxiliares[v.v].bloques_dependientes) {
+      for (bloque of mapa.bloques_dependientes) {
         Inferencia.tipadoBloque(bloque);
       }
     }
@@ -92,17 +98,23 @@ TIPOS.colisionan = function(uno, otro) {
   return false;
 };
 
-TIPOS.variablesEn = function(tipo) {
-  if (tipo.id=="VAR") {
-    return [tipo.i]
+TIPOS.variablesPorTipo = {
+  VAR: (tipo) => [tipo.i],
+  LISTA: (tipo) => TIPOS.variablesEn(tipo.alfa),
+  ERROR: (tipo) => [0] // Para detectar errores rápido
+};
+
+TIPOS.variablesEn = function(tipos) {
+  if (!Array.isArray(tipos)) {
+    tipos = [tipos];
   }
-  if (tipo.id=="LISTA") {
-    return TIPOS.variablesEn(tipo.alfa);
+  let variables = [];
+  for (let tipo of tipos) {
+    if (tipo.id in TIPOS.variablesPorTipo) {
+      variables = variables.concat(TIPOS.variablesPorTipo[tipo.id](tipo));
+    }
   }
-  if (tipo.id=="ERROR") {
-    return [0]; // Para detectar errores rápido
-  }
-  return [];
+  return variables;
 };
 
 TIPOS.fallo = function(tipo) {
@@ -172,11 +184,7 @@ TIPOS.AUXVAR = function(b_id) {
     unificar: function(otro) { return otro; }
   };
   TIPOS.frescas.push(tipo);
-  Inferencia.variables_auxiliares[b_id] = {
-    tipo: tipo,
-    otras_variables_que_unifican: [],
-    bloques_dependientes: []
-  };
+  Inferencia.variables_auxiliares[b_id] = Inferencia.nuevaDefinicionBloque(tipo);
   return tipo;
 }
 
@@ -364,6 +372,7 @@ TIPOS.obtenerArgumentosDefinicion = function(bloque, opt_scope) {
 // Antes de comenzar a ejecutar el algoritmo de inferencia
 TIPOS.init = function() {
   TIPOS.i=0;
+  TIPOS.frescas = [null];
 };
 
 Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {
@@ -401,7 +410,8 @@ TIPOS.tiparArgumentosLlamado = function(bloque) {
     let nombreArg = bloque.arguments_[n];
     let idArg = Inferencia.obtenerIdVariable(nombreArg, scope, "VAR");
     if (idArg in Inferencia.mapa_de_variables) {
-      let tipoMapa = Inferencia.mapa_de_variables[idArg].tipo;
+      let mapa = Inferencia.mapa_de_variables[idArg];
+      let tipoMapa = mapa.tipo;
       let tipoArg = tipoMapa;
       let fallaAnterior = TIPOS.fallo(tipoArg);
       if (fallaAnterior) {
@@ -418,7 +428,9 @@ TIPOS.tiparArgumentosLlamado = function(bloque) {
           ]; });
         if (tipoUnificado) {
           if (TIPOS.fallo(tipoUnificado) && tipoUnificado.idError == "INCOMPATIBLES") { tipoUnificado.sugerido = tipoUnificado.t2; }
-          if (!TIPOS.fallo(tipoMapa)) { Inferencia.mapa_de_variables[idArg].tipo = tipoUnificado; }
+          if (!TIPOS.fallo(tipoMapa)) {
+            TIPOS.redefinirTipoVariable(mapa, tipoUnificado)
+          }
         }
       }
     }
@@ -1066,7 +1078,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
           Inferencia.error(bloque, "TIPOS_VAREQ", TIPOS.Errores.Incompatibles(obj, mapa.nombre_original, tipoAnterior.str1(), tipo.str1()));
         }
         if (!fallaAnterior) {
-          for (let i of TIPOS.variablesEn(unificacion)) {
+          for (let i of TIPOS.variablesEn([unificacion, tipo])) {
             if (TIPOS.frescas[i]) {
               let src = TIPOS.frescas[i].src;
               let id = TIPOS.frescas[i].v;
@@ -1077,7 +1089,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
               }
             }
           }
-          mapa.tipo = unificacion;
+          TIPOS.redefinirTipoVariable(mapa, unificacion);
         }
       }
     }

@@ -119,16 +119,28 @@ Inferencia.nuevaVariable = function(nombre, scope, clase) {
   if (id_variable in Inferencia.mapa_de_variables) {
     nuevaDefinicion = Inferencia.mapa_de_variables[id_variable];
   } else {
-    nuevaDefinicion = {
-      scope: scope,
-      nombre_original: nombre,
-      tipo: TIPOS.VAR(id_variable),
-      otras_variables_que_unifican: [],
-      bloques_dependientes: []
-    };
+    nuevaDefinicion = Inferencia.nuevaDefinicionVariable(scope, nombre, id_variable);
     Inferencia.mapa_de_variables[id_variable] = nuevaDefinicion;
   }
   return nuevaDefinicion;
+};
+
+Inferencia.nuevaDefinicionVariable = function(scope, nombre, id_variable) {
+  return {
+    scope: scope,
+    nombre_original: nombre,
+    tipo: TIPOS.VAR(id_variable),
+    otras_variables_que_unifican: [],
+    bloques_dependientes: []
+  };
+};
+
+Inferencia.nuevaDefinicionBloque = function(tipo) {
+  return {
+    tipo: tipo,
+    otras_variables_que_unifican: [],
+    bloques_dependientes: []
+  };
 };
 
 Inferencia.asociarParDeVariables = function(v1, v2) {
