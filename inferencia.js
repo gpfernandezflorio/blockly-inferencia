@@ -125,11 +125,12 @@ Inferencia.nuevaVariable = function(nombre, scope, clase) {
   return nuevaDefinicion;
 };
 
-Inferencia.nuevaDefinicionVariable = function(scope, nombre, id_variable) {
+Inferencia.nuevaDefinicionVariable = function(scope, nombre, tipo_o_id) {
+  let tipo = typeof tipo_o_id == 'string' ? TIPOS.VAR(tipo_o_id) : tipo_o_id;
   return {
     scope: scope,
     nombre_original: nombre,
-    tipo: TIPOS.VAR(id_variable),
+    tipo: tipo,
     otras_variables_que_unifican: [],
     bloques_dependientes: []
   };
