@@ -944,8 +944,8 @@ TIPOS.tiposInput = {
       {k:'INPUT',
         t:(is_text
           ? 'TEXTO'
-          : TIPOS.LISTA(TIPOS.TEXTO)
-        ), msg: `${is_text ? '' : 'List'}TextOp1`
+          : TIPOS.LISTA(TIPOS.AUXVAR(this.id))
+        ), msg: is_text ? 'TextOp1' : 'ListOp1'
       }
     ];
   },
