@@ -48,7 +48,7 @@ Inferencia.crearMapaDeVariables = function(ws) {
   Inferencia.mapa_de_variables = {};
   // Mapa secundario para bloques sin variables asociadas
   Inferencia.variables_auxiliares = {};
-  TIPOS.init();
+  TIPOS.init(ws);
   let bloques_tope = Inferencia.obtenerBloquesSuperiores(ws);
   Inferencia.buscarGlobales(bloques_tope, ws);
   Inferencia.definirVariablesDelMapa(bloques_tope);
@@ -94,6 +94,15 @@ Inferencia.definirVariablesDelMapa = function(bloques_tope) {
       }
     }
   }
+};
+
+// Para agregar un campo de un registro
+Inferencia.agregarVariableCampoAlMapa = function(bloque, nombreRegistro, nombreCampo) {
+  let t = Inferencia.agregarVariableAlMapa(nombreCampo, bloque, `REG_${nombreRegistro}`, true);
+  if (t) {
+    t.registro = nombreRegistro;
+  }
+  return t;
 };
 
 Inferencia.agregarVariableAlMapa = function(nombre, bloque_o_scope, clase, global) {

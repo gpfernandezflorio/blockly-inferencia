@@ -73,6 +73,96 @@ Main.inicializar = function() {
 Main.agregarBloquesCustom = function() {
   Main.generador = Blockly.JavaScript;
 
+  Blockly.Extensions.registerMutator(
+    "register_def_mutator",
+    {
+      name: Blockly.Msg.REGISTER_DEFAULT_NAME,
+      fields: [Blockly.Msg.FIELD_DEFAULT_NAME],
+      mutationToDom: function() {
+        const container = Blockly.utils.xml.createElement('mutation');
+        container.setAttribute('name', this.name);
+        for (let fieldName of this.fields) {
+          const field = Blockly.utils.xml.createElement('field');
+          field.setAttribute('name', fieldName);
+          container.appendChild(field);
+        }
+        return container;
+      },
+      domToMutation: function(xmlElement) {
+        const fields = [];
+        for (let i = 0, childNode; (childNode = xmlElement.childNodes[i]); i++) {
+          if (childNode.nodeName.toLowerCase() === 'field') {
+              fields.push(childNode.getAttribute('name'));
+          }
+        }
+        this.name = xmlElement.getAttribute('name');
+        this.fields = fields;
+        this.rebuild();
+      },
+      compose: function(containerBlock) {
+        let itemBlock = containerBlock.getInputTargetBlock('STACK');
+        const fields = [];
+        while (itemBlock && !itemBlock.isInsertionMarker()) {
+          fields.push(itemBlock.getFieldValue("NAME"));
+          itemBlock = itemBlock.nextConnection &&
+              itemBlock.nextConnection.targetBlock();
+        }
+        this.fields = fields;
+        if (this.fields.length == 0) {
+          this.fields.push(Blockly.Msg.FIELD_DEFAULT_NAME);
+        }
+        this.rebuild();
+      },
+      decompose: function(workspace) {
+        let containerBlock = workspace.newBlock('register_mutator_container');
+        containerBlock.initSvg();
+        let connection = containerBlock.getInput('STACK').connection;
+        for (let i=0; i < this.fields.length; i++) {
+          let itemBlock = workspace.newBlock('register_mutator_field');
+          itemBlock.initSvg();
+          itemBlock.setFieldValue(this.fields[i], "NAME");
+          connection.connect(itemBlock.previousConnection);
+          connection = itemBlock.nextConnection;
+        }
+        return containerBlock;
+      },
+      rebuild: function() {
+        for (let i=0; i<this.fields.length; i++) {
+          if (this.getInput(`FIELD_${i}`)) {
+            this.setFieldValue(this.fields[i], `FIELD_${i}`);
+          } else {
+            this.appendDummyInput(`FIELD_${i}`)
+              .setAlign(Blockly.ALIGN_RIGHT)
+              .appendField(new Blockly.FieldLabel(this.fields[i]), `FIELD_${i}`);
+          }
+        }
+        let i = this.fields.length;
+        while (this.getInput(`FIELD_${i}`)) {
+          this.removeInput(`FIELD_${i}`);
+          i++;
+        }
+      },
+      definicionDeTipo: function() {
+        const nombre = this.getFieldValue("NAME");
+        const campos = this.fields.map(function(c) {
+          return {nombre:c, tipo:Inferencia.agregarVariableCampoAlMapa(this, nombre, c)}
+        });
+        const t = {
+          id: nombre,
+          str: function() { return Blockly.Msg.TIPOS_REGISTRO.replace("%1", nombre); },
+          str1: function() { return Blockly.Msg.TIPOS_REGISTRO1.replace("%1", nombre); },
+          strs: function() { return Blockly.Msg.TIPOS_REGISTROS.replace("%1", nombre); },
+          unificar: function(otro) {
+            if (otro.id == nombre || (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO")) {
+              return otro;
+            }
+            return TIPOS.INCOMPATIBLES(this, otro);
+          }
+        };
+        return t;
+      }
+    }, null, ['register_mutator_field']
+  );
   Blockly.defineBlocksWithJsonArray([  // BEGIN JSON EXTRACT
     {
       "type": "main",
@@ -82,8 +172,7 @@ Main.agregarBloquesCustom = function() {
       "style": "procedure_blocks",
       "args1": [{"type":"input_statement","name":"LOOP"}],
       "inputsInline": false
-    },
-    {
+    },{
       "type": "variables_global_def",
       "message0": "%{BKY_VARIABLES_SET}",
       "args0": [
@@ -101,6 +190,38 @@ Main.agregarBloquesCustom = function() {
       "tooltip": "%{BKY_VARIABLES_SET_TOOLTIP}",
       "helpUrl": "%{BKY_VARIABLES_SET_HELPURL}",
       "extensions": ["contextMenu_variableSetterGetter"]
+    },{
+      "type": "register_def",
+      "message0": "%{BKY_REGISTER_DEF}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "%{BKY_REGISTER_DEFAULT_NAME}"
+        }
+      ],
+      "message1": "%1 %2",
+      "args1": [
+        {"type":"field_label","name":"FIELD_0","text":"%{BKY_FIELD_DEFAULT_NAME}"},
+        {"type":"input_dummy","name":"FIELD_0","align":"RIGHT"}
+      ],
+      "style": "list_blocks",
+      "mutator": "register_def_mutator"
+    },{
+      "type": "register_mutator_container",
+      "message0": "%{BKY_FIELDS}",
+      "message1": "%1",
+      "args1":[{"type":"input_statement","name":"STACK"}],
+      "enableContextMenu": false,
+      "style": "list_blocks"
+    },{
+      "type": "register_mutator_field",
+      "message0": "%{BKY_FIELD}",
+      "args0": [{"type":"field_input","name":"NAME","text":"%{BKY_FIELD_DEFAULT_NAME}"}],
+      "previousStatement": null,
+      "nextStatement": null,
+      "enableContextMenu": false,
+      "style": "list_blocks"
     }
   ]);  // END JSON EXTRACT (Do not delete this comment.)
 
@@ -110,6 +231,10 @@ Main.agregarBloquesCustom = function() {
   };
 
   Main.generador['variables_global_def'] = function(block) {
+    return '';
+  };
+
+  Main.generador['register_def'] = function(block) {
     return '';
   };
 

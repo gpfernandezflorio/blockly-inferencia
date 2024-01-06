@@ -370,9 +370,21 @@ TIPOS.obtenerArgumentosDefinicion = function(bloque, opt_scope) {
 }
 
 // Antes de comenzar a ejecutar el algoritmo de inferencia
-TIPOS.init = function() {
+TIPOS.init = function(ws) {
   TIPOS.i=0;
   TIPOS.frescas = [null];
+  // Busco definiciones de tipos adicionales
+  TIPOS.custom = {};
+  for (let b of ws.getAllBlocks(false)) {
+    if ('definicionDeTipo' in b) {
+      TIPOS.definirNuevo(b.definicionDeTipo());
+    }
+  }
+};
+
+// Define un nuevo tipo t
+TIPOS.definirNuevo = function(t) {
+  TIPOS.custom[t.id] = t;
 };
 
 Blockly.Blocks['procedures_defreturn'].variableLibre = function(global) {

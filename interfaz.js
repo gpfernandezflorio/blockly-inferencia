@@ -4,11 +4,20 @@ Main.mostrarMapa = function() {
   const variables_locales = [];
   const variables_globales = [];
   const funciones = [];
+  const campos = {};
   for (v_id in Inferencia.mapa_de_variables) {
     let mapa = Inferencia.mapa_de_variables[v_id];
     let scope = mapa.scope;
     if (scope.id_s=="GLOBAL") {
       if (v_id.startsWith("VAR")) {variables_globales.push(mapa);}
+      else if (v_id.startsWith("REG") && 'registro' in mapa) {
+        const r = mapa.registro;
+        if (r in campos) {
+          campos[r].push(mapa);
+        } else {
+          campos[r] = [mapa];
+        }
+      }
       else {funciones.push(mapa);}
     } else if (scope.id_s.startsWith("MAIN")) {
       variables_main.push(mapa);
@@ -43,6 +52,16 @@ Main.mostrarMapa = function() {
     res += `<table id='t01'><tr><th>${Blockly.Msg.TIPOS_FUNCION}</th><th>${Blockly.Msg.TIPOS_TIPO_INFERIDO}</th></tr>`;
     for (mapa of funciones) {
       res += "<tr><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
+    }
+    res += "</table>";
+  }
+  if (Object.keys(campos).length) {
+    res += `<h5>${Blockly.Msg.TIPOS_CAMPOS}</h5>`
+    res += `<table id='t01'><tr><th>${Blockly.Msg.TIPOS_REG}</th><th>${Blockly.Msg.TIPOS_CAMPO}</th><th>${Blockly.Msg.TIPOS_TIPO_INFERIDO}</th></tr>`;
+    for (reg in campos) {
+      for (mapa of campos[reg]) {
+        res += "<tr><td>" + reg + "</td><td>" + mapa.nombre_original + "</td><td>" + TIPOS.str(mapa.tipo) + "</td></tr>";
+      }
     }
     res += "</table>";
   }
@@ -95,5 +114,5 @@ Main.completarInterfaz = function() {
 };
 
 const bloques_superiores = [
-  "main", "procedures_defreturn", "procedures_defnoreturn", "variables_global_def"
+  "main", "procedures_defreturn", "procedures_defnoreturn", "variables_global_def", "register_def"
 ];
