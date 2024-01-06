@@ -1,7 +1,7 @@
 Blockly.Msg.REGISTER_DEF = 'Define %1 as record with fields';
+Blockly.Msg.REGISTER_CREATE = '%1 with';
 Blockly.Msg.REGISTER_DEFAULT_NAME = 'Record';
 Blockly.Msg.FIELD_DEFAULT_NAME = 'field';
-Blockly.Msg.FIELD = 'field %1';
 Blockly.Msg.FIELDS = 'fields';
 
 Blockly.Msg.TIPOS_OPCIONES = 'Options';
@@ -65,16 +65,17 @@ Blockly.Msg.TIPOS_REGISTROS = '%1 records';
 Blockly.Msg.TIPOS_ERROR_DIFERIDO = 'diferred error';
 Blockly.Msg.TIPOS_ERROR_COLISION = 'colision between %1 and %2';
 Blockly.Msg.TIPOS_ERROR_INCOMPATIBLES = 'incompatible types %1 and %2';
-Blockly.Msg.TIPOS_ARGUMENTO1 = 'Argument';
-Blockly.Msg.TIPOS_VARIABLE1 = 'Variable';
-Blockly.Msg.TIPOS_FUNCION1 = 'Function';
+Blockly.Msg.TIPOS_ARGUMENTO1 = 'Argument %1';
+Blockly.Msg.TIPOS_VARIABLE1 = 'Variable %1';
+Blockly.Msg.TIPOS_FUNCION1 = 'Function %1';
+Blockly.Msg.TIPOS_CAMPO1 = 'Field %1 of record %2';
 
 Blockly.Msg.TIPOS_ERROR = 'Error';
 Blockly.Msg.TIPOS_WARNING = 'Warning';
 Blockly.Msg.TIPOS_ERROR_PARENT = 'This block has to be inside another block.';
 Blockly.Msg.TIPOS_ERROR_PARENT_FUN = 'This block can only be used inside a function definition.';
 Blockly.Msg.TIPOS_ERROR_PARENT_LOOP = 'This block can only be used inside a loop block.';
-Blockly.Msg.TIPOS_ERROR_VARIABLE_1 = '%1 %2 has already been used as %3';
+Blockly.Msg.TIPOS_ERROR_VARIABLE_1 = '%1 has already been used as %2';
 Blockly.Msg.TIPOS_ERROR_VARIABLE_2 = ' but here it is used as %1.';
 Blockly.Msg.TIPOS_ERROR_GENERICO = '%1 has to be %2';
 Blockly.Msg.TIPOS_ERROR_2OPS = 'Both operands have to be of the same type';

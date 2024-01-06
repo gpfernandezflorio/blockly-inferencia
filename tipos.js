@@ -576,9 +576,8 @@ TIPOS.inicializar = function() {
   TIPOS.Errores.IterNum = TIPOS.Errores.SX(Blockly.Msg.TIPOS_NUMERO1, Blockly.Msg.TIPOS_ERROR_ITERADOR);
   TIPOS.Errores.Incompatibles = function(obj, nombre, tipoAnterior, tipoNuevo) { return [
     Blockly.Msg.TIPOS_ERROR_VARIABLE_1
-      .replace("%1", obj)
-      .replace("%2", nombre)
-      .replace("%3", tipoAnterior),
+      .replace("%1", obj.replace("%1", nombre))
+      .replace("%2", tipoAnterior),
     Blockly.Msg.TIPOS_ERROR_VARIABLE_2
       .replace("%1", tipoNuevo)
   ];}
@@ -652,6 +651,7 @@ TIPOS.tipoEsperado = function(bloque, input_key) {
     * variables_set
     * variables_global_def
     * procedures_defreturn
+    * register_create
     * lists_create_with
     * lists_repeat (el input ITEM)
     * lists_indexOf (el input FIND, que en realidad depende del input VALUE)
@@ -966,10 +966,9 @@ TIPOS.tiposInput = {
     return [{k:'LIST', t:TIPOS.LISTA(TIPOS[is_numeric ? 'ENTERO' : 'TEXTO']),
       msg:`List${is_numeric ? 'Num' : 'Text'}Op`
     }];
-  }
+  },
   /* Los siguientes sólo los agrego para TIPOS.tipoEsperado porque la función
     de tipado se define aparte */
-  ,
   controls_for: [
     {k:'FROM', t:'NUMERO', msg:'NumOp1'},
     {k:'TO', t:'NUMERO', msg:'NumOp2'},
@@ -1032,6 +1031,13 @@ TIPOS.tipadoExtra = {
       } else {
         Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_FUN);
       }
+    }
+  },
+  register_create: function(tipos_inputs) {
+    const reg = this.name;
+    for (let i=0; i<this.fields.length; i++) {
+      let v_id = Inferencia.obtenerIdCampoBloque(reg, this.fields[i]);
+      TIPOS.tipadoVariable(this, v_id, `FIELD_${i}`, Blockly.Msg.TIPOS_CAMPO1.replace("%2", reg));
     }
   }
 };

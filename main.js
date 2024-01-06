@@ -73,75 +73,96 @@ Main.inicializar = function() {
 Main.agregarBloquesCustom = function() {
   Main.generador = Blockly.JavaScript;
 
+  const inicializarRegistro = function() {
+
+  };
+
+  const actualizarRegistros = function(ws, xmlElement) {
+    for (let b of ws.getAllBlocks(false)) {
+      if (['register_def','register_create'].includes(b.type) && b.getFieldValue("NAME") == xmlElement.getAttribute('name')) {
+        b.domToMutation(xmlElement);
+      }
+    }
+  };
+
+  const renameRegistro = function() {};
+
+  const register_mixin = {
+    name: Blockly.Msg.REGISTER_DEFAULT_NAME,
+    fields: [Blockly.Msg.FIELD_DEFAULT_NAME],
+    mutationToDom: function() {
+      const container = Blockly.utils.xml.createElement('mutation');
+      container.setAttribute('name', this.name);
+      for (let fieldName of this.fields) {
+        const field = Blockly.utils.xml.createElement('field');
+        field.setAttribute('name', fieldName);
+        container.appendChild(field);
+      }
+      return container;
+    },
+    domToMutation: function(xmlElement) {
+      const fields = [];
+      for (let i = 0, childNode; (childNode = xmlElement.childNodes[i]); i++) {
+        if (childNode.nodeName.toLowerCase() === 'field') {
+            fields.push(childNode.getAttribute('name'));
+        }
+      }
+      this.name = xmlElement.getAttribute('name');
+      this.fields = fields;
+      this.rebuild();
+    },
+    compose: function(containerBlock) {
+      let itemBlock = containerBlock.getInputTargetBlock('STACK');
+      const fields = [];
+      while (itemBlock && !itemBlock.isInsertionMarker()) {
+        fields.push(itemBlock.getFieldValue("NAME"));
+        itemBlock = itemBlock.nextConnection &&
+            itemBlock.nextConnection.targetBlock();
+      }
+      this.fields = fields;
+      if (this.fields.length == 0) {
+        this.fields.push(Blockly.Msg.FIELD_DEFAULT_NAME);
+      }
+      this.rebuild();
+      actualizarRegistros(this.workspace, this.mutationToDom());
+    },
+    decompose: function(workspace) {
+      let containerBlock = workspace.newBlock('register_mutator_container');
+      containerBlock.initSvg();
+      let connection = containerBlock.getInput('STACK').connection;
+      for (let i=0; i < this.fields.length; i++) {
+        let itemBlock = workspace.newBlock('register_mutator_field');
+        itemBlock.initSvg();
+        itemBlock.setFieldValue(this.fields[i], "NAME");
+        connection.connect(itemBlock.previousConnection);
+        connection = itemBlock.nextConnection;
+      }
+      return containerBlock;
+    },
+    rebuild: function() {
+      const appendInput = this.type == 'register_create'
+        ? 'appendValueInput'
+        : 'appendDummyInput';
+      for (let i=0; i<this.fields.length; i++) {
+        if (this.getInput(`FIELD_${i}`)) {
+          this.setFieldValue(this.fields[i], `FIELD_${i}`);
+        } else {
+          this[appendInput](`FIELD_${i}`)
+            .setAlign(Blockly.ALIGN_RIGHT)
+            .appendField(new Blockly.FieldLabel(this.fields[i]), `FIELD_${i}`);
+        }
+      }
+      let i = this.fields.length;
+      while (this.getInput(`FIELD_${i}`)) {
+        this.removeInput(`FIELD_${i}`);
+        i++;
+      }
+    }
+  };
+
   Blockly.Extensions.registerMutator(
     "register_def_mutator",
-    {
-      name: Blockly.Msg.REGISTER_DEFAULT_NAME,
-      fields: [Blockly.Msg.FIELD_DEFAULT_NAME],
-      mutationToDom: function() {
-        const container = Blockly.utils.xml.createElement('mutation');
-        container.setAttribute('name', this.name);
-        for (let fieldName of this.fields) {
-          const field = Blockly.utils.xml.createElement('field');
-          field.setAttribute('name', fieldName);
-          container.appendChild(field);
-        }
-        return container;
-      },
-      domToMutation: function(xmlElement) {
-        const fields = [];
-        for (let i = 0, childNode; (childNode = xmlElement.childNodes[i]); i++) {
-          if (childNode.nodeName.toLowerCase() === 'field') {
-              fields.push(childNode.getAttribute('name'));
-          }
-        }
-        this.name = xmlElement.getAttribute('name');
-        this.fields = fields;
-        this.rebuild();
-      },
-      compose: function(containerBlock) {
-        let itemBlock = containerBlock.getInputTargetBlock('STACK');
-        const fields = [];
-        while (itemBlock && !itemBlock.isInsertionMarker()) {
-          fields.push(itemBlock.getFieldValue("NAME"));
-          itemBlock = itemBlock.nextConnection &&
-              itemBlock.nextConnection.targetBlock();
-        }
-        this.fields = fields;
-        if (this.fields.length == 0) {
-          this.fields.push(Blockly.Msg.FIELD_DEFAULT_NAME);
-        }
-        this.rebuild();
-      },
-      decompose: function(workspace) {
-        let containerBlock = workspace.newBlock('register_mutator_container');
-        containerBlock.initSvg();
-        let connection = containerBlock.getInput('STACK').connection;
-        for (let i=0; i < this.fields.length; i++) {
-          let itemBlock = workspace.newBlock('register_mutator_field');
-          itemBlock.initSvg();
-          itemBlock.setFieldValue(this.fields[i], "NAME");
-          connection.connect(itemBlock.previousConnection);
-          connection = itemBlock.nextConnection;
-        }
-        return containerBlock;
-      },
-      rebuild: function() {
-        for (let i=0; i<this.fields.length; i++) {
-          if (this.getInput(`FIELD_${i}`)) {
-            this.setFieldValue(this.fields[i], `FIELD_${i}`);
-          } else {
-            this.appendDummyInput(`FIELD_${i}`)
-              .setAlign(Blockly.ALIGN_RIGHT)
-              .appendField(new Blockly.FieldLabel(this.fields[i]), `FIELD_${i}`);
-          }
-        }
-        let i = this.fields.length;
-        while (this.getInput(`FIELD_${i}`)) {
-          this.removeInput(`FIELD_${i}`);
-          i++;
-        }
-      },
+    Object.assign({
       definicionDeTipo: function() {
         const nombre = this.getFieldValue("NAME");
         const campos = this.fields.map(function(c) {
@@ -161,7 +182,13 @@ Main.agregarBloquesCustom = function() {
         };
         return t;
       }
-    }, null, ['register_mutator_field']
+    }, register_mixin), function() {}, ['register_mutator_field']
+  );
+  Blockly.Extensions.registerMutator(
+    "register_create_mutator",
+    Object.assign({
+      //
+    }, register_mixin), function() {}, ['register_mutator_field']
   );
   Blockly.defineBlocksWithJsonArray([  // BEGIN JSON EXTRACT
     {
@@ -208,6 +235,21 @@ Main.agregarBloquesCustom = function() {
       "style": "list_blocks",
       "mutator": "register_def_mutator"
     },{
+      "type": "register_create",
+      "message0": "%{BKY_REGISTER_CREATE}",
+      "args0":[
+        {"type":"field_label","name":"NAME","text":"%{BKY_REGISTER_DEFAULT_NAME}"}
+      ],
+      "message1": "%1 %2",
+      "args1": [
+        {"type":"field_label","name":"FIELD_0","text":"%{BKY_FIELD_DEFAULT_NAME}"},
+        {"type":"input_value","name":"FIELD_0","align":"RIGHT"}
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "style": "list_blocks",
+      "mutator": "register_create_mutator"
+    },{
       "type": "register_mutator_container",
       "message0": "%{BKY_FIELDS}",
       "message1": "%1",
@@ -216,7 +258,7 @@ Main.agregarBloquesCustom = function() {
       "style": "list_blocks"
     },{
       "type": "register_mutator_field",
-      "message0": "%{BKY_FIELD}",
+      "message0": "%1",
       "args0": [{"type":"field_input","name":"NAME","text":"%{BKY_FIELD_DEFAULT_NAME}"}],
       "previousStatement": null,
       "nextStatement": null,

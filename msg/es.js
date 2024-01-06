@@ -1,7 +1,7 @@
 Blockly.Msg.REGISTER_DEF = 'Definir %1 como registro con campos';
+Blockly.Msg.REGISTER_CREATE = '%1 con';
 Blockly.Msg.REGISTER_DEFAULT_NAME = 'Registro';
 Blockly.Msg.FIELD_DEFAULT_NAME = 'campo';
-Blockly.Msg.FIELD = 'campo %1';
 Blockly.Msg.FIELDS = 'campos';
 
 Blockly.Msg.TIPOS_OPCIONES = 'Opciones';
@@ -65,16 +65,17 @@ Blockly.Msg.TIPOS_REGISTROS = 'registros %1';
 Blockly.Msg.TIPOS_ERROR_DIFERIDO = 'error diferido';
 Blockly.Msg.TIPOS_ERROR_COLISION = 'colisión entre %1 y %2';
 Blockly.Msg.TIPOS_ERROR_INCOMPATIBLES = 'tipos %1 y %2 incompatibles';
-Blockly.Msg.TIPOS_ARGUMENTO1 = 'El argumento';
-Blockly.Msg.TIPOS_VARIABLE1 = 'La variable';
-Blockly.Msg.TIPOS_FUNCION1 = 'La función';
+Blockly.Msg.TIPOS_ARGUMENTO1 = 'El argumento %1';
+Blockly.Msg.TIPOS_VARIABLE1 = 'La variable %1';
+Blockly.Msg.TIPOS_FUNCION1 = 'La función %1';
+Blockly.Msg.TIPOS_CAMPO1 = 'El campo %1 del registro %2';
 
 Blockly.Msg.TIPOS_ERROR = 'Error';
 Blockly.Msg.TIPOS_WARNING = 'Advertencia';
 Blockly.Msg.TIPOS_ERROR_PARENT = 'Este bloque tiene que estar dentro de otro.';
 Blockly.Msg.TIPOS_ERROR_PARENT_FUN = 'Este bloque sólo se puede usar dentro de la definición de una función.';
 Blockly.Msg.TIPOS_ERROR_PARENT_LOOP = 'Este bloque sólo se puede usar dentro de un bloque de ciclo.';
-Blockly.Msg.TIPOS_ERROR_VARIABLE_1 = '%1 %2 ya se había usado como %3';
+Blockly.Msg.TIPOS_ERROR_VARIABLE_1 = '%1 ya se había usado como %2';
 Blockly.Msg.TIPOS_ERROR_VARIABLE_2 = ' pero ahora se está usando como %1.';
 Blockly.Msg.TIPOS_ERROR_GENERICO = '%1 tiene que ser %2';
 Blockly.Msg.TIPOS_ERROR_2OPS = 'Los operandos tienen que ser del mismo tipo';

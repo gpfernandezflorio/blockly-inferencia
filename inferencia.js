@@ -304,6 +304,10 @@ Inferencia.todos_los_hijos = function(bloque) {
   return res.filter((x) => Inferencia.esBloqueUtil(x));
 };
 
+Inferencia.obtenerIdCampoBloque = function(registro, campo) {
+  return Inferencia.obtenerIdVariable(campo, Inferencia.scopeGlobal(), `REG_${registro}`);
+};
+
 Inferencia.obtenerIdFuncionBloque = function(bloque) { // el bloque debe ser procedures_callreturn
   let nombre_original = bloque.getFieldValue('NAME');
   return Inferencia.obtenerIdVariable(nombre_original, Inferencia.scopeGlobal(), "PROC");
