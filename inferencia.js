@@ -97,8 +97,8 @@ Inferencia.definirVariablesDelMapa = function(bloques_tope) {
 };
 
 // Para agregar un campo de un registro
-Inferencia.agregarVariableCampoAlMapa = function(bloque, nombreRegistro, nombreCampo) {
-  let t = Inferencia.agregarVariableAlMapa(nombreCampo, bloque, `REG_${nombreRegistro}`, true);
+Inferencia.agregarVariableCampoAlMapa = function(nombreRegistro, nombreCampo) {
+  let t = Inferencia.agregarVariableAlMapa(nombreCampo, {}, `REG_${nombreRegistro}`, true);
   if (t) {
     t.registro = nombreRegistro;
   }

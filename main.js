@@ -73,19 +73,29 @@ Main.inicializar = function() {
 Main.agregarBloquesCustom = function() {
   Main.generador = Blockly.JavaScript;
 
-  const inicializarRegistro = function() {
-
-  };
-
-  const actualizarRegistros = function(ws, xmlElement) {
+  const actualizarRegistros = function(ws, oldData, xmlElement) {
     for (let b of ws.getAllBlocks(false)) {
-      if (['register_def','register_create'].includes(b.type) && b.getFieldValue("NAME") == xmlElement.getAttribute('name')) {
-        b.domToMutation(xmlElement);
+      if (['register_def','register_create','register_obs'].includes(b.type) && b.name == oldData.name) {
+        b.domToMutation(xmlElement, oldData);
       }
     }
   };
 
-  const renameRegistro = function() {};
+  const dropdown_register_obs_options = function() {
+    if (this.sourceBlock_ && 'fields' in this.sourceBlock_) {
+      const res = [];
+      for (let i=0; i < this.sourceBlock_.fields.length; i++) {
+        res.push([this.sourceBlock_.fields[i], `${i}`]);
+      }
+      return res;
+    } else {
+      return [[Blockly.Msg.FIELD_DEFAULT_NAME, `${0}`]];
+    }
+  }
+
+  const dropdown_register_obs = function() {
+    return new Blockly.FieldDropdown(dropdown_register_obs_options);
+  };
 
   const register_mixin = {
     name: Blockly.Msg.REGISTER_DEFAULT_NAME,
@@ -100,7 +110,7 @@ Main.agregarBloquesCustom = function() {
       }
       return container;
     },
-    domToMutation: function(xmlElement) {
+    domToMutation: function(xmlElement, opt_old) {
       const fields = [];
       for (let i = 0, childNode; (childNode = xmlElement.childNodes[i]); i++) {
         if (childNode.nodeName.toLowerCase() === 'field') {
@@ -109,9 +119,14 @@ Main.agregarBloquesCustom = function() {
       }
       this.name = xmlElement.getAttribute('name');
       this.fields = fields;
-      this.rebuild();
-    },
+      this.rebuild(opt_old);
+    }
+  };
+
+  const register_mutator_mixin = Object.assign({
     compose: function(containerBlock) {
+      const oldData = {name: this.name, fields: this.fields};
+      this.name = containerBlock.getFieldValue("NAME");
       let itemBlock = containerBlock.getInputTargetBlock('STACK');
       const fields = [];
       while (itemBlock && !itemBlock.isInsertionMarker()) {
@@ -124,11 +139,14 @@ Main.agregarBloquesCustom = function() {
         this.fields.push(Blockly.Msg.FIELD_DEFAULT_NAME);
       }
       this.rebuild();
-      actualizarRegistros(this.workspace, this.mutationToDom());
+      if (!containerBlock.workspace.isDragging()) {
+        actualizarRegistros(this.workspace, oldData, this.mutationToDom());
+      }
     },
     decompose: function(workspace) {
       let containerBlock = workspace.newBlock('register_mutator_container');
       containerBlock.initSvg();
+      containerBlock.setFieldValue(this.name, "NAME");
       let connection = containerBlock.getInput('STACK').connection;
       for (let i=0; i < this.fields.length; i++) {
         let itemBlock = workspace.newBlock('register_mutator_field');
@@ -140,6 +158,7 @@ Main.agregarBloquesCustom = function() {
       return containerBlock;
     },
     rebuild: function() {
+      this.setFieldValue(this.name, "NAME")
       const appendInput = this.type == 'register_create'
         ? 'appendValueInput'
         : 'appendDummyInput';
@@ -158,37 +177,47 @@ Main.agregarBloquesCustom = function() {
         i++;
       }
     }
-  };
+  }, register_mixin);
 
   Blockly.Extensions.registerMutator(
     "register_def_mutator",
     Object.assign({
       definicionDeTipo: function() {
-        const nombre = this.getFieldValue("NAME");
-        const campos = this.fields.map(function(c) {
-          return {nombre:c, tipo:Inferencia.agregarVariableCampoAlMapa(this, nombre, c)}
-        });
-        const t = {
-          id: nombre,
-          str: function() { return Blockly.Msg.TIPOS_REGISTRO.replace("%1", nombre); },
-          str1: function() { return Blockly.Msg.TIPOS_REGISTRO1.replace("%1", nombre); },
-          strs: function() { return Blockly.Msg.TIPOS_REGISTROS.replace("%1", nombre); },
-          unificar: function(otro) {
-            if (otro.id == nombre || (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO")) {
-              return otro;
-            }
-            return TIPOS.INCOMPATIBLES(this, otro);
-          }
-        };
-        return t;
+        return TIPOS.REGISTRO(this.name, this.fields);
       }
-    }, register_mixin), function() {}, ['register_mutator_field']
+    }, register_mutator_mixin), function() {}, ['register_mutator_field']
   );
   Blockly.Extensions.registerMutator(
     "register_create_mutator",
     Object.assign({
       //
-    }, register_mixin), function() {}, ['register_mutator_field']
+    }, register_mutator_mixin), function() {}, ['register_mutator_field']
+  );
+  Blockly.Extensions.registerMutator(
+    "register_obs_mutator",
+    Object.assign({
+      rebuild: function(old) {
+        const prev = this.getFieldValue("FIELD");
+        const prevName = this.getField("FIELD").getText();
+        this.getInput("REG").removeField("FIELD");
+        this.getInput("REG").insertFieldAt(0, dropdown_register_obs(), "FIELD");
+        delete this.getField("FIELD").generatedOptions_;
+        if (this.fields.includes(prevName)) {
+          // Sigue existiendo y no cambió de nombre, aunque podría estar en otra posición
+          this.setFieldValue(`${this.fields.indexOf(prevName)}`, "FIELD");
+        } else {
+          // Fue eliminado o se cambió de nombre
+          if (this.fields.length > prev) {
+            // Hay uno en esa posición (probablemente cambió de nombre)
+            // Si le asigno el mismo valor no se actualiza así que tengo que destruirlo y volver a crearlo
+            this.setFieldValue(prev, "FIELD");
+          } else {
+            // Asigno el primero
+            this.setFieldValue("0", "FIELD");
+          }
+        }
+      }
+    }, register_mixin), function() {}
   );
   Blockly.defineBlocksWithJsonArray([  // BEGIN JSON EXTRACT
     {
@@ -221,11 +250,7 @@ Main.agregarBloquesCustom = function() {
       "type": "register_def",
       "message0": "%{BKY_REGISTER_DEF}",
       "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "%{BKY_REGISTER_DEFAULT_NAME}"
-        }
+        {"type":"field_label","name":"NAME","text":"%{BKY_REGISTER_DEFAULT_NAME}"}
       ],
       "message1": "%1 %2",
       "args1": [
@@ -245,15 +270,31 @@ Main.agregarBloquesCustom = function() {
         {"type":"field_label","name":"FIELD_0","text":"%{BKY_FIELD_DEFAULT_NAME}"},
         {"type":"input_value","name":"FIELD_0","align":"RIGHT"}
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "output": null,
       "style": "list_blocks",
+      "inputsInline": true,
       "mutator": "register_create_mutator"
     },{
+      "type": "register_obs",
+      "message0": "%{BKY_REGISTER_OBS}",
+      "args0":[
+        {"type":"field_dropdown","name":"FIELD","options":dropdown_register_obs_options},
+        {"type":"input_value","name":"REG","align":"RIGHT"}
+      ],
+      "output": null,
+      "style": "list_blocks",
+      "mutator": "register_obs_mutator"
+    },{
       "type": "register_mutator_container",
-      "message0": "%{BKY_FIELDS}",
-      "message1": "%1",
-      "args1":[{"type":"input_statement","name":"STACK"}],
+      "message0": "%{BKY_REGISTER_NAME}",
+      "args0": [{
+        "type": "field_input",
+        "name": "NAME",
+        "text": "%{BKY_REGISTER_DEFAULT_NAME}"
+      }],
+      "message1": "%{BKY_FIELDS}",
+      "message2": "%1",
+      "args2":[{"type":"input_statement","name":"STACK"}],
       "enableContextMenu": false,
       "style": "list_blocks"
     },{

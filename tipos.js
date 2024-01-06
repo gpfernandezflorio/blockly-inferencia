@@ -245,6 +245,25 @@ TIPOS.LISTA = function(alfa) {
   }
 };
 
+// Registro
+TIPOS.REGISTRO = function(nombre, campos) {
+  return {
+    id: nombre,
+    str: function() { return Blockly.Msg.TIPOS_REGISTRO.replace("%1", nombre); },
+    str1: function() { return Blockly.Msg.TIPOS_REGISTRO1.replace("%1", nombre); },
+    strs: function() { return Blockly.Msg.TIPOS_REGISTROS.replace("%1", nombre); },
+    campos:campos.map(function(c) {
+      return {nombre:c, tipo:Inferencia.agregarVariableCampoAlMapa(nombre, c)}
+    }),
+    unificar: function(otro) {
+      if (otro.id == nombre || (TIPOS.subtiparTexto == 'siempre' && otro.id == "TEXTO")) {
+        return otro;
+      }
+      return TIPOS.INCOMPATIBLES(this, otro);
+    }
+  };
+};
+
 // Entero
 TIPOS.ENTERO = {
   id:"ENTERO",
@@ -737,6 +756,15 @@ TIPOS.tipoSalida = {
     // la próxima iteración este bloque va a desaparecer
     return TIPOS.AUXVAR(this.id);
   },
+  register_create: function(tipos_inputs) {
+    return TIPOS.REGISTRO(this.name, this.fields);
+  },
+  register_obs: function(tipos_inputs) {
+    // si ya está en el mapa, retorno lo que está en el mapa
+    // si no, creo una nueva variable fresca y la agrego al mapa
+    let tipoVariable = Inferencia.agregarVariableCampoAlMapa(this.name, this.fields[this.getFieldValue("FIELD")]);
+    return (tipoVariable === undefined) ? TIPOS.AUXVAR(this.id) : tipoVariable.tipo;
+  },
   math_on_list: function(t) {
     let op = this.getFieldValue('OP');
     let tipo = t.LIST === undefined
@@ -918,6 +946,11 @@ TIPOS.tiposInput = {
       {k:'TEXT', t:'TEXTO', msg:'TextOp2'}
   ],
   procedures_ifreturn: [{k:'CONDITION', t:'BINARIO', msg:'BoolCond'}],
+  register_obs: function() {
+    return [{k:"REG", t:TIPOS.REGISTRO(this.name, this.fields),
+      msg:TIPOS.Errores.SOp(Blockly.Msg.TIPOS_REGISTRO1.replace("%1",this.name))
+    }];
+  },
   math_on_list: function() {
     let op = this.getFieldValue('OP');
     return [{k:'LIST',
@@ -1082,8 +1115,10 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
         tipoAnterior = tipoAnterior.sugerido;
       } else { return; }
     }
+    let tag = "TIPOS_VAREQ";
     let tipo = argumento_o_tipo;
     if (typeof argumento_o_tipo == 'string') {
+      tag += `_${argumento_o_tipo}`;
       let bloqueArgumento = bloque.getInputTargetBlock(argumento_o_tipo);
       tipo = Inferencia.tipo(bloqueArgumento);
     }
@@ -1093,7 +1128,7 @@ TIPOS.tipadoVariable = function(bloque, v_id, argumento_o_tipo, obj) {
       } else {
         let unificacion = TIPOS.unificar(tipoAnterior, tipo);
         if (TIPOS.fallo(unificacion)) {
-          Inferencia.error(bloque, "TIPOS_VAREQ", TIPOS.Errores.Incompatibles(obj, mapa.nombre_original, tipoAnterior.str1(), tipo.str1()));
+          Inferencia.error(bloque, tag, TIPOS.Errores.Incompatibles(obj, mapa.nombre_original, tipoAnterior.str1(), tipo.str1()));
         }
         if (!fallaAnterior) {
           for (let i of TIPOS.variablesEn([unificacion, tipo])) {

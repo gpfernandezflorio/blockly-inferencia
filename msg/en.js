@@ -1,7 +1,9 @@
 Blockly.Msg.REGISTER_DEF = 'Define %1 as record with fields';
-Blockly.Msg.REGISTER_CREATE = '%1 with';
+Blockly.Msg.REGISTER_CREATE = '%1 with:';
+Blockly.Msg.REGISTER_OBS = '%1 of %2';
 Blockly.Msg.REGISTER_DEFAULT_NAME = 'Record';
 Blockly.Msg.FIELD_DEFAULT_NAME = 'field';
+Blockly.Msg.REGISTER_NAME = 'name %1';
 Blockly.Msg.FIELDS = 'fields';
 
 Blockly.Msg.TIPOS_OPCIONES = 'Options';
