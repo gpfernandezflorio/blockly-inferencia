@@ -22,6 +22,10 @@ Inferencia.inicializar = function(infoEntorno) {
   TIPOS.agregarBloqueVariableGlobal();
 };
 
+Inferencia.bloquesQueDefinenParámetros = ['procedures_defnoreturn', 'procedures_defreturn']; // el bloque debe tener el atributo "arguments_"
+Inferencia.bloquesQueDefinenIdentificadores = ['variables_get', 'variables_set', 'controls_for', 'controls_forEach']; // el bloque debe tener un field "VAR"
+Inferencia.bloquesQueDefinenScopeAnidado = ['controls_for', 'controls_forEach'];
+
 // Retorna el bloque que define el inicio del scope o null si no hay ninguno
 Inferencia.topeScope = function(bloque, nombre) {
   let ancestro = bloque;
@@ -31,7 +35,7 @@ Inferencia.topeScope = function(bloque, nombre) {
       return ancestro;
     }
     // También si llego al ciclo en el que declaré la variable en cuestión
-    if (nombre && ['controls_for','controls_forEach'].includes(ancestro.type) && ancestro.getField("VAR").getText()==nombre) {
+    if (nombre && Inferencia.bloqueDefineScopeDeVariable(ancestro, nombre)) {
       return ancestro;
     }
     ancestro = ancestro.getSurroundParent();
@@ -39,6 +43,19 @@ Inferencia.topeScope = function(bloque, nombre) {
   return null;
 };
 
+Inferencia.bloqueDefineScopeDeVariable = function(bloque, nombre) {
+  return Inferencia.bloquesQueDefinenScopeAnidado.includes(bloque.type) &&
+    Inferencia.bloqueDefineIdentificador(bloque, nombre)
+  ;
+};
+
+Inferencia.bloqueDefineParametro = function(bloque, nombre) {
+  return Inferencia.bloquesQueDefinenParámetros.includes(bloque.type) && bloque.arguments_.includes(nombre);
+};
+
+Inferencia.bloqueDefineIdentificador = function(bloque, nombre) {
+  return Inferencia.bloquesQueDefinenIdentificadores.includes(bloque.type) && bloque.getField("VAR").getText()==nombre;
+};
 
 // Reviso todos los bloques para recolectar variables en sus respectivos scopes
 // Luego le asigno un tipo a cada una (de ser posible)
@@ -173,7 +190,15 @@ Inferencia.existeVariableGlobal = function(nombre) {
 
 Inferencia.esUnArgumento = function(nombre, bloque) {
   let tope = Inferencia.topeScope(bloque, nombre);
-  if (tope && (tope.type == 'procedures_defnoreturn' || tope.type == 'procedures_defreturn') && tope.arguments_.includes(nombre)) {
+  if (tope && Inferencia.bloqueDefineParametro(tope, nombre)) {
+    return tope;
+  }
+  return undefined;
+};
+
+Inferencia.esUnIdentificadorLocal = function(nombre, bloque) {
+  let tope = Inferencia.topeScope(bloque, nombre);
+  if (tope && Inferencia.bloqueDefineIdentificador(tope, nombre)) {
     return tope;
   }
   return undefined;
@@ -182,7 +207,7 @@ Inferencia.esUnArgumento = function(nombre, bloque) {
 Inferencia.esUnaVariableLocal = function(nombre, bloque) {
   let scope = Inferencia.obtenerScope(bloque, nombre);
   if (!scope) { return true; }
-  return scope.id_s != "GLOBAL" && !Inferencia.esUnArgumento(nombre, bloque);
+  return scope.id_s != "GLOBAL" && !Inferencia.esUnArgumento(nombre, bloque) && !Inferencia.esUnIdentificadorLocal(nombre, bloque);
 };
 
 // Algoritmo de inferencia
@@ -234,7 +259,7 @@ Inferencia.numeroDeCiclo = function(bloque) {
   let tope = bloque.getSurroundParent();
   let ancestro = bloque;
   while (ancestro && ancestro != tope) {
-    if (['controls_for','controls_forEach'].includes(ancestro.type)) { i++; }
+    if (Inferencia.bloquesQueDefinenScopeAnidado.includes(ancestro.type)) { i++; }
     ancestro = ancestro.getParent();
   }
   return i;
@@ -245,13 +270,44 @@ Inferencia.scopeProcedimiento = function(nombre) {
     id_s: Inferencia.obtenerIdVariable(nombre, null, "PROC"),
     nombre_original: nombre
   };
-}
+};
+
+Inferencia.scopeBloque = function(bloque) {
+  return {
+    id_s: bloque.id,
+    nombre_original: "bloque " + bloque.type + " " + Inferencia.numeroDeBloqueDeTipo(bloque)
+  };
+};
+
+Inferencia.numeroDeBloqueDeTipo = function(bloque) {
+  let i=1;
+  for (let otroBloque of bloque.workspace.getBlocksByType(bloque.type)) {
+    if (otroBloque.id == bloque.id) { return i; }
+    i++;
+  }
+};
 
 Inferencia.obtenerScope = function(bloque, nombre) {
   let tope = Inferencia.esUnArgumento(nombre, bloque);
   if (tope) {
     let nombre_procedimiento = tope.getProcedureDef()[0];
     return Inferencia.scopeProcedimiento(nombre_procedimiento);
+  }
+  tope = Inferencia.esUnIdentificadorLocal(nombre, bloque);
+  if (tope) {
+    if (Inferencia.bloquesQueDefinenScopeAnidado.includes(tope.type)) {
+      // scope especial: dentro de un ciclo
+      let scope2 = Inferencia.obtenerScope(tope.getSurroundParent(), nombre);
+      if (scope2 && scope2.id_s != "GLOBAL") {
+        return {
+          id_s: scope2.id_s + " - " + tope.id,
+          nombre_original: scope2.nombre_original + ` - ${Blockly.Msg.TIPOS_CICLO} ` + Inferencia.numeroDeCiclo(tope),
+          padre: scope2
+        }
+      }
+    } else {
+      return Inferencia.scopeBloque(tope);
+    }
   }
   if (Inferencia.modo_variables() == Inferencia.GLOBALES) {
     return Inferencia.scopeGlobal();
@@ -270,16 +326,6 @@ Inferencia.obtenerScope = function(bloque, nombre) {
         id_s: "MAIN",
         nombre_original: "procedimiento principal"
       };
-    } else if (['controls_for','controls_forEach'].includes(tope.type)) {
-      // scope especial: dentro de un ciclo
-      let scope2 = Inferencia.obtenerScope(tope.getSurroundParent(), nombre);
-      if (scope2 && scope2.id_s != "GLOBAL") {
-        return {
-          id_s: scope2.id_s + " - " + tope.id,
-          nombre_original: scope2.nombre_original + ` - ${Blockly.Msg.TIPOS_CICLO} ` + Inferencia.numeroDeCiclo(tope),
-          padre: scope2
-        }
-      }
     } else if (Inferencia.bloquesScopeAdicionales) { // Se podrían agregar otros bloques que generen scope (ej: eventos)
       let scopePrima = Inferencia.bloquesScopeAdicionales(bloque, nombre, tope);
       if (scopePrima) { return scopePrima; }
@@ -313,7 +359,7 @@ Inferencia.obtenerIdFuncionBloque = function(bloque) { // el bloque debe ser pro
   return Inferencia.obtenerIdVariable(nombre_original, Inferencia.scopeGlobal(), "PROC");
 };
 
-Inferencia.obtenerIdVariableBloque = function(bloque) { // el bloque debe tener un field "VAR" (variables_get, variables_set, controls_for, controls_forEach)
+Inferencia.obtenerIdVariableBloque = function(bloque) { // Debe ser uno de Inferencia.bloquesQueDefinenIdentificadores
   let nombre_original = bloque.getField("VAR").getText();
   let scope = Inferencia.obtenerScope(bloque, nombre_original);
   if (scope) return Inferencia.obtenerIdVariable(nombre_original, scope, "VAR");

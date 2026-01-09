@@ -670,7 +670,6 @@ TIPOS.tipoEsperado = function(bloque, input_key) {
     * variables_set
     * variables_global_def
     * procedures_defreturn
-    * register_create
     * lists_create_with
     * lists_repeat (el input ITEM)
     * lists_indexOf (el input FIND, que en realidad depende del input VALUE)
@@ -755,15 +754,6 @@ TIPOS.tipoSalida = {
     // Tengo que devolver algo para que no falle el algoritmo pero igual en
     // la próxima iteración este bloque va a desaparecer
     return TIPOS.AUXVAR(this.id);
-  },
-  register_create: function(tipos_inputs) {
-    return TIPOS.REGISTRO(this.name, this.fields);
-  },
-  register_obs: function(tipos_inputs) {
-    // si ya está en el mapa, retorno lo que está en el mapa
-    // si no, creo una nueva variable fresca y la agrego al mapa
-    let tipoVariable = Inferencia.agregarVariableCampoAlMapa(this.name, this.fields[this.getFieldValue("FIELD")]);
-    return (tipoVariable === undefined) ? TIPOS.AUXVAR(this.id) : tipoVariable.tipo;
   },
   math_on_list: function(t) {
     let op = this.getFieldValue('OP');
@@ -946,11 +936,6 @@ TIPOS.tiposInput = {
       {k:'TEXT', t:'TEXTO', msg:'TextOp2'}
   ],
   procedures_ifreturn: [{k:'CONDITION', t:'BINARIO', msg:'BoolCond'}],
-  register_obs: function() {
-    return [{k:"REG", t:TIPOS.REGISTRO(this.name, this.fields),
-      msg:TIPOS.Errores.SOp(Blockly.Msg.TIPOS_REGISTRO1.replace("%1",this.name))
-    }];
-  },
   math_on_list: function() {
     let op = this.getFieldValue('OP');
     return [{k:'LIST',
@@ -1042,6 +1027,7 @@ TIPOS.tipadoExtra = {
   variables_set: function(tipos_inputs) {
     let obj = Blockly.Msg.TIPOS_VARIABLE1;
     if (Inferencia.esUnArgumento(this.getField("VAR").getText(), this)) { obj = Blockly.Msg.TIPOS_ARGUMENTO1; }
+    if (Inferencia.esUnIdentificadorLocal(this.getField("VAR").getText(), this)) { obj = Blockly.Msg.TIPOS_IDENTIFICADOR1; }
     let v_id = Inferencia.obtenerIdVariableBloque(this);
     TIPOS.tipadoVariable(this, v_id, "VALUE", obj);
   },
@@ -1065,13 +1051,6 @@ TIPOS.tipadoExtra = {
         Inferencia.advertencia(this, "PARENT", Blockly.Msg.TIPOS_ERROR_PARENT_FUN);
       }
     }
-  },
-  register_create: function(tipos_inputs) {
-    const reg = this.name;
-    for (let i=0; i<this.fields.length; i++) {
-      let v_id = Inferencia.obtenerIdCampoBloque(reg, this.fields[i]);
-      TIPOS.tipadoVariable(this, v_id, `FIELD_${i}`, Blockly.Msg.TIPOS_CAMPO1.replace("%2", reg));
-    }
   }
 };
 
@@ -1088,7 +1067,7 @@ Blockly.Blocks['controls_for'].tipado = function() {
   if ((tipoInicial && !TIPOS.fallo(tipoInicial) && tipoInicial.id == "FRACCION") || (tipoPaso && !TIPOS.fallo(tipoPaso) && tipoPaso.id == "FRACCION")) {
     tipoIterador = TIPOS.FRACCION;
   }
-  TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), tipoIterador, Blockly.Msg.TIPOS_VARIABLE1);
+  TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), tipoIterador, Blockly.Msg.TIPOS_IDENTIFICADOR1);
 };
 
 // repetición en lista
@@ -1101,7 +1080,7 @@ Blockly.Blocks['controls_forEach'].tipado = function() {
   if (TIPOS.fallo(tipoVariable)) { return; }
   if (tipoOperando) {
     let alfa = tipoOperando.alfa;
-    TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), alfa, Blockly.Msg.TIPOS_VARIABLE1);
+    TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), alfa, Blockly.Msg.TIPOS_IDENTIFICADOR1);
   }
 };
 

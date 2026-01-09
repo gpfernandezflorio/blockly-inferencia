@@ -45,6 +45,7 @@ Main.inicializar = function() {
   Main.agregarBloquesCustom();
   TIPOS.inicializar();
   TIPOS.agregarFuncionesBloques();
+  Inferencia.bloquesQueDefinenIdentificadores.push('event_message');
   Inferencia.inicializar({
     todosLosBloques: (ws) => ws.getAllBlocks(true),
     bloquesSuperiores: bloques_superiores,
@@ -305,6 +306,20 @@ Main.agregarBloquesCustom = function() {
       "nextStatement": null,
       "enableContextMenu": false,
       "style": "list_blocks"
+    },{
+      "type": "event_message",
+      "message0": "%{BKY_WHEN_MESSAGE}",
+      "args0": [{
+        "type":"field_variable",
+        "name": "VAR",
+        "variable": "%{BKY_MESSAGE_DEFAULT_NAME}"
+      }],
+      "message1": "%{BKY_CONTROLS_REPEAT_INPUT_DO} %1",
+      "args1": [{
+        "type": "input_statement",
+        "name": "DO"
+      }],
+      "style": "loop_blocks"
     }
   ]);  // END JSON EXTRACT (Do not delete this comment.)
 
@@ -321,7 +336,44 @@ Main.agregarBloquesCustom = function() {
     return '';
   };
 
+  Main.generador['event_message'] = function(block) {
+    return '';
+  };
+
   delete Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.onchange;
+
+  TIPOS.tiposInput.register_create = function(tipos_inputs) {
+    const reg = this.name;
+    for (let i=0; i<this.fields.length; i++) {
+      let v_id = Inferencia.obtenerIdCampoBloque(reg, this.fields[i]);
+      TIPOS.tipadoVariable(this, v_id, `FIELD_${i}`, Blockly.Msg.TIPOS_CAMPO1.replace("%2", reg));
+    }
+  };
+
+  TIPOS.tiposInput.register_obs = function() {
+    return [{k:"REG", t:TIPOS.REGISTRO(this.name, this.fields),
+      msg:TIPOS.Errores.SOp(Blockly.Msg.TIPOS_REGISTRO1.replace("%1",this.name))
+    }];
+  };
+
+  TIPOS.tipoSalida.register_create = function(tipos_inputs) {
+    return TIPOS.REGISTRO(this.name, this.fields);
+  };
+
+  TIPOS.tipoSalida.register_obs = function(tipos_inputs) {
+    // si ya está en el mapa, retorno lo que está en el mapa
+    // si no, creo una nueva variable fresca y la agrego al mapa
+    let tipoVariable = Inferencia.agregarVariableCampoAlMapa(this.name, this.fields[this.getFieldValue("FIELD")]);
+    return (tipoVariable === undefined) ? TIPOS.AUXVAR(this.id) : tipoVariable.tipo;
+  };
+
+  TIPOS.tipadoExtra.event_message = function(tipos_inputs) {
+    let tipoVariable = Inferencia.agregarVariableAlMapa(this.getField('VAR').getText(), this, "VAR", false);
+    if (tipoVariable === undefined) { return; }
+    tipoVariable = tipoVariable.tipo;
+    if (TIPOS.fallo(tipoVariable)) { return; }
+    TIPOS.tipadoVariable(this, Inferencia.obtenerIdVariableBloque(this), TIPOS.TEXTO, Blockly.Msg.TIPOS_IDENTIFICADOR1);
+  };
 }
 
 // Inyecta la interfaz Blockly en la div con id "blockly" y guarda el resultado en Main.workspace

@@ -114,5 +114,5 @@ Main.completarInterfaz = function() {
 };
 
 const bloques_superiores = [
-  "main", "procedures_defreturn", "procedures_defnoreturn", "variables_global_def", "register_def"
+  "main", "procedures_defreturn", "procedures_defnoreturn", "variables_global_def", "register_def", "event_message"
 ];
